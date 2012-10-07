@@ -16,6 +16,10 @@ Building:
     make
     make install
 
+If you are building from Git, you'll need to install autoconf / automake /
+libtool, and run autogen.sh first.  This is not necessary if building from
+a released source tarball.
+
 Basic usage - command-line interface:
 
     stoken import --token=224665249002742606314306156441436672025677510324121004644173122356414742716713323
