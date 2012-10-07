@@ -1,0 +1,253 @@
+.\"
+.\"    Man page for stoken
+.\"
+.TH stoken 1 2012-09-09
+.nh
+.SH NAME
+stoken \- software token for cryptographic authentication
+.SH SYNOPSIS
+\fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP] [\fIopts\fB]
+.PP
+\fBstoken\fP \fBimport\fP
+{\fB\-\-file=\fIpath\fP|\fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
+[\fIopts\fB]
+.PP
+\fBstoken\fP \fBsetpin\fP [\fIopts\fB]
+.PP
+\fBstoken\fP \fBsetpass\fP [\fIopts\fB]
+.PP
+\fBstoken\fP \fBshow\fP [\fB\-\-seed\fP] [\fIopts\fB]
+.PP
+\fBstoken\fP \fBexport\fP
+[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP}] [\fIopts\fB]
+.PP
+\fBstoken\fP \fBhelp\fP
+.PP
+\fBstoken\fP \fBversion\fP
+.SH "DESCRIPTION"
+.PP
+\fBstoken\fP is a software token compatible with RSA SecurID 128-bit (AES)
+tokens.  The command-line interface provides facilities for importing new
+tokens, displaying the current tokencode, encrypting the seed with a
+user-specified password, storing the user's PIN alongside the token, and
+viewing or exporting the token data.
+.SH "BASIC USAGE"
+.PP
+Use \fBstoken import\fP to decode a token string and write it into
+\fI~/.stokenrc\fP.  This may prompt for a device ID and/or password,
+depending on what options your administrator used to create the token.
+The token string can be provided on the command line, or read from a
+text file.
+.PP
+\fBstoken\fP will autodetect the following types of token strings:
+.TP
+.B 286510182209303756117707012447003320623006...
+.PD 0
+.TP
+.B 29658\-21098\-45467\-64675\-65731\-01441\-11337...
+.PD
+Pure numeric (81-digit) strings, with or without dashes.  These may have
+been furnished as-is, or they could have been derived from an \fIsdtid\fP
+file by the RSA \fITokenConverter\fP program.
+.TP
+.B com.rsa.securid.iphone://ctf?ctfData=229639330774927764401...
+iPhone-compatible token strings.
+.TP
+.B http://127.0.0.1/securid/ctf?ctfData=250494932146245277466...
+Android-compatible token strings.
+.PD
+.PP
+The device ID, if used, is typically the same as the IMEI number from
+the mobile phone for which the token was created.  This can be viewed in
+the "about" menu for the RSA soft token app on the phone.
+.PP
+By default, \fBstoken import\fP will refuse to overwrite an existing token in
+\fI~/.stokenrc\fP.  The \fB\-\-force\fP switch overrides this check.
+.PP
+\fBstoken import\fP will normally prompt for a new password, which is used
+to encrypt the seed before storing it in \fI~/.stokenrc\fP.  This can be
+bypassed by entering an empty password, or specifying
+\fB\-\-new\-password=''\fP on the command line.  It is recommended to
+choose a longer, hard-to-guess passphrase for this purpose.
+.PP
+After a token has been imported, running \fBstoken\fP with no arguments
+will prompt for any required password or PIN, then display the current
+tokencode.
+.PP
+Tokencodes are computed from the raw (decrypted) seed data, the current
+time of day, and the PIN.  If the same seed is installed on multiple
+devices, they should all produce identical tokencodes.  If they do not,
+double-check the timezone setting and consider using NTP to synchronize
+the system time to a known good source.
+.PP
+\fBstoken setpin\fP can be used to save the PIN in \fI~/.stokenrc\fP.
+Not all tokens will require a PIN; this can be configured by the SecurID
+administrator when generating new tokens.  Setting an empty PIN will remove
+the PIN from \fI~/.stokenrc\fP so that the user will be prompted every
+time it is required.  See the \fBSECURITY CONSIDERATIONS\fP section below
+for additional details.
+.PP
+\fBstoken setpass\fP encrypts the seed and PIN (if present) in
+\fI~/.stokenrc\fP with a user-selectable password or passphrase.  If an
+empty password is entered, the password will be removed.  See the
+\fBSECURITY CONSIDERATIONS\fP section below for additional details.
+.SH "VIEWING TOKENS"
+.PP
+\fBstoken show\fP displays information about the current token, typically
+read from \fI~/.stokenrc\fP.  The \fB\-\-seed\fP option displays the
+encrypted and decrypted seed bytes (which should be treated as sensitive
+data, as they can be used to derive tokencodes).
+.PP
+\fBstoken export\fP translates the current token into a format suitable
+for importation to another device.
+.SH "GLOBAL OPTIONS"
+.TP
+\fB\-\-rcfile=\fIfile\fP
+Use an alternate \fI.stokenrc\fP file.  This is typically used to support
+multiple tokens on the same user account.
+.TP
+\fB\-\-password=\fIpassword\fP, \fB\-p\fP \fIpassword\fP
+Use a password supplied from the command line, instead of prompting the user.
+See notes in \fBSECURITY CONSIDERATIONS\fP below.
+.TP
+\fB\-\-pin=\fIpin\fP, \fB\-n\fP \fIpin\fP
+Use a PIN supplied from the command line, instead of prompting the user.
+See notes in \fBSECURITY CONSIDERATIONS\fP below.  If you save your PIN
+in \fI~/.stokenrc\fP, note that \fB\-\-pin=0000\fP is often required when
+activating a new soft token for the first time.
+.SH "OTHER OPTIONS"
+.TP
+\fB\-\-new\-password=\fIpassword\fP
+Supply the encryption password from the command line for operations that
+write out a token string or \fI.stokenrc\fP file: \fBimport\fP, \fBexport\fP,
+and \fBsetpass\fP.  See notes in \fBSECURITY CONSIDERATIONS\fP below.
+.TP
+\fB\-\-keep\-password\fP
+If the token in the \fI.stokenrc\fP file is protected with a password, retain
+the same password when exporting the token.  By default, the \fBexport\fP
+operation will not encrypt the token with a password; note that it may not
+be possible to enter all possible passwords on devices with limited text
+input capabilities (such as feature phones).
+.TP
+\fB\-\-new\-pin=\fIpin\fP
+Supply a new PIN from the command line for the \fBsetpin\fP operation.
+See notes in \fBSECURITY CONSIDERATIONS\fP below.
+.TP
+\fB\-\-new\-devid=\fIdevid\fP
+Used with the \fBexport\fP command to encrypt the new token with a specific
+device ID (IMEI).  This is only used for testing purposes.
+.TP
+\fB\-\-blocks\fP, \fB\-\-iphone\fP, \fB\-\-android\fP
+Used with the \fBexport\fP command to select the output format.  See examples
+in \fBBASIC USAGE\fP.  By default, the \fBexport\fP command will print an
+unformatted 81-digit string to standard output.
+.TP
+\fB\-\-use\-time=\fP{\fIunix_time\fP|\fB+\fIoffset\fP|\fB-\fIoffset\fP}
+Instead of generating a tokencode based on the current time of day,
+force a specific time, or adjust the current time based on a positive
+or negative offset (specified in seconds).  This is only used for testing
+purposes.
+.TP
+\fB\-\-stdin\fP, \fB\-s\fP
+When generating a tokencode that requires \fIeither\fP a password or PIN,
+read the password or PIN as single line from standard input.  This is
+intended to allow external programs to call \fIstoken\fP to generate
+single-use passwords without user intervention; see \fBNON-INTERACTIVE USE\fP
+below.
+.TP
+\fB\-\-force\fP, \fB\-f\fP
+Override token expiration date checks (for \fBtokencode\fP) or token
+overwrite checks (for \fBimport\fP).
+.TP
+\fB\-\-batch\fP, \fB\-b\fP
+Abort with an error exit code if any user input is required.  Intended for
+automated operation and testing.
+.TP
+\fB\-\-file=\fIfile\fP
+Use a token from \fIfile\fP instead of the \fI.stokenrc\fP file.  Most
+\fBstoken\fP commands accept this flag, but it is expected that the typical
+user will save his token in \fI~/.stokenrc\fP instead of supplying it by
+hand on every invocation.  Typically \fB\-\-file\fP and \fB\-\-token\fP
+are only used for the \fBimport\fP command.
+.TP
+\fB\-\-token=\fItoken_string\fP
+Use a token from the command line instead of the \fI.stokenrc\fP file.  See
+above notes on \fB\-\-file\fP.
+.TP
+\fB\-\-random\fP
+Generate a random token on the fly.  Used for testing or demonstrations only.
+These tokens should \fBnot\fP be used for real authentication.
+.TP
+\fB\-\-help\fP, \fB\-h\fP
+Display basic usage information.
+.TP
+\fB\-\-version\fP, \fB\-v\fP
+Display version information.
+.SH "SECURITY CONSIDERATIONS"
+.PP
+Software tokens, unlike hardware tokens, are relatively easy to replicate.
+Systems that store soft token seeds should be carefully guarded to prevent
+unauthorized disclosure.  The use of whole-disk encryption, such as TrueCrypt,
+is strongly recommended for laptops and other portable devices that are
+easily lost or stolen.
+.PP
+\fBstoken\fP permits users to store their PIN in \fI~/.stokenrc\fP to
+allow for automated (scriptable) generation of tokencodes, but the risks of
+this approach should be carefully weighed against the benefits.
+.PP
+Using the \fBsetpass\fP command to encrypt the seed and PIN in
+\fI~/.stokenrc\fP provides some degree of protection against unauthorized
+access, but does not necessarily cover all possible attack vectors.  A
+host that is already compromised (e.g. running a keylogger) will not
+provide adequate protection for any seed(s) stored on it.
+.PP
+\fBstoken\fP encryption passwords may be up to 40 characters long.
+A longer passphrase constructed from several random words can provide
+more protection from brute-force attacks than a shorter password.
+.PP
+Entering a password or PIN on the command line is generally unsafe on
+multiuser systems, as other users may be able to view the command line
+arguments in \fBps\fP or similar utilities.  The command line could
+also be cached in shell history files.
+.PP
+\fBstoken\fP attempts to lock pages to prevent swapping out to disk, but
+does not scrub secrets from process memory.
+.SH "NON-INTERACTIVE USE"
+.PP
+Other applications, such as VPN clients, may want to invoke \fBstoken\fP
+non-interactively to generate single-use passwords.  Three usage modes are
+supported, depending on the level of security (and/or convenience) that is
+required:
+.SS No password or PIN
+.PP
+The user configures \fBstoken\fP to print a tokencode immediately upon
+invocation, with no prompts, by using \fBsetpin\fP to store the PIN in
+\fI~/.stokenrc\fP and using \fBsetpass\fP to set an empty password.
+The other application can then invoke \fBstoken \-\-batch\fP and read
+the tokencode through a pipe from standard output.
+.PP
+This provides no security for the seed, but may be useful in applications
+where (re-)authentication is frequent or unattended operation is required.
+.SS Save the PIN and set a password
+.PP
+The user configures \fBstoken\fP to encrypt the \fI~/.stokenrc\fP secrets
+with a password using \fBsetpass\fP, then saves the PIN with \fBsetpin\fP.
+The PIN and the seed will both be encrypted with the password.  The other
+application will request the password from the user, then call
+\fBstoken \-\-stdin\fP, write the password to \fBstoken\fP's standard input
+through a pipe, and read back a tokencode from \fBstoken\fP's standard
+output.
+.SS No password; prompt for the PIN
+.PP
+Similar to above, but set an empty password using \fBsetpass\fP, do not
+save the PIN in \fI~/.stokenrc\fP, and pass the PIN to \fBstoken \-\-stdin\fP
+via standard input.
+.SH "SEE ALSO"
+.PP
+\fBstoken\-gui\fP(1).
+.SH FILES
+.TP
+~/.stokenrc
+Default configuration file.
+.SH "AUTHOR"
+Kevin Cernekee <cernekee@gmail.com>

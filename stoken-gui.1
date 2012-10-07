@@ -1,0 +1,67 @@
+.\"
+.\"    Man page for stoken-gui
+.\"
+.TH stoken-gui 1 2012-09-09
+.nh
+.SH NAME
+stoken-gui \- GTK+ software token
+.SH SYNOPSIS
+\fBstoken-gui\fP [\fIopts\fB]
+.SH "DESCRIPTION"
+.PP
+\fBstoken-gui\fP is a software token compatible with RSA SecurID 128-bit (AES)
+tokens.  The graphical user interface provides limited support for password
+entry and viewing the current token.  Initial token importation and other
+configuration items are handled through the command-line interface,
+\fBstoken(1)\fP.
+.PP
+After using \fBstoken import\fP to populate \fI~/.stokenrc\fP,
+\fBstoken-gui\fP may be invoked to display the tokencode and counter.  The
+tokencode changes once a minute; \fBstoken-gui\fP may be left running
+forever and will copy the current tokencode to the clipboard on demand.
+.PP
+If a password and/or PIN is required, \fBstoken-gui\fP will pop up a
+dialog box requesting the appropriate information.
+.SH "OPTIONS"
+.TP
+\fB\-\-rcfile=\fIfile\fP
+Use an alternate \fI.stokenrc\fP file.  This is typically used to support
+multiple tokens on the same user account.
+.TP
+\fB\-\-password=\fIpassword\fP, \fB\-p\fP \fIpassword\fP
+Use a password supplied from the command line, instead of prompting the user.
+See notes in \fBSECURITY CONSIDERATIONS\fP on the \fBstoken(1)\fP man page.
+.TP
+\fB\-\-pin=\fIpin\fP, \fB\-n\fP \fIpin\fP
+Use a PIN supplied from the command line, instead of prompting the user.
+See notes in \fBSECURITY CONSIDERATIONS\fP on the \fBstoken(1)\fP man page.
+.TP
+\fB\-\-force\fP, \fB\-f\fP
+Override token expiration date check.
+.TP
+\fB\-\-file=\fIfile\fP
+Use a token from \fIfile\fP instead of the \fI.stokenrc\fP file.  For
+testing purposes only.
+.TP
+\fB\-\-token=\fItoken_string\fP
+Use a token from the command line instead of the \fI.stokenrc\fP file.  See
+above notes on \fB\-\-file\fP.
+.TP
+\fB\-\-random\fP
+Generate a random token on the fly.  Used for testing or demonstrations only.
+These tokens should \fBnot\fP be used for real authentication.
+.TP
+\fB\-\-help\fP, \fB\-h\fP
+Display basic usage information.
+.TP
+\fB\-\-version\fP, \fB\-v\fP
+Display version information.
+.SH "SEE ALSO"
+.PP
+\fBstoken\fP(1).
+.SH FILES
+.TP
+~/.stokenrc
+Default configuration file.
+.SH "AUTHOR"
+Kevin Cernekee <cernekee@gmail.com>
