@@ -32,5 +32,8 @@ Please substitute the token string provided by your administrator.
 
 See the man pages for additional details: stoken(1), stoken-gui(1)
 
+See examples/ and src/stoken.h for information on using the shared library
+interface (libstoken) to generate tokencodes from other applications.
+
 Author: Kevin Cernekee <cernekee@gmail.com>
 License: LGPLv2.1+
