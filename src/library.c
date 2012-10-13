@@ -333,7 +333,7 @@ void stoken_pin_range(struct stoken_ctx *ctx, int *min_pin, int *max_pin)
 int stoken_pin_required(struct stoken_ctx *ctx)
 {
 	/* don't prompt for a PIN if it was saved in the rcfile */
-	if (strlen(ctx->t->pin))
+	if (ctx->t->enc_pin_str || strlen(ctx->t->pin))
 		return 0;
 	return securid_pin_required(ctx->t);
 }
