@@ -68,28 +68,32 @@ static void restore_tio(int sig)
 	exit(1);
 }
 
+static void terminal_init(void)
+{
+	struct sigaction sa;
+	const int fd = 0;
+
+	/* restore a sane terminal state if interrupted */
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = &restore_tio;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGHUP, &sa, NULL);
+
+	tcgetattr(fd, &oldtio);
+}
+
 static void stdin_echo(int enable_echo)
 {
-	struct termios tio;
-	struct sigaction sa;
+	struct termios tio = oldtio;
 	const int fd = 0;
 
 	if (!enable_echo) {
 		/* ripped from busybox bb_ask() */
-		tcgetattr(fd, &oldtio);
 		tcflush(fd, TCIFLUSH);
-		tio = oldtio;
-
 		tio.c_iflag &= ~(IUCLC|IXON|IXOFF|IXANY);
 		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL|TOSTOP);
 		tcsetattr(fd, TCSANOW, &tio);
-
-		/* restore a sane terminal state if interrupted */
-		memset(&sa, 0, sizeof(sa));
-		sa.sa_handler = &restore_tio;
-		sigaction(SIGINT, &sa, NULL);
-		sigaction(SIGTERM, &sa, NULL);
-		sigaction(SIGHUP, &sa, NULL);
 	} else
 		tcsetattr(fd, TCSANOW, &oldtio);
 }
@@ -116,7 +120,9 @@ static int read_user_input(char *out, int max_len, int hide_chars)
 	stdin_echo(!hide_chars);
 	rc = raw_read_user_input(out, max_len);
 	stdin_echo(1);
-	puts("");
+
+	if (hide_chars)
+		puts("");
 	return rc;
 }
 
@@ -305,6 +311,8 @@ int main(int argc, char **argv)
 	t = current_token;
 	if (!t)
 		die("error: no token present.  Use 'stoken import' to add one.\n");
+
+	terminal_init();
 
 	if (!strcmp(cmd, "tokencode")) {
 		int days_left = securid_check_exp(t, adjusted_time());
