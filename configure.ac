@@ -38,6 +38,8 @@ else
 	LDFLAGS="$LDFLAGS -Wl,--strip-debug"
 fi
 
+EXTRA_PC_LIBS=""
+
 # extra gcc flags (warnings and such)
 
 if test "x$GCC" = "xyes"; then
@@ -113,6 +115,7 @@ fi
 if test $tomcrypt_pkg = no; then
 	AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
 	AC_SUBST(LIBTOMCRYPT_PC, [])
+	EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
 else
 	AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
 	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
@@ -131,6 +134,8 @@ AC_TRY_LINK([#include <tomcrypt.h>],
 
 LIBS="$saved_LIBS"
 CFLAGS="$saved_CFLAGS"
+
+AC_SUBST(EXTRA_PC_LIBS, [$EXTRA_PC_LIBS])
 
 # library version
 

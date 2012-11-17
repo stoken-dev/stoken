@@ -7,5 +7,5 @@ Name: stoken
 Description: Software token
 Version: @VERSION@
 Requires: @LIBTOMCRYPT_PC@
-Libs: -L${libdir} -lstoken
+Libs: -L${libdir} -lstoken @EXTRA_PC_LIBS@
 Cflags: -I${includedir}
