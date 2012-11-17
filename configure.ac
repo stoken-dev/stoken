@@ -101,12 +101,13 @@ fi
 AM_CONDITIONAL([ENABLE_GUI], [test $enable_gui = yes])
 
 # libtomcrypt
+# Some distributions add a libtomcrypt.pc file, but it isn't in the upstream
+# libtomcrypt distribution so we can't count on it.
 
 tomcrypt_pkg=no
 
 if test "x$PKG_CONFIG" != x; then
-	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt,
-			[tomcrypt_pkg=yes], [])
+	PKG_CHECK_EXISTS([libtomcrypt], [tomcrypt_pkg=yes], [])
 fi
 
 if test $tomcrypt_pkg = no; then
@@ -114,6 +115,7 @@ if test $tomcrypt_pkg = no; then
 	AC_SUBST(LIBTOMCRYPT_PC, [])
 else
 	AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
+	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
 fi
 
 saved_LIBS="$LIBS"
