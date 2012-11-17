@@ -8,6 +8,8 @@ dist_man_MANS		= stoken.1
 lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
+libstoken_la_LDFLAGS	+= -Wl,--version-script,libstoken.map
+libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
 noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h
 pkgconfig_DATA		= stoken.pc
@@ -34,5 +36,5 @@ endif
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore
+EXTRA_DIST		= .gitignore libstoken.map
 DISTCLEANFILES		= *~

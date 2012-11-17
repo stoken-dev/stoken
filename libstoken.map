@@ -1,0 +1,35 @@
+STOKEN_1.0 {
+global:
+	stoken_new;
+	stoken_destroy;
+	stoken_import_rcfile;
+	stoken_import_string;
+	stoken_pin_range;
+	stoken_pin_required;
+	stoken_pass_required;
+	stoken_devid_required;
+	stoken_check_pin;
+	stoken_decrypt_seed;
+	stoken_compute_tokencode;
+};
+
+STOKEN_PRIVATE {
+global:
+	securid_check_exp;
+	securid_compute_tokencode;
+	securid_decode_token;
+	securid_decrypt_pin;
+	securid_decrypt_seed;
+	securid_devid_required;
+	securid_encode_token;
+	securid_encrypt_pin;
+	securid_pass_required;
+	securid_pin_format_ok;
+	securid_pin_required;
+	securid_random_token;
+	securid_token_info;
+	__stoken_parse_and_decode_token;
+	__stoken_read_rcfile;
+	__stoken_write_rcfile;
+	__stoken_zap_rcfile_data;
+};
