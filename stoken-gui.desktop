@@ -6,5 +6,4 @@ Exec=stoken-gui
 Icon=stoken-gui
 Terminal=false
 Type=Application
-Encoding=UTF-8
 Categories=Security;GTK;Utility;
