@@ -17,13 +17,13 @@ pkgconfig_DATA		= stoken.pc
 
 bin_PROGRAMS		= stoken
 stoken_SOURCES		= src/cli.c src/common.c
-stoken_LDADD		= $(LDADD) libstoken.la $(TOMCRYPT_LIBS)
+stoken_LDADD		= $(LDADD) libstoken.la
 
 if ENABLE_GUI
 bin_PROGRAMS		+= stoken-gui
 stoken_gui_SOURCES	= src/gui.c src/common.c
 stoken_gui_CFLAGS	= $(AM_CFLAGS) $(GTK_CFLAGS)
-stoken_gui_LDADD	= $(LDADD) libstoken.la $(GTK_LIBS) $(TOMCRYPT_LIBS)
+stoken_gui_LDADD	= $(LDADD) libstoken.la $(GTK_LIBS)
 
 dist_man_MANS		+= stoken-gui.1
 
