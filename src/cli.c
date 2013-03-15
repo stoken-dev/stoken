@@ -150,8 +150,10 @@ static void request_devid(struct securid_token *t, char *devid)
 
 	if (opt_devid) {
 		rc = securid_decrypt_seed(t, "", opt_devid);
-		if (rc != ERR_BAD_DEVID)
+		if (rc != ERR_BAD_DEVID) {
+			strncpy(devid, opt_devid, BUFLEN);
 			return;
+		}
 		warn("warning: --devid parameter is incorrect\n");
 	}
 
