@@ -57,9 +57,8 @@ iPhone-compatible token strings.
 Android-compatible token strings.
 .PD
 .PP
-The device ID, if used, is typically the same as the IMEI number from
-the mobile phone for which the token was created.  This can be viewed in
-the "about" menu for the RSA soft token app on the phone.
+The device ID, if used, can be viewed in the "about" menu for the RSA soft
+token app on the phone.
 .PP
 By default, \fBstoken import\fP will refuse to overwrite an existing token in
 \fI~/.stokenrc\fP.  The \fB\-\-force\fP switch overrides this check.
@@ -135,7 +134,7 @@ See notes in \fBSECURITY CONSIDERATIONS\fP below.
 .TP
 \fB\-\-new\-devid=\fIdevid\fP
 Used with the \fBexport\fP command to encrypt the new token with a specific
-device ID (IMEI).  This is only used for testing purposes.
+device ID.  This is only used for testing purposes.
 .TP
 \fB\-\-blocks\fP, \fB\-\-iphone\fP, \fB\-\-android\fP
 Used with the \fBexport\fP command to select the output format.  See examples

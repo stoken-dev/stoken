@@ -159,16 +159,16 @@ static void request_devid(struct securid_token *t, char *devid)
 
 	prompt("This token is bound to a specific device.\n");
 	for (i = 0; ; i++) {
-		prompt("Enter device serial number (IMEI): ");
+		prompt("Enter device ID from the RSA 'About' screen: ");
 		read_user_input(devid, BUFLEN, 0);
 
 		rc = securid_decrypt_seed(t, "", devid);
 		if (rc != ERR_BAD_DEVID)
 			return;
 		if (i == 2)
-			die("error: invalid IMEI\n");
+			die("error: invalid device ID\n");
 
-		prompt("IMEI does not match the token.\n");
+		prompt("Device ID does not match the token.\n");
 	}
 }
 
