@@ -236,10 +236,10 @@ int securid_decode_token(const char *in, struct securid_token *t)
 }
 
 static int generate_key_hash(uint8_t *key_hash, const char *pass,
-	const char *devid, uint16_t *device_id_hash)
+	const char *devid, uint16_t *device_id_hash, int is_smartphone)
 {
-	uint8_t key[MAX_PASS + DEVID_CHARS + MAGIC_LEN + 1];
-	int pos = 0;
+	uint8_t key[MAX_PASS + DEVID_CHARS + MAGIC_LEN + 1], *devid_buf;
+	int pos = 0, devid_len = is_smartphone ? 40 : 32;
 	const uint8_t magic[] = { 0xd8, 0xf5, 0x32, 0x53, 0x82, 0x89, 0x00 };
 
 	memset(key, 0, sizeof(key));
@@ -251,26 +251,31 @@ static int generate_key_hash(uint8_t *key_hash, const char *pass,
 		memcpy(key, pass, pos);
 	}
 
+	devid_buf = &key[pos];
 	if (devid) {
 		int len = 0;
-		uint8_t *p = &key[pos];
 
-		/* skip anything that isn't a digit */
+		/*
+		 * For iPhone/Android ctf strings, the device ID takes up
+		 * 40 bytes and consists of hex digits + zero padding.
+		 *
+		 * For other ctf strings (e.g. --blocks), the device ID takes
+		 * up 32 bytes and consists of decimal digits + zero padding.
+		 *
+		 * If this seed isn't locked to a device, we'll just hash
+		 * 40 (or 32) zero bytes, below.
+		 */
 		for (; *devid; devid++) {
-			if (*devid >= '0' && *devid <= '9') {
-				if (len++ > DEVID_CHARS)
-					return ERR_BAD_PASSWORD;
-				*(p++) = *devid;
-			}
+			if ((is_smartphone && !isxdigit(*devid)) ||
+			    (!is_smartphone && !isdigit(*devid)))
+				continue;
+			if (len++ > devid_len)
+				return ERR_BAD_PASSWORD;
+			key[pos++] = *devid;
 		}
-		if (device_id_hash)
-			*device_id_hash = securid_shortmac(&key[pos],
-				DEVID_CHARS);
-		pos += len;
-	} else if (device_id_hash) {
-		/* just hash the zeroed devid buffer */
-		*device_id_hash = securid_shortmac(&key[pos], DEVID_CHARS);
 	}
+	if (device_id_hash)
+		*device_id_hash = securid_shortmac(devid_buf, devid_len);
 
 	memcpy(&key[pos], magic, MAGIC_LEN);
 	securid_mac(key, pos + MAGIC_LEN, key_hash);
@@ -294,7 +299,7 @@ int securid_decrypt_seed(struct securid_token *t, const char *pass,
 	rc = generate_key_hash(key_hash,
 			       t->flags & FL_PASSPROT ? pass : NULL,
 			       t->flags & FL_SNPROT ? devid : NULL,
-			       &device_id_hash);
+			       &device_id_hash, t->is_smartphone);
 	if (rc)
 		return rc;
 
@@ -399,7 +404,8 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 	if (devid && !strlen(devid))
 		devid = NULL;
 
-	rc = generate_key_hash(key_hash, pass, devid, &newt.device_id_hash);
+	rc = generate_key_hash(key_hash, pass, devid, &newt.device_id_hash,
+			       newt.is_smartphone);
 	if (rc)
 		return rc;
 
@@ -445,7 +451,8 @@ int securid_random_token(struct securid_token *t)
 
 	t->dec_seed_hash = securid_shortmac(t->dec_seed, AES_KEY_SIZE);
 
-	generate_key_hash(key_hash, NULL, NULL, &t->device_id_hash);
+	generate_key_hash(key_hash, NULL, NULL, &t->device_id_hash,
+			  t->is_smartphone);
 	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
 	t->has_enc_seed = 1;
 

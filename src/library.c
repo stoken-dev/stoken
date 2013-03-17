@@ -40,11 +40,16 @@ struct stoken_ctx {
  * Internal functions (only called from within the stoken package)
  ***********************************************************************/
 
+static int strstarts(const char *str, const char *prefix)
+{
+	return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
 int __stoken_parse_and_decode_token(const char *str, struct securid_token *t)
 {
 	char buf[BUFLEN];
 	const char *p;
-	int i;
+	int i, ret;
 
 	do {
 		/* try to handle broken quoted-printable input */
@@ -79,7 +84,13 @@ int __stoken_parse_and_decode_token(const char *str, struct securid_token *t)
 	}
 	buf[i] = 0;
 
-	return securid_decode_token(buf, t);
+	ret = securid_decode_token(buf, t);
+
+	if (strstarts(str, "com.rsa.securid.iphone://ctf") ||
+	    strstarts(str, "com.rsa.securid://ctf") ||
+	    strstarts(str, "http://127.0.0.1/securid/ctf"))
+		t->is_smartphone = 1;
+	return ret;
 }
 
 static int next_token(char **in, char *tok, int maxlen)

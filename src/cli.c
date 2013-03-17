@@ -338,6 +338,7 @@ int main(int argc, char **argv)
 			request_new_pass(pass);
 		}
 
+		t->is_smartphone = 0;
 		securid_encode_token(t, pass, opt_new_devid, buf);
 		rc = write_token_and_pin(buf, NULL, pass);
 		if (rc != ERR_NONE)
@@ -352,6 +353,7 @@ int main(int argc, char **argv)
 		else if (!opt_keep_password)
 			pass = NULL;
 
+		t->is_smartphone = opt_iphone || opt_android;
 		securid_encode_token(t, pass, opt_new_devid, buf);
 		print_formatted(buf);
 	} else if (!strcmp(cmd, "show")) {

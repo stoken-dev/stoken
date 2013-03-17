@@ -49,7 +49,7 @@
 #define BINENC_OFS		(VER_CHARS + SERIAL_CHARS)
 #define CHECKSUM_OFS		(BINENC_OFS + BINENC_CHARS)
 
-#define DEVID_CHARS		32
+#define DEVID_CHARS		40
 
 #define TOKEN_BITS_PER_CHAR	3
 #define MIN_TOKEN_BITS		189
@@ -81,6 +81,7 @@ struct securid_token {
 	char			serial[SERIAL_CHARS + 1];
 	uint16_t		flags;
 	uint16_t		exp_date;
+	int			is_smartphone;
 
 	int			has_enc_seed;
 	uint8_t			enc_seed[AES_KEY_SIZE];
