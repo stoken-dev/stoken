@@ -7,3 +7,4 @@ Icon=stoken-gui
 Terminal=false
 Type=Application
 Categories=Security;GTK;Utility;
+Keywords=RSA;SecurID;Authenticator;
