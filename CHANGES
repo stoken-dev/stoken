@@ -1,0 +1,12 @@
+v0.2 - 2013/05/18
+
+ - Fix a couple of problems seen when manipulating tokens tied to a device
+   ID, particularly if the token was intended for a smartphone (bug #1)
+
+ - Clean up pkg-config dependencies
+
+ - Other minor cleanups
+
+v0.1 - 2012/11/17
+
+ - Initial public release
