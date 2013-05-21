@@ -91,8 +91,7 @@ static void stdin_echo(int enable_echo)
 	if (!enable_echo) {
 		/* ripped from busybox bb_ask() */
 		tcflush(fd, TCIFLUSH);
-		tio.c_iflag &= ~(IUCLC|IXON|IXOFF|IXANY);
-		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL|TOSTOP);
+		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL);
 		tcsetattr(fd, TCSANOW, &tio);
 	} else
 		tcsetattr(fd, TCSANOW, &oldtio);
