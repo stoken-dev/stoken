@@ -96,8 +96,7 @@ static void stdin_echo(int enable_echo)
 		tcflush(fd, TCIFLUSH);
 		tio = oldtio;
 
-		tio.c_iflag &= ~(IUCLC|IXON|IXOFF|IXANY);
-		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL|TOSTOP);
+		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL);
 		tcsetattr(fd, TCSANOW, &tio);
 
 		/* restore a sane terminal state if interrupted */
