@@ -33,9 +33,6 @@ AC_ARG_ENABLE(
 
 if test "x$enable_debug" = xyes; then
 	CFLAGS="$CFLAGS -O0 -ggdb"
-else
-	CFLAGS="$CFLAGS -O2"
-	LDFLAGS="$LDFLAGS -Wl,--strip-debug"
 fi
 
 EXTRA_PC_LIBS=""
