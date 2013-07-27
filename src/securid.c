@@ -563,7 +563,7 @@ int securid_pin_format_ok(const char *pin)
 
 int securid_pin_required(const struct securid_token *t)
 {
-	return ((t->flags >> FLD_PINMODE_SHIFT) & FLD_PINMODE_MASK) >= 2;
+	return ((t->flags & FLD_PINMODE_MASK) >> FLD_PINMODE_SHIFT) >= 2;
 }
 
 int securid_pass_required(const struct securid_token *t)
