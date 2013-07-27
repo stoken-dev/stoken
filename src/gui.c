@@ -64,7 +64,7 @@ static gint update_tokencode(gpointer data)
 {
 	time_t now = time(NULL);
 	struct tm *tm;
-	int sec;
+	int sec, i, j, code_len;
 	char str[16];
 
 	tm = gmtime(&now);
@@ -75,8 +75,15 @@ static gint update_tokencode(gpointer data)
 
 	sec = 59 - tm->tm_sec;
 
-	strcpy(str, tokencode_str);
-	sprintf(&str[4], " %s", &tokencode_str[4]);
+	/* inject a space in the middle of the code, e.g. "1234 5678" */
+	code_len = strlen(tokencode_str);
+	for (i = 0, j = 0; i < code_len; i++) {
+		if (i == code_len / 2)
+			str[j++] = ' ';
+		str[j++] = tokencode_str[i];
+	}
+	str[j] = 0;
+
 	gtk_label_set_text(GTK_LABEL(tokencode_text), str);
 
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar),

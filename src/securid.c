@@ -349,7 +349,7 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 {
 	uint8_t bcd_time[8];
 	uint8_t key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
-	int i;
+	int i, j;
 	uint32_t tokencode;
 	struct tm *gmt;
 	int pin_len = strlen(t->pin);
@@ -378,16 +378,17 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	tokencode = (key0[i + 0] << 24) | (key0[i + 1] << 16) |
 		    (key0[i + 2] << 8)  | (key0[i + 3] << 0);
 
-	/* add PIN digits to tokencode, if available */
-	for (i = 0; i < 8; i++) {
+	/* populate code_out backwards, adding PIN digits if available */
+	j = ((t->flags & FLD_DIGIT_MASK) >> FLD_DIGIT_SHIFT) + 1;
+	code_out[j--] = 0;
+	for (i = 0; j >= 0; j--, i++) {
 		uint8_t c = tokencode % 10;
 		tokencode /= 10;
 
 		if (i < pin_len)
 			c += t->pin[pin_len - i - 1] - '0';
-		code_out[7 - i] = c % 10 + '0';
+		code_out[j] = c % 10 + '0';
 	}
-	code_out[8] = 0;
 }
 
 int securid_encode_token(const struct securid_token *t, const char *pass,
