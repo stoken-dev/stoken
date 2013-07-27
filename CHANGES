@@ -1,3 +1,13 @@
+v0.3 - UNRELEASED
+
+ - Fix build failure on kfreebsd
+
+ - Don't strip stoken / stoken-gui binaries by default
+
+ - Add support for 6-digit tokencodes
+
+ - Fix handling of PIN-less tokens
+
 v0.2 - 2013/05/18
 
  - Fix a couple of problems seen when manipulating tokens tied to a device
