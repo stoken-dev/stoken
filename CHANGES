@@ -1,6 +1,6 @@
 v0.3 - UNRELEASED
 
- - Fix build failure on kfreebsd
+ - Fix build failures on kfreebsd and Android
 
  - Don't strip stoken / stoken-gui binaries by default
 
