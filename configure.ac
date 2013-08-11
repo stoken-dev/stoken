@@ -55,6 +55,9 @@ else
 	AC_MSG_RESULT([yes])
 fi
 
+# mlockall() is missing on Bionic (Android)
+AC_CHECK_FUNCS(mlockall)
+
 # gtk / stoken-gui
 
 AC_ARG_WITH([gtk], [AS_HELP_STRING([--with-gtk],

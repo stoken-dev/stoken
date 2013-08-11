@@ -335,7 +335,9 @@ int common_init(char *cmd)
 	 * we don't actually scrub memory, but at least try to keep the seeds
 	 * from being swapped out to disk
 	 */
+#ifdef HAVE_MLOCKALL
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+#endif
 
 	cfg = xzalloc(sizeof(*cfg));
 	if (__stoken_read_rcfile(opt_rcfile, cfg, &warn) != ERR_NONE)
