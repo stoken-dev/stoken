@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS	= foreign subdir-objects
 
 AM_CPPFLAGS		= -DDATA_DIR=\"$(datadir)\"
-AM_CFLAGS		= $(TOMCRYPT_CFLAGS)
+AM_CFLAGS		= $(TOMCRYPT_CFLAGS) $(LIBXML2_CFLAGS)
 
 dist_man_MANS		= stoken.1
 
@@ -10,7 +10,7 @@ libstoken_la_SOURCES	= src/library.c src/securid.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
-libstoken_la_LIBADD	= $(TOMCRYPT_LIBS)
+libstoken_la_LIBADD	= $(TOMCRYPT_LIBS) $(LIBXML2_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
 noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h

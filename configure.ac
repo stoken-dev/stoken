@@ -102,6 +102,10 @@ fi
 
 AM_CONDITIONAL([ENABLE_GUI], [test $enable_gui = yes])
 
+# libxml2 support for sdtid file parsing
+
+PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
+
 # libtomcrypt
 # Some distributions add a libtomcrypt.pc file, but it isn't in the upstream
 # libtomcrypt distribution so we can't count on it.
