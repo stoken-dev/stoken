@@ -12,7 +12,7 @@ AC_PROG_LIBTOOL
 m4_ifdef([PKG_INSTALLDIR], [PKG_INSTALLDIR],
 	  [AC_ARG_WITH([pkgconfigdir],
 		       [AS_HELP_STRING([--with-pkgconfigdir],
-		       [install directory for openconnect.pc pkg-config file])],
+		       [install directory for stoken.pc pkg-config file])],
 			[],[with_pkgconfigdir='$(libdir)/pkgconfig'])
 	   AC_SUBST([pkgconfigdir], [${with_pkgconfigdir}])])
 
