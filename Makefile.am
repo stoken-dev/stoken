@@ -7,6 +7,7 @@ dist_man_MANS		= stoken.1
 
 lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c
+libstoken_la_CFLAGS	= $(AM_CFLAGS)
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
 libstoken_la_LIBADD	= $(TOMCRYPT_LIBS)
@@ -14,6 +15,18 @@ libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
 noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h
 pkgconfig_DATA		= stoken.pc
+
+if USE_JNI
+if JNI_STANDALONE
+libstoken_la_SOURCES	+= src/jni.c
+libstoken_la_CFLAGS	+= $(JNI_CFLAGS)
+else
+lib_LTLIBRARIES		+= libstoken-wrapper.la
+libstoken_wrapper_la_SOURCES = src/jni.c
+libstoken_wrapper_la_CFLAGS = $(AM_CFLAGS) $(JNI_CFLAGS)
+libstoken_wrapper_la_LIBADD = libstoken.la
+endif
+endif
 
 bin_PROGRAMS		= stoken
 stoken_SOURCES		= src/cli.c src/common.c
