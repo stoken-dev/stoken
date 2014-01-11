@@ -364,6 +364,13 @@ int stoken_check_pin(struct stoken_ctx *ctx, const char *pin)
 	return securid_pin_format_ok(pin) == ERR_NONE ? 0 : -EINVAL;
 }
 
+int stoken_check_devid(struct stoken_ctx *ctx, const char *devid)
+{
+	if (securid_decrypt_seed(ctx->t, "", devid) == ERR_BAD_DEVID)
+		return -EINVAL;
+	return 0;
+}
+
 int stoken_decrypt_seed(struct stoken_ctx *ctx, const char *pass,
 	const char *devid)
 {

@@ -13,6 +13,11 @@ global:
 	stoken_compute_tokencode;
 };
 
+STOKEN_1.1 {
+global:
+	stoken_check_devid;
+} STOKEN_1.0;
+
 STOKEN_PRIVATE {
 global:
 	securid_check_exp;

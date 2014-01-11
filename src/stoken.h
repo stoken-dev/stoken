@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #define STOKEN_API_VER_MAJOR	1
-#define STOKEN_API_VER_MINOR	0
+#define STOKEN_API_VER_MINOR	1
 
 #define STOKEN_MAX_TOKENCODE	8
 
@@ -93,6 +93,18 @@ int stoken_devid_required(struct stoken_ctx *ctx);
  *   -EINVAL: invalid format
  */
 int stoken_check_pin(struct stoken_ctx *ctx, const char *pin);
+
+/*
+ * Check the device ID by performing a partial seed decrypt.  This helps
+ * callers provide better user feedback after a stoken_decrypt_seed() failure.
+ *
+ * Return values:
+ *
+ *   0:       success
+ *   -EINVAL: DEVID MAC failed
+ *   -EIO:    any other failure (e.g. ran out of memory)
+ */
+int stoken_check_devid(struct stoken_ctx *ctx, const char *devid);
 
 /*
  * Try to decrypt the seed stored in CTX, and compare the MAC to see if
