@@ -1,0 +1,18 @@
+Description:
+
+This directory contains a JNI interface layer for libstoken, and a
+demo program to show how it can be used.
+
+Build instructions:
+
+From the top level, run:
+
+    ./configure --with-java
+    make
+    cd java
+    ant
+    java -Djava.library.path=../.libs -jar dist/example.jar \
+    	{ <token_string> | <stokenrc_path> }
+
+Test/demo code is in src/com/example/
+LibStoken wrapper library is in src/org/stoken/
