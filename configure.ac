@@ -145,4 +145,5 @@ APIMINOR="`awk '/#define STOKEN_API_VER_MINOR/ {print $3}' ${libhdr}`"
 AC_SUBST(APIMAJOR)
 AC_SUBST(APIMINOR)
 
-AC_OUTPUT(stoken.pc)
+AC_CONFIG_FILES(stoken.pc)
+AC_OUTPUT
