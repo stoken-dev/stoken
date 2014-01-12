@@ -123,6 +123,19 @@ int stoken_decrypt_seed(struct stoken_ctx *ctx, const char *pass,
 	const char *devid);
 
 /*
+ * Generate a new token string for the previously-decrypted seed stored
+ * in CTX.  PASS and DEVID may be NULL.  The returned string must be freed
+ * by the caller.
+ *
+ * Return values:
+ *
+ *   ptr:     on success, a pointer to a new string
+ *   NULL:    on failure
+ */
+char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
+	const char *devid);
+
+/*
  * Generate a tokencode from the decrypted seed, for UNIX time WHEN.
  * OUT is allocated by the caller, and must be able to store at least
  * (STOKEN_MAX_TOKENCODE + 1) bytes.

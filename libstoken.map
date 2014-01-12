@@ -16,6 +16,7 @@ global:
 STOKEN_1.1 {
 global:
 	stoken_check_devid;
+	stoken_encrypt_seed;
 } STOKEN_1.0;
 
 STOKEN_PRIVATE {

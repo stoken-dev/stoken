@@ -385,6 +385,23 @@ int stoken_decrypt_seed(struct stoken_ctx *ctx, const char *pass,
 	return 0;
 }
 
+char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
+	const char *devid)
+{
+	char *ret;
+
+	if (!ctx->t || !ctx->t->has_dec_seed)
+		return NULL;
+	ret = calloc(1, MAX_TOKEN_CHARS + 1);
+	if (!ret)
+		return NULL;
+	if (securid_encode_token(ctx->t, pass, devid, ret) != ERR_NONE) {
+		free(ret);
+		return NULL;
+	}
+	return ret;
+}
+
 int stoken_compute_tokencode(struct stoken_ctx *ctx, time_t when,
 	const char *pin, char *out)
 {
