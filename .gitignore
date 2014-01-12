@@ -26,11 +26,11 @@ ltmain.sh
 libtool
 
 # objects
-src/*.o
-stoken
-stoken-gui
-stoken-*.tar.gz
-stoken.pc
+/src/*.o
+/stoken
+/stoken-gui
+/stoken-*.tar.gz
+/stoken.pc
 
 # scratch files
 .*.sw*
