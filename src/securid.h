@@ -63,9 +63,9 @@
 #define FL_128BIT		BIT(14)
 #define FL_PASSPROT		BIT(13)
 #define FL_SNPROT		BIT(12)
-#define FL_FEAT3		BIT(11)
+#define FL_APPSEEDS		BIT(11)
 #define FL_FEAT4		BIT(10)
-#define FL_FEAT5		BIT(9)
+#define FL_TIMESEEDS		BIT(9)
 #define FLD_DIGIT_SHIFT		6
 #define FLD_DIGIT_MASK		(0x07 << FLD_DIGIT_SHIFT)
 #define FL_FEAT6		BIT(5)
@@ -78,6 +78,7 @@
 #define SECURID_EPOCH		946684800
 
 struct securid_token {
+	int			version;
 	char			serial[SERIAL_CHARS + 1];
 	uint16_t		flags;
 	uint16_t		exp_date;

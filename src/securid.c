@@ -220,6 +220,7 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	if (token_mac != computed_mac)
 		return ERR_CHECKSUM_FAILED;
 
+	t->version = in[0] - '0';
 	memcpy(&t->serial, &in[VER_CHARS], SERIAL_CHARS);
 	t->serial[SERIAL_CHARS] = 0;
 
@@ -429,7 +430,7 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 	set_bits(d, 159, 15, securid_shortmac(newt.dec_seed, AES_KEY_SIZE));
 	set_bits(d, 174, 15, newt.device_id_hash);
 
-	sprintf(out, "2%s", newt.serial);
+	sprintf(out, "%d%s", newt.version, newt.serial);
 	bits_to_numoutput(d, &out[BINENC_OFS], BINENC_BITS);
 
 	set_bits(d, 0, 15, securid_shortmac(out, CHECKSUM_OFS));
@@ -457,7 +458,8 @@ int securid_random_token(struct securid_token *t)
 	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
 	t->has_enc_seed = 1;
 
-	t->flags = FL_FEAT5 | FLD_DIGIT_MASK | FLD_PINMODE_MASK |
+	t->version = 2;
+	t->flags = FL_TIMESEEDS | FLD_DIGIT_MASK | FLD_PINMODE_MASK |
 		   (1 << FLD_NUMSECONDS_SHIFT) | FL_128BIT;
 	t->pinmode = 3;
 
@@ -525,9 +527,9 @@ void securid_token_info(const struct securid_token *t,
 	}
 	callback("Seconds per tokencode", str);
 
-	callback("Feature bit 3", t->flags & FL_FEAT3 ? "yes" : "no");
+	callback("App-derived", t->flags & FL_APPSEEDS ? "yes" : "no");
 	callback("Feature bit 4", t->flags & FL_FEAT4 ? "yes" : "no");
-	callback("Feature bit 5", t->flags & FL_FEAT5 ? "yes" : "no");
+	callback("Time-derived", t->flags & FL_TIMESEEDS ? "yes" : "no");
 	callback("Feature bit 6", t->flags & FL_FEAT6 ? "yes" : "no");
 }
 
