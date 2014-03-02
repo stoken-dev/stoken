@@ -118,4 +118,8 @@ int securid_pin_required(const struct securid_token *t);
 int securid_pass_required(const struct securid_token *t);
 int securid_devid_required(const struct securid_token *t);
 
+void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
+void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
+int securid_rand(void *out, int len);
+
 #endif /* !__STOKEN_SECURID_H__ */

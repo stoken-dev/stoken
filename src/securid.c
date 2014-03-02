@@ -31,8 +31,7 @@
 
 #include "securid.h"
 
-static void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in,
-	uint8_t *out)
+void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
 	symmetric_key skey;
 	uint8_t tmp[AES_BLOCK_SIZE];
@@ -47,8 +46,7 @@ static void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in,
 	memcpy(out, tmp, AES_BLOCK_SIZE);
 }
 
-static void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in,
-	uint8_t *out)
+void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
 	symmetric_key skey;
 	uint8_t tmp[AES_BLOCK_SIZE];
@@ -61,7 +59,7 @@ static void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in,
 	memcpy(out, tmp, AES_BLOCK_SIZE);
 }
 
-static int securid_rand(void *out, int len)
+int securid_rand(void *out, int len)
 {
 	if (rng_get_bytes(out, len, NULL) != len)
 		return ERR_GENERAL;
