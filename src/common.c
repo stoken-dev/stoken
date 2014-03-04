@@ -278,25 +278,34 @@ char *parse_cmdline(int argc, char **argv, int is_gui)
 
 static int read_token_from_file(char *filename, struct securid_token *t)
 {
-	char buf[BUFLEN];
+	char buf[65536], *p;
 	int rc = ERR_BAD_LEN;
 	FILE *f;
+	ssize_t len;
 
 	f = fopen(filename, "r");
 	if (f == NULL)
 		return ERR_GENERAL;
 
-	while (fgets(buf, BUFLEN, f) != NULL) {
-		rc = __stoken_parse_and_decode_token(buf, t);
+	len = fread(buf, 1, sizeof(buf) - 1, f);
+	if (len < 0)
+		return ERR_GENERAL;
+	buf[len] = 0;
+
+	for (p = buf; *p; ) {
+		rc = __stoken_parse_and_decode_token(p, t);
 
 		/*
-		 * keep reading more lines until we find something that
+		 * keep checking more lines until we find something that
 		 * looks like a token
 		 */
-		if (rc == ERR_GENERAL)
-			continue;
-		else
+		if (rc != ERR_GENERAL)
 			break;
+
+		p = index(p, '\n');
+		if (!p)
+			break;
+		p++;
 	}
 
 	fclose(f);
