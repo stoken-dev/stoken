@@ -40,6 +40,9 @@ enum {
 	ERR_MISSING_PASSWORD,
 	ERR_DECRYPT_FAILED,
 	ERR_BAD_DEVID,
+	ERR_NO_MEMORY,
+	ERR_FILE_READ,
+	ERR_MULTIPLE_TOKENS,
 };
 
 static const char stoken_errstr[][32] = {
@@ -52,6 +55,9 @@ static const char stoken_errstr[][32] = {
 	"Missing required password",
 	"Seed decryption failed",
 	"Device ID mismatch",
+	"Out of memory",
+	"Cannot read file",
+	"Multiple tokens found in input",
 };
 
 #define NOT_GUI			0
