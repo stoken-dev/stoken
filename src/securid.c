@@ -290,6 +290,9 @@ int securid_decrypt_seed(struct securid_token *t, const char *pass,
 	uint16_t device_id_hash;
 	int rc;
 
+	if (t->sdtid)
+		return securid_decrypt_sdtid(t, pass);
+
 	if (t->flags & FL_PASSPROT && !pass)
 		return ERR_MISSING_PASSWORD;
 	if (t->flags & FL_SNPROT && !devid)

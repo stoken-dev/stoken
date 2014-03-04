@@ -77,6 +77,8 @@
 /* UNIX time_t for 2000/01/01 00:00:00 GMT */
 #define SECURID_EPOCH		946684800
 
+struct sdtid;
+
 struct securid_token {
 	int			version;
 	char			serial[SERIAL_CHARS + 1];
@@ -96,9 +98,16 @@ struct securid_token {
 	int			pinmode;
 	char			pin[MAX_PIN + 1];
 	char			*enc_pin_str;
+
+	struct sdtid		*sdtid;
 };
 
 int securid_decode_token(const char *in, struct securid_token *t);
+
+int securid_decode_sdtid(const char *in, struct securid_token *t);
+int securid_decrypt_sdtid(struct securid_token *t, const char *pass);
+void securid_free_sdtid(struct sdtid *s);
+
 int securid_decrypt_seed(struct securid_token *t, const char *pass,
 	const char *devid);
 void securid_compute_tokencode(struct securid_token *t, time_t now,
