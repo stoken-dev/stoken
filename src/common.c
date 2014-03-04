@@ -285,11 +285,11 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 
 	f = fopen(filename, "r");
 	if (f == NULL)
-		return ERR_GENERAL;
+		return ERR_FILE_READ;
 
 	len = fread(buf, 1, sizeof(buf) - 1, f);
 	if (len < 0)
-		return ERR_GENERAL;
+		return ERR_FILE_READ;
 	buf[len] = 0;
 
 	for (p = buf; *p; ) {
@@ -371,7 +371,9 @@ int common_init(char *cmd)
 		}
 		if (opt_file) {
 			rc = read_token_from_file(opt_file, t);
-			if (rc != ERR_NONE)
+			if (rc == ERR_MULTIPLE_TOKENS)
+				die("error: multiple tokens found; use 'stoken split' to create separate files\n");
+			else if (rc != ERR_NONE)
 				die("error: no valid token in file '%s': %s\n",
 				    opt_file, stoken_errstr[rc]);
 			current_token = t;
