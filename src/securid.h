@@ -129,6 +129,6 @@ int securid_devid_required(const struct securid_token *t);
 
 void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
 void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
-int securid_rand(void *out, int len);
+int securid_rand(void *out, int len, int paranoid);
 
 #endif /* !__STOKEN_SECURID_H__ */

@@ -21,13 +21,17 @@
 #include "config.h"
 
 #include <ctype.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <tomcrypt.h>
+#include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "securid.h"
 
@@ -59,10 +63,34 @@ void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 	memcpy(out, tmp, AES_BLOCK_SIZE);
 }
 
-int securid_rand(void *out, int len)
+int securid_rand(void *out, int len, int paranoid)
 {
-	if (rng_get_bytes(out, len, NULL) != len)
-		return ERR_GENERAL;
+	if (paranoid) {
+		/*
+		 * Use /dev/random for long lived key material but not for
+		 * test purposes.  This can block for a long time if entropy
+		 * is limited.
+		 */
+		int fd, ret;
+
+		fd = open("/dev/random", O_RDONLY);
+		if (fd < 0)
+			return ERR_GENERAL;
+
+		while (len) {
+			ret = read(fd, out, len);
+			if (ret < 0) {
+				close(fd);
+				return ERR_GENERAL;
+			}
+			out += ret;
+			len -= ret;
+		}
+		close(fd);
+	} else {
+		if (rng_get_bytes(out, len, NULL) != len)
+			return ERR_GENERAL;
+	}
 	return ERR_NONE;
 }
 
@@ -448,8 +476,8 @@ int securid_random_token(struct securid_token *t)
 
 	memset(t, 0, sizeof(*t));
 
-	if (securid_rand(t->dec_seed, AES_KEY_SIZE) ||
-	    securid_rand(randbytes, sizeof(randbytes)))
+	if (securid_rand(t->dec_seed, AES_KEY_SIZE, 0) ||
+	    securid_rand(randbytes, sizeof(randbytes), 0))
 		return ERR_GENERAL;
 
 	t->dec_seed_hash = securid_shortmac(t->dec_seed, AES_KEY_SIZE);
@@ -593,7 +621,7 @@ char *securid_encrypt_pin(const char *pin, const char *password)
 
 	securid_mac(password, strlen(password), passhash);
 
-	if (securid_rand(iv, AES_BLOCK_SIZE))
+	if (securid_rand(iv, AES_BLOCK_SIZE, 0))
 		return NULL;
 
 	for (i = 0; i < AES_BLOCK_SIZE; i++)
