@@ -288,6 +288,8 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 		return ERR_FILE_READ;
 
 	len = fread(buf, 1, sizeof(buf) - 1, f);
+	fclose(f);
+
 	if (len < 0)
 		return ERR_FILE_READ;
 	buf[len] = 0;
@@ -308,7 +310,6 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 		p++;
 	}
 
-	fclose(f);
 	return rc;
 }
 
