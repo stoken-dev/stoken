@@ -9,7 +9,7 @@ stoken \- software token for cryptographic authentication
 \fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP] [\fIopts\fB]
 .PP
 \fBstoken\fP \fBimport\fP
-{\fB\-\-file=\fIpath\fP|\fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
+{\fB\-\-file=\fIfile\fP|\fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
 [\fIopts\fB]
 .PP
 \fBstoken\fP \fBsetpin\fP [\fIopts\fB]
@@ -19,7 +19,10 @@ stoken \- software token for cryptographic authentication
 \fBstoken\fP \fBshow\fP [\fB\-\-seed\fP] [\fIopts\fB]
 .PP
 \fBstoken\fP \fBexport\fP
-[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP}] [\fIopts\fB]
+[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP|\fB\-\-sdtid\fP}]
+[\fIopts\fB]
+.PP
+\fBstoken\fP \fBissue\fP [\-\-\fBtemplate\fP=\fIfile\fP]
 .PP
 \fBstoken\fP \fBhelp\fP
 .PP
@@ -46,19 +49,27 @@ text file.
 .TP
 .B 29658\-21098\-45467\-64675\-65731\-01441\-11337...
 .PD
-Pure numeric (81-digit) strings, with or without dashes.  These may have
-been furnished as-is, or they could have been derived from an \fIsdtid\fP
-file by the RSA \fITokenConverter\fP program.
+Pure numeric (81-digit) "ctf" (compressed token format) strings, with or
+without dashes.  These may have been furnished as-is, or they could have
+been derived from an \fIsdtid\fP file by the RSA \fITokenConverter\fP program.
 .TP
 .B com.rsa.securid.iphone://ctf?ctfData=229639330774927764401...
 iPhone-compatible token strings.
 .TP
 .B http://127.0.0.1/securid/ctf?ctfData=250494932146245277466...
 Android-compatible token strings.
+.TP
+.B <?xml version=...
+RSA \fIsdtid\fP-formatted XML files.  These should be imported from a file:
+\fBstoken import \-\-file=FILE.SDTID\fP.
 .PD
 .PP
 The device ID, if used, can be viewed in the "about" menu for the RSA soft
-token app on the phone.
+token app on the phone.  Numeric ctf strings and smartphone tokens bound
+to a device ID contain a seed that is encrypted using the device ID, so the
+ID must be furnished before stoken can successfully import the token.
+\fIsdtid\fP files can be imported without knowledge of the device ID, as
+long as the password (if any) is known.
 .PP
 By default, \fBstoken import\fP will refuse to overwrite an existing token in
 \fI~/.stokenrc\fP.  The \fB\-\-force\fP switch overrides this check.
@@ -99,11 +110,16 @@ data, as they can be used to derive tokencodes).
 .PP
 \fBstoken export\fP translates the current token into a format suitable
 for importation to another device.
+.PP
+\fBstoken issue\fP generates a new software token in XML \fIsdtid\fP
+format.  Experimental.
 .SH "GLOBAL OPTIONS"
 .TP
 \fB\-\-rcfile=\fIfile\fP
-Use an alternate \fI.stokenrc\fP file.  This is typically used to support
-multiple tokens on the same user account.
+Use an alternate \fI.stokenrc\fP configuration file.  This is typically
+used to support multiple tokens on the same user's UNIX account.  Note that
+the \fI.stokenrc\fP file stores additional data (such as the PIN), so it
+cannot be parsed as a "raw" token string by \fBstoken \-\-file\fP.
 .TP
 \fB\-\-password=\fIpassword\fP, \fB\-p\fP \fIpassword\fP
 Use a password supplied from the command line, instead of prompting the user.
@@ -119,7 +135,8 @@ activating a new soft token for the first time.
 \fB\-\-new\-password=\fIpassword\fP
 Supply the encryption password from the command line for operations that
 write out a token string or \fI.stokenrc\fP file: \fBimport\fP, \fBexport\fP,
-and \fBsetpass\fP.  See notes in \fBSECURITY CONSIDERATIONS\fP below.
+\fBsetpass\fP, and \fBissue\fP.  See notes in \fBSECURITY CONSIDERATIONS\fP
+below.
 .TP
 \fB\-\-keep\-password\fP
 If the token in the \fI.stokenrc\fP file is protected with a password, retain
@@ -133,13 +150,26 @@ Supply a new PIN from the command line for the \fBsetpin\fP operation.
 See notes in \fBSECURITY CONSIDERATIONS\fP below.
 .TP
 \fB\-\-new\-devid=\fIdevid\fP
-Used with the \fBexport\fP command to encrypt the new token with a specific
-device ID.  This is only used for testing purposes.
+Used with the \fBexport\fP or \fBissue\fP command to encrypt the new token
+with a specific device ID.  This is only used for testing purposes.
 .TP
 \fB\-\-blocks\fP, \fB\-\-iphone\fP, \fB\-\-android\fP
 Used with the \fBexport\fP command to select the output format.  See examples
 in \fBBASIC USAGE\fP.  By default, the \fBexport\fP command will print an
 unformatted 81-digit string to standard output.
+.TP
+\fB\-\-sdtid\fP, \fB\-\-xml\fP
+These options are synonyms.  Both export a token to standard output in
+RSA's \fIsdtid\fP XML format.
+.TP
+\fB\-\-template=\fIfile\fP
+Used with the \fBexport\fP or \fBissue\fP commands to override fields in
+the XML output.  The template file should look like any standard \fIsdtid\fP
+file, but all fields are optional and will default to reasonably sane
+values if omitted.  This can be used to force the output XML to use a
+specific serial number, user name, expiration date, etc.  Correct MAC
+checksums will be (re)computed on the provided values.  See the
+\fIexamples\fP directory in the source distribution for more information.
 .TP
 \fB\-\-use\-time=\fP{\fIunix_time\fP|\fB+\fIoffset\fP|\fB-\fIoffset\fP}
 Instead of generating a tokencode based on the current time of day,
@@ -163,8 +193,9 @@ Abort with an error exit code if any user input is required.  Intended for
 automated operation and testing.
 .TP
 \fB\-\-file=\fIfile\fP
-Use a token from \fIfile\fP instead of the \fI.stokenrc\fP file.  Most
-\fBstoken\fP commands accept this flag, but it is expected that the typical
+Read a ctf string, an Android/iPhone URI, or an XML \fIsdtid\fP token from
+\fIfile\fP instead of the \fI.stokenrc\fP configuration.  Most \fBstoken\fP
+commands accept this flag, but it is expected that the typical
 user will save his token in \fI~/.stokenrc\fP instead of supplying it by
 hand on every invocation.  Typically \fB\-\-file\fP and \fB\-\-token\fP
 are only used for the \fBimport\fP command.
@@ -211,7 +242,7 @@ also be cached in shell history files.
 .PP
 \fBstoken\fP attempts to lock pages to prevent swapping out to disk, but
 does not scrub secrets from process memory.
-.SH "NON-INTERACTIVE USE"
+.SH "NON\-INTERACTIVE USE"
 .PP
 Other applications, such as VPN clients, may want to invoke \fBstoken\fP
 non-interactively to generate single-use passwords.  Three usage modes are
@@ -241,6 +272,17 @@ output.
 Similar to above, but set an empty password using \fBsetpass\fP, do not
 save the PIN in \fI~/.stokenrc\fP, and pass the PIN to \fBstoken \-\-stdin\fP
 via standard input.
+.SH "BUGS/TODO"
+.PP
+\fIsdtid\fP support is very rough and may choke on unexpected input.
+As a short\-term workaround you can try commenting out the
+sanity checks in \fBsdtid_decrypt()\fP to see if the problem goes away.
+.PP
+Features under development include: 30\-second tokens, v3 ctf strings,
+hardware token seeds (and the \fBstoken split\fP command needed to work with
+them), and support for non-Linux hosts.
+.PP
+Patches are always welcome.
 .SH "SEE ALSO"
 .PP
 \fBstoken\-gui\fP(1).
