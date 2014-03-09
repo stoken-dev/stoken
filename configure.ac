@@ -39,23 +39,25 @@ fi
 
 EXTRA_PC_LIBS=""
 
-# extra gcc flags (warnings and such)
-
-if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall"
-fi
-
-AC_MSG_CHECKING([for -Wno-pointer-sign])
-saved_CFLAGS="$CFLAGS"
-ptrsign=yes
-CFLAGS="$CFLAGS -Wno-pointer-sign"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])], [], ptrsign=no)
-if test $ptrsign = no; then
-	CFLAGS="$saved_CFLAGS"
-	AC_MSG_RESULT([no])
-else
-	AC_MSG_RESULT([yes])
-fi
+AS_COMPILER_FLAGS(WFLAGS,
+        "-Wall
+         -Wextra
+         -Wno-missing-field-initializers
+         -Wno-sign-compare
+         -Wno-pointer-sign
+         -Wno-unused-parameter
+         -Werror=pointer-to-int-cast
+         -Wdeclaration-after-statement
+         -Werror-implicit-function-declaration
+         -Wformat-nonliteral
+         -Wformat-security
+         -Winit-self
+         -Wno-missing-declarations
+         -Wmissing-include-dirs
+         -Wnested-externs
+         -Wpointer-arith
+         -Wwrite-strings")
+AC_SUBST(WFLAGS, [$WFLAGS])
 
 # mlockall() is missing on Bionic (Android)
 AC_CHECK_FUNCS(mlockall)

@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS	= foreign subdir-objects
 
 AM_CPPFLAGS		= -DDATA_DIR=\"$(datadir)\"
-AM_CFLAGS		= $(TOMCRYPT_CFLAGS) $(LIBXML2_CFLAGS)
+AM_CFLAGS		= $(TOMCRYPT_CFLAGS) $(LIBXML2_CFLAGS) $(WFLAGS)
 
 dist_man_MANS		= stoken.1
 
