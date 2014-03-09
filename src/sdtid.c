@@ -463,7 +463,7 @@ static void decrypt_secret(uint8_t *result, const uint8_t *enc_bin,
 }
 
 static void decrypt_seed(uint8_t *result, const uint8_t *enc_bin,
-			   const char *str0, const uint8_t *key)
+			 const char *str0, const uint8_t *key)
 {
 	memset(result, 0, AES_BLOCK_SIZE);
 	strncpy(&result[0], str0, 8);
@@ -575,6 +575,7 @@ static void format_date(long in, char *out, int max_len)
 	time_t t;
 	struct tm tm;
 
+	/* negative time = relative to NOW */
 	if (in >= 0)
 		t = SECURID_EPOCH + (in * 24*60*60);
 	else
