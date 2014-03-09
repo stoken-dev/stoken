@@ -38,11 +38,11 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_seed;
+	opt_seed, opt_sdtid;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
-     *opt_new_pin;
+     *opt_new_pin, *opt_template;
 struct securid_token *current_token;
 
 static int debug_level;
@@ -126,6 +126,7 @@ enum {
 	OPT_NEW_PASSWORD,
 	OPT_NEW_DEVID,
 	OPT_NEW_PIN,
+	OPT_TEMPLATE,
 };
 
 static const struct option long_opts[] = {
@@ -156,10 +157,13 @@ static const struct option long_opts[] = {
 	{ "new-password",   1, NULL,                    OPT_NEW_PASSWORD  },
 	{ "new-devid",      1, NULL,                    OPT_NEW_DEVID     },
 	{ "new-pin",        1, NULL,                    OPT_NEW_PIN       },
+	{ "template",       1, NULL,                    OPT_TEMPLATE      },
 	{ "keep-password",  0, &opt_keep_password,      1                 },
 	{ "blocks",         0, &opt_blocks,             1                 },
 	{ "iphone",         0, &opt_iphone,             1                 },
 	{ "android",        0, &opt_android,            1                 },
+	{ "sdtid",          0, &opt_sdtid,              1                 },
+	{ "xml",            0, &opt_sdtid,              1                 },
 	{ "seed",           0, &opt_seed,               1                 },
 	{ "stdin",          0, NULL,                    's'               },
 	{ NULL,             0, NULL,                    0                 },
@@ -199,7 +203,8 @@ static void usage_cli(void)
 	puts("Other commands:");
 	puts("");
 	puts("  stoken show [ --seed ]");
-	puts("  stoken export [ { --blocks | --iphone | --android } ]");
+	puts("  stoken export [ { --blocks | --iphone | --android | --sdtid } ]");
+	puts("  stoken issue [ --file=<token_file> ]");
 	puts("");
 	usage_common();
 	exit(1);
@@ -251,6 +256,7 @@ char *parse_cmdline(int argc, char **argv, int is_gui)
 		case OPT_NEW_PASSWORD: opt_new_password = optarg; break;
 		case OPT_NEW_DEVID: opt_new_devid = optarg; break;
 		case OPT_NEW_PIN: opt_new_pin = optarg; break;
+		case OPT_TEMPLATE: opt_template = optarg; break;
 		case 0: break;
 		default: opt_help = 1;
 		}

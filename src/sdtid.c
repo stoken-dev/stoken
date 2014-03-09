@@ -592,6 +592,17 @@ int securid_decode_sdtid(const char *in, struct securid_token *t)
 	return decode_one(in, t, -1);
 }
 
+int securid_issue_sdtid(const char *filename, const char *pass)
+{
+	return ERR_GENERAL;
+}
+
+int securid_export_sdtid(const char *filename, struct securid_token *t,
+			 const char *pass, const char *devid)
+{
+	return ERR_GENERAL;
+}
+
 void securid_free_sdtid(struct sdtid *s)
 {
 	if (!s)

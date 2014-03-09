@@ -352,9 +352,22 @@ int main(int argc, char **argv)
 		else if (!opt_keep_password)
 			pass = NULL;
 
-		t->is_smartphone = opt_iphone || opt_android;
-		securid_encode_token(t, pass, opt_new_devid, buf);
-		print_formatted(buf);
+		if (!opt_sdtid) {
+			t->is_smartphone = opt_iphone || opt_android;
+			securid_encode_token(t, pass, opt_new_devid, buf);
+			print_formatted(buf);
+		} else {
+			rc = securid_export_sdtid(opt_template, t,
+						  pass, opt_new_devid);
+			if (rc != ERR_NONE)
+				die("export: error writing sdtid: %s\n",
+				    stoken_errstr[rc]);
+		}
+	} else if (!strcmp(cmd, "issue")) {
+		rc = securid_issue_sdtid(opt_template, opt_new_password);
+		if (rc != ERR_NONE)
+			die("issue: error generating sdtid: %s\n",
+			    stoken_errstr[rc]);
 	} else if (!strcmp(cmd, "show")) {
 		unlock_token(t, 0, NULL);
 		securid_token_info(t, &print_token_info_line);
