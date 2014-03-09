@@ -538,7 +538,7 @@ err:
 	return ERR_GENERAL;
 }
 
-static int parse_sdtid(const char *in, struct sdtid *s, int which)
+static int parse_sdtid(const char *in, struct sdtid *s, int which, int strict)
 {
 	xmlNode *batch, *node;
 	int ret = ERR_GENERAL, idx = 0;
@@ -565,7 +565,7 @@ static int parse_sdtid(const char *in, struct sdtid *s, int which)
 		}
 	}
 
-	if (!s->header_node || !s->tkn_node || !s->trailer_node)
+	if (strict && (!s->header_node || !s->tkn_node || !s->trailer_node))
 		goto err;
 
 	return ERR_NONE;
@@ -584,7 +584,7 @@ static int decode_one(const char *in, struct securid_token *t, int which)
 	if (!s)
 		return ERR_NO_MEMORY;
 
-	ret = parse_sdtid(in, s, which);
+	ret = parse_sdtid(in, s, which, 1);
 	if (ret) {
 		free(s);
 		return ret;
