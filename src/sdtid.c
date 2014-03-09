@@ -19,6 +19,7 @@
  */
 
 #define _GNU_SOURCE
+#define _POSIX_SOURCE
 
 #include <stdint.h>
 #include <stdio.h>
@@ -59,6 +60,87 @@ static const uint8_t token_mac_iv[] =
 static const uint8_t token_enc_iv[] =
 		{ 0x16, 0xa0, 0x9e, 0x66, 0x7f, 0x3b, 0xcc, 0x90,
 		  0x8b, 0x2f, 0xb1, 0x36, 0x6e, 0xa9, 0x57, 0xd3 };
+
+struct sec_contents {
+	const char		*name;
+	const char		*value;
+};
+
+static const struct sec_contents header_fields[] = {
+	{ "Version", "0" },
+	{ "Origin", "N/A" },
+	{ "Dest", "N/A" },
+	{ "Name", "N/A" },
+	{ "FirstToken", "N/A" },
+	{ "LastToken", "N/A" },
+	{ "NumTokens", "0" },
+	{ "Secret", " " },
+	{ "DefBirth", "2000/01/01" },
+	{ "DefDeath", " " },
+	{ "DefDigits", "8" },
+	{ "DefInterval", "60" },
+	{ "DefAlg", "1" },
+	{ "DefMode", "0" },
+	{ "DefPrecision", "2400" },
+	{ "DefSmallWin", "630" },
+	{ "DefMediumWin", "4320" },
+	{ "DefLargeWin", "4320" },
+	{ "DefAddPIN", "1" },
+	{ "DefLocalPIN", "0" },
+	{ "DefCopyProtection", "1" },
+	{ "DefPinType", "0" },
+	{ "DefKeypad", "1" },
+	{ "DefProtLevel", "0" },
+	{ "DefRevision", "0" },
+	{ "DefTimeDerivedSeeds", "1" },
+	{ "DefAppDerivedSeeds", "0" },
+	{ "DefFormFactor", "20000001" },
+	{ NULL, NULL },
+};
+
+static const struct sec_contents tkn_fields[] = {
+	{ "SN", " " },
+	{ "Seed", " " },
+	{ "UserFirstName", " " },
+	{ "UserLastName", " " },
+	{ "UserLogin", " " },
+
+	/* these are usually specified in the header instead */
+	{ "Birth", NULL },
+	{ "Death", NULL },
+	{ "Digits", NULL },
+	{ "Interval", NULL },
+	{ "Alg", NULL },
+	{ "Mode", NULL },
+	{ "Precision", NULL },
+	{ "SmallWin", NULL },
+	{ "MediumWin", NULL },
+	{ "LargeWin", NULL },
+	{ "AddPIN", NULL },
+	{ "LocalPIN", NULL },
+	{ "CopyProtection", NULL },
+	{ "PinType", NULL },
+	{ "Keypad", NULL },
+	{ "ProtLevel", NULL },
+	{ "Revision", NULL },
+	{ "TimeDerivedSeeds", NULL },
+	{ "AppDerivedSeeds", NULL },
+	{ "FormFactor", NULL },
+
+	{ NULL, NULL },
+};
+
+static const struct sec_contents tkn_attr_fields[] = {
+	{ "DeviceSerialNumber", " " },
+	{ "Nickname", " " },
+	{ NULL, NULL },
+};
+
+static const struct sec_contents trailer_fields[] = {
+	{ "BatchSignature", " " },
+	{ "BatchCertificate", " " },
+	{ NULL, NULL },
+};
 
 /************************************************************************
  * XML utility functions
@@ -127,14 +209,17 @@ static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
 {
 	/* this matches src/misc/base64/base64_encode.c in tomcrypt */
 	unsigned long enclen = 4 * ((len + 2) / 3) + 1;
-	char *out = malloc(enclen);
+	char *out = malloc(enclen + 1);
 	int ret;
 
 	if (!out)
 		return ERR_NO_MEMORY;
 
-	base64_encode(data, len, out, &enclen);
-	ret = replace_string(s, node, name, out);
+	/* the first character of <Seed> will be ignored by the reader */
+	*out = '=';
+	base64_encode(data, len, out + 1, &enclen);
+	ret = replace_string(s, node, name,
+			     !strcmp(name, "Seed") ? out : out + 1);
 
 	free(out);
 	return ret;
@@ -225,8 +310,9 @@ static int lookup_b64(struct sdtid *s, const char *name, uint8_t *out,
 	if (!data)
 		return -1;
 
-	/* sometimes the encoded value has a bogus '=' at the beginning */
-	for (p = data; *p == '='; )
+	/* <Seed> has a bogus character at the start of the string */
+	p = data;
+	if (*p && !strcmp(name, "Seed"))
 		p++;
 
 	len = base64_decode(p, strlen(p), out, &actual) == CRYPT_OK ?
@@ -483,6 +569,20 @@ static uint16_t parse_date(const char *in)
 	return (mktime(&tm) - SECURID_EPOCH) / (24*60*60);
 }
 
+static void format_date(long in, char *out, int max_len)
+{
+	time_t t;
+	struct tm tm;
+
+	if (in >= 0)
+		t = SECURID_EPOCH + (in * 24*60*60);
+	else
+		t = time(NULL) - in;
+
+	gmtime_r(&t, &tm);
+	strftime(out, max_len, "%Y/%m/%d", &tm);
+}
+
 static int decode_fields(struct securid_token *t)
 {
 	struct sdtid *s = t->sdtid;
@@ -609,15 +709,301 @@ int securid_decode_sdtid(const char *in, struct securid_token *t)
 	return decode_one(in, t, -1);
 }
 
+static int read_template_file(const char *filename, struct sdtid *s)
+{
+	ssize_t len;
+	char buf[65536];
+	FILE *f;
+
+	f = fopen(filename, "r");
+	if (f == NULL)
+		return ERR_FILE_READ;
+	len = fread(buf, 1, sizeof(buf) - 1, f);
+	fclose(f);
+
+	if (len < 0)
+		return ERR_FILE_READ;
+	buf[len] = 0;
+
+	if (parse_sdtid(buf, s, -1, 0) != ERR_NONE)
+		return ERR_GENERAL;
+	return ERR_NONE;
+}
+
+static xmlNode *fill_section(xmlNode *parent, const char *name,
+			     const struct sec_contents *pairs,
+			     struct sdtid *tpl)
+{
+	xmlNode *section;
+
+	section = xmlNewNode(NULL, XCAST(name));
+	if (!section)
+		return NULL;
+	if (!xmlAddChild(parent, section))
+		return NULL;
+
+	for (; pairs->name; pairs++) {
+		const char *value = pairs->value;
+
+		if (tpl) {
+			char *str;
+			str = __lookup_common(tpl,
+					      xmlDocGetRootElement(tpl->doc),
+					      pairs->name);
+			if (str)
+				value = str;
+		}
+
+		if (!value)
+			continue;
+		if (xmlNewTextChild(section, NULL, XCAST(pairs->name),
+				    XCAST(value)) == NULL)
+			return NULL;
+	}
+	return section;
+}
+
+static struct sdtid *new_sdtid(struct sdtid *tpl)
+{
+	struct sdtid *s;
+	xmlNode *batch, *attr;
+
+	s = calloc(1, sizeof(*s));
+	if (!s)
+		goto bad;
+
+	s->doc = xmlNewDoc(XCAST("1.0"));
+	if (!s->doc)
+		goto bad;
+
+	batch = xmlNewNode(NULL, XCAST("TKNBatch"));
+	if (!batch)
+		goto bad;
+	xmlDocSetRootElement(s->doc, batch);
+
+	s->header_node = fill_section(batch, "TKNHeader", header_fields, tpl);
+	s->tkn_node = fill_section(batch, "TKN", tkn_fields, tpl);
+	s->trailer_node = fill_section(batch, "TKNTrailer", trailer_fields, tpl);
+	attr = fill_section(s->tkn_node, "TokenAttributes", tkn_attr_fields, tpl);
+
+	if (!s->header_node || !s->tkn_node || !s->trailer_node || !attr)
+		goto bad;
+
+	return s;
+
+bad:
+	securid_free_sdtid(s);
+	return NULL;
+}
+
+static int clone_from_template(const char *filename, struct sdtid **tpl,
+			       struct sdtid **dst)
+{
+	int ret;
+
+	*tpl = *dst = NULL;
+
+	/* note that filename is OPTIONAL */
+	if (filename) {
+		*tpl = calloc(1, sizeof(**tpl));
+		if (!*tpl)
+			return ERR_NO_MEMORY;
+
+		ret = read_template_file(filename, *tpl);
+		if (ret != ERR_NONE)
+			goto out;
+	}
+
+	*dst = new_sdtid(*tpl);
+	if (*dst)
+		return ERR_NONE;
+
+	ret = ERR_NO_MEMORY;
+
+out:
+	securid_free_sdtid(*tpl);
+	securid_free_sdtid(*dst);
+	return ret;
+}
+
+static int overwrite_secret(struct sdtid *s, xmlNode *node, const char *name,
+			    int paranoid)
+{
+	uint8_t data[AES_BLOCK_SIZE];
+	int ret;
+
+	ret = securid_rand(data, sizeof(data), paranoid);
+	if (ret != ERR_NONE) {
+		s->error = ret;
+		return ret;
+	}
+
+	return replace_b64(s, node, name, data, sizeof(data));
+}
+
+static int recompute_macs(struct sdtid *s)
+{
+	uint8_t mac[AES_BLOCK_SIZE];
+
+	if (hash_section(s, s->header_node, mac, s->batch_mac_key, batch_mac_iv) ||
+	    replace_b64(s, s->header_node, "HeaderMAC", mac, sizeof(mac)) ||
+	    hash_section(s, s->tkn_node, mac, s->token_mac_key, token_mac_iv) ||
+	    replace_b64(s, s->tkn_node, "TokenMAC", mac, sizeof(mac))) {
+		s->error = ERR_GENERAL;
+		return ERR_GENERAL;
+	}
+
+	return ERR_NONE;
+}
+
+static void check_and_store_int(struct sdtid *s, struct sdtid *tpl,
+				const char *name, int val)
+{
+	char *tmp, str[32];
+	if (node_present(tpl, name))
+		return;
+
+	if (asprintf(&tmp, "Def%s", name) < 0) {
+		s->error = ERR_NO_MEMORY;
+		return;
+	}
+	snprintf(str, sizeof(str), "%d", val);
+	replace_string(s, s->header_node, tmp, str);
+	free(tmp);
+}
+
+static int generate_sn(char *str)
+{
+	uint8_t data[6];
+	int i;
+
+	if (securid_rand(data, sizeof(data), 0) != ERR_NONE)
+		return ERR_GENERAL;
+	for (i = 0; i < 6; i++)
+		sprintf(&str[i*2], "%02d", data[i] % 100);
+	return ERR_NONE;
+}
+
 int securid_issue_sdtid(const char *filename, const char *pass)
 {
-	return ERR_GENERAL;
+	struct sdtid *s = NULL, *tpl = NULL;
+	int ret = ERR_GENERAL;
+	uint8_t dec_seed[AES_KEY_SIZE], enc_seed[AES_KEY_SIZE];
+	char str[32];
+
+	if (clone_from_template(filename, &tpl, &s) ||
+	    overwrite_secret(s, s->header_node, "Secret", 1) ||
+	    securid_rand(dec_seed, sizeof(dec_seed), 1))
+		goto out;
+
+	if (!node_present(tpl, "SN")) {
+		if (generate_sn(str) != ERR_NONE)
+			goto out;
+		replace_string(s, s->tkn_node, "SN", str);
+	}
+
+	ret = generate_all_keys(s, pass);
+	if (ret != ERR_NONE || s->error != ERR_NONE)
+		goto out;
+
+	decrypt_seed(enc_seed, dec_seed, s->sn, s->token_enc_key);
+	replace_b64(s, s->tkn_node, "Seed", enc_seed, sizeof(enc_seed));
+
+	if (!node_present(tpl, "Birth")) {
+		format_date(-1, str, 32);
+		replace_string(s, s->header_node, "DefBirth", str);
+	}
+
+	if (!node_present(tpl, "Death")) {
+		/* if unspecified, use (today + 5 years) */
+		format_date(-5*365*24*60*60, str, 32);
+		replace_string(s, s->header_node, "DefDeath", str);
+	}
+
+	recompute_macs(s);
+
+	if (s->error != ERR_NONE)
+		goto out;
+
+	xmlDocFormatDump(stdout, s->doc, 1);
+	ret = ERR_NONE;
+
+out:
+	securid_free_sdtid(tpl);
+	securid_free_sdtid(s);
+	memset(dec_seed, 0, sizeof(dec_seed));
+	return ret;
 }
 
 int securid_export_sdtid(const char *filename, struct securid_token *t,
 			 const char *pass, const char *devid)
 {
-	return ERR_GENERAL;
+	struct sdtid *s = NULL, *tpl = NULL;
+	int ret;
+	uint8_t dec_seed[AES_KEY_SIZE], enc_seed[AES_KEY_SIZE];
+
+	ret = clone_from_template(filename, &tpl, &s);
+	if (ret != ERR_NONE)
+		return ret;
+
+	if (!node_present(tpl, "Secret"))
+		overwrite_secret(s, s->header_node, "Secret", 0);
+
+	/* this section should largely mirror decode_fields() */
+
+	if (!node_present(tpl, "SN"))
+		replace_string(s, s->tkn_node, "SN", t->serial);
+
+	check_and_store_int(s, tpl, "TimeDerivedSeeds",
+			    !!(t->flags & FL_TIMESEEDS));
+	check_and_store_int(s, tpl, "AppDerivedSeeds",
+			    !!(t->flags & FL_APPSEEDS));
+	check_and_store_int(s, tpl, "Mode", !!(t->flags & FL_FEAT4));
+	check_and_store_int(s, tpl, "Alg", !!(t->flags & FL_128BIT));
+	check_and_store_int(s, tpl, "AddPIN",
+			    !!(t->flags >> (FLD_PINMODE_SHIFT + 1)));
+	check_and_store_int(s, tpl, "LocalPIN",
+			    !!(t->flags >> (FLD_PINMODE_SHIFT + 0)));
+	check_and_store_int(s, tpl, "Digits", 1 +
+			    ((t->flags & FLD_DIGIT_MASK) >> FLD_DIGIT_SHIFT));
+	check_and_store_int(s, tpl, "Interval",
+			    t->flags & FLD_NUMSECONDS_MASK ? 60 : 30);
+
+	if (!node_present(tpl, "Death")) {
+		char str[32];
+		format_date(t->exp_date, str, 32);
+		replace_string(s, s->header_node, "DefDeath", str);
+	}
+
+	ret = generate_all_keys(s, pass);
+	if (ret != ERR_NONE || s->error != ERR_NONE)
+		goto out;
+
+	/* special case: this is an unencrypted seed in base64 format */
+	if (node_present(tpl, "Seed")) {
+		if (lookup_b64(tpl, "Seed", dec_seed, AES_KEY_SIZE)) {
+			ret = ERR_GENERAL;
+			goto out;
+		}
+	} else {
+		memcpy(dec_seed, t->dec_seed, AES_KEY_SIZE);
+	}
+
+	decrypt_seed(enc_seed, dec_seed, s->sn, s->token_enc_key);
+	replace_b64(s, s->tkn_node, "Seed", enc_seed, sizeof(enc_seed));
+
+	recompute_macs(s);
+
+	if (s->error != ERR_NONE)
+		goto out;
+
+	xmlDocFormatDump(stdout, s->doc, 1);
+	ret = ERR_NONE;
+
+out:
+	securid_free_sdtid(tpl);
+	securid_free_sdtid(s);
+	return ret;
 }
 
 void securid_free_sdtid(struct sdtid *s)
@@ -626,5 +1012,6 @@ void securid_free_sdtid(struct sdtid *s)
 		return;
 	free(s->sn);
 	xmlFreeDoc(s->doc);
+	memset(s, 0, sizeof(*s));
 	free(s);
 }
