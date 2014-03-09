@@ -164,8 +164,8 @@ static int parse_rcline(struct stoken_cfg *cfg, int linenum, char *line,
 	return ERR_NONE;
 }
 
-static int fopen_rcfile(const char *override, char *mode, warn_fn_t warn_fn,
-	FILE **f)
+static int fopen_rcfile(const char *override, const char *mode,
+	warn_fn_t warn_fn, FILE **f)
 {
 	char *homedir;
 	const char *file = override;
