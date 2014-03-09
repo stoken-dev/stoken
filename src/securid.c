@@ -20,8 +20,6 @@
 
 #include "config.h"
 
-#define _POSIX_SOURCE
-
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdint.h>

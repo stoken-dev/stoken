@@ -5,6 +5,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_LIBTOOL
+AC_GNU_SOURCE
 
 # Upstream's pkg.m4 (since 0.27) offers this now, but define our own
 # compatible version in case the local version of pkgconfig isn't new enough.
@@ -57,6 +58,9 @@ fi
 
 # mlockall() is missing on Bionic (Android)
 AC_CHECK_FUNCS(mlockall)
+
+# TODO: see if compatibility functions are needed to build on Darwin
+AC_CHECK_FUNCS(strcasestr asprintf)
 
 # gtk / stoken-gui
 
