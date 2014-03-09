@@ -34,6 +34,9 @@
  *
  *   # generate tokencode from a token string provided on the command line
  *   ./libstoken-test 252503079680743142131101346153112272336172670304467711744173124152503452716757206
+ *
+ *   # generate tokencode from an sdtid XML file
+ *   ./libstoken-test "`cat foo.sdtid`"
  */
 
 #include <signal.h>
@@ -133,7 +136,7 @@ int main(int argc, char **argv)
 
 	if (argc >= 2) {
 		char *s = argv[1];
-		if (*s == '1' || *s == '2') {
+		if (*s == '1' || *s == '2' || *s == '<') {
 			rc = stoken_import_string(ctx, s);
 			if (rc)
 				die("stoken_import_string returned %d\n", rc);
