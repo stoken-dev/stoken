@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "common.h"
+#include "stoken-internal.h"
 
 #define AES_BLOCK_SIZE		16
 #define AES_KEY_SIZE		16

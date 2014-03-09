@@ -19,11 +19,6 @@
  */
 
 #include "config.h"
-#include "common.h"
-#include "securid.h"
-#include "sdtid.h"
-#include "stoken.h"
-#include "stoken-internal.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -31,6 +26,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include "securid.h"
+#include "sdtid.h"
+#include "stoken-internal.h"
 
 struct stoken_ctx {
 	struct securid_token	*t;

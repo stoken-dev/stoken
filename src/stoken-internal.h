@@ -21,13 +21,34 @@
 #ifndef __STOKEN_INTERNAL_H__
 #define __STOKEN_INTERNAL_H__
 
-#include "securid.h"
 #include "stoken.h"
+
+#define BUFLEN			256
+#define RC_NAME			".stokenrc"
+#define RC_VER			1
 
 struct stoken_cfg {
 	char			*rc_ver;
 	char			*rc_token;
 	char			*rc_pin;
+};
+
+struct securid_token;
+
+/* keep this in sync with stoken_errstr */
+enum {
+	ERR_NONE = 0,
+	ERR_GENERAL,
+	ERR_BAD_LEN,
+	ERR_TOKEN_VERSION,
+	ERR_CHECKSUM_FAILED,
+	ERR_BAD_PASSWORD,
+	ERR_MISSING_PASSWORD,
+	ERR_DECRYPT_FAILED,
+	ERR_BAD_DEVID,
+	ERR_NO_MEMORY,
+	ERR_FILE_READ,
+	ERR_MULTIPLE_TOKENS,
 };
 
 typedef void (warn_fn_t)(const char *, ...);

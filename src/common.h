@@ -26,24 +26,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 
-#define BUFLEN			256
-#define RC_NAME			".stokenrc"
-#define RC_VER			1
-
-enum {
-	ERR_NONE = 0,
-	ERR_GENERAL,
-	ERR_BAD_LEN,
-	ERR_TOKEN_VERSION,
-	ERR_CHECKSUM_FAILED,
-	ERR_BAD_PASSWORD,
-	ERR_MISSING_PASSWORD,
-	ERR_DECRYPT_FAILED,
-	ERR_BAD_DEVID,
-	ERR_NO_MEMORY,
-	ERR_FILE_READ,
-	ERR_MULTIPLE_TOKENS,
-};
+#include "stoken-internal.h"
 
 static const char stoken_errstr[][32] = {
 	"Success",

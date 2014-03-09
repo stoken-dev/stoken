@@ -34,6 +34,7 @@
 #include "common.h"
 #include "securid.h"
 #include "sdtid.h"
+#include "stoken-internal.h"
 
 static void print_token_info_line(const char *key, const char *value)
 {

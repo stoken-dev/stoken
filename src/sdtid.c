@@ -32,9 +32,9 @@
 #include <libxml/tree.h>
 #include <tomcrypt.h>
 
-#include "common.h"
 #include "securid.h"
 #include "sdtid.h"
+#include "stoken-internal.h"
 
 struct sdtid {
 	xmlDoc			*doc;
