@@ -40,6 +40,11 @@ struct sdtid {
 	xmlNode			*tkn_node;
 	xmlNode			*trailer_node;
 	int			error;
+
+	char			*sn;
+	uint8_t			batch_mac_key[AES_KEY_SIZE];
+	uint8_t			token_mac_key[AES_KEY_SIZE];
+	uint8_t			token_enc_key[AES_KEY_SIZE];
 };
 
 static const uint8_t batch_mac_iv[] =
@@ -391,6 +396,39 @@ static void calc_key(uint8_t *result, const char *str0, const char *str1,
 	cbc_hash(result, key, iv, buf, sizeof(buf));
 }
 
+static int generate_all_keys(struct sdtid *s, const char *pass)
+{
+	uint8_t secret[AES_BLOCK_SIZE], key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
+
+	char *origin = NULL, *dest = NULL, *name = NULL;
+	int ret = ERR_GENERAL;
+
+	origin = lookup_string(s, "Origin", NULL);
+	dest = lookup_string(s, "Dest", NULL);
+	name = lookup_string(s, "Name", NULL);
+
+	free(s->sn);
+	s->sn = lookup_string(s, "SN", NULL);
+
+	if (!origin || !dest || !name || !s->sn ||
+	    lookup_b64(s, "Secret", secret, AES_KEY_SIZE))
+		goto err;
+
+	hash_password(key0, pass ? pass : origin, dest, name);
+	decrypt_secret(key1, secret, name, key0);
+
+	calc_key(s->batch_mac_key, "BatchMAC", name, key1, batch_mac_iv);
+	calc_key(s->token_mac_key, "TokenMAC", s->sn, key1, token_mac_iv);
+	calc_key(s->token_enc_key, "TokenEncrypt", s->sn, key1, token_enc_iv);
+	ret = ERR_NONE;
+
+err:
+	free(origin);
+	free(dest);
+	free(name);
+	return s->error ? : ret;
+}
+
 /************************************************************************
  * Public functions
  ************************************************************************/
@@ -398,56 +436,35 @@ static void calc_key(uint8_t *result, const char *str0, const char *str1,
 int securid_decrypt_sdtid(struct securid_token *t, const char *pass)
 {
 	struct sdtid *s = t->sdtid;
+	uint8_t good_mac[AES_BLOCK_SIZE], mac[AES_BLOCK_SIZE];
+	int ret;
 
-	uint8_t secret[AES_BLOCK_SIZE],
-		key0[AES_KEY_SIZE], key1[AES_KEY_SIZE], tmpkey[AES_KEY_SIZE],
-		good_mac[AES_BLOCK_SIZE], mac[AES_BLOCK_SIZE];
+	if (pass && !strlen(pass))
+		pass = NULL;
 
-	char *origin = NULL, *dest = NULL, *name = NULL, *sn = NULL;
-	int ret = ERR_GENERAL;
+	ret = generate_all_keys(s, pass);
+	if (ret != ERR_NONE)
+		return ret;
 
-	origin = lookup_string(s, "Origin", NULL);
-	dest = lookup_string(s, "Dest", NULL);
-	name = lookup_string(s, "Name", NULL);
-	sn = lookup_string(s, "SN", NULL);
-
-	if (!origin || !dest || !name || !sn ||
-	    lookup_b64(s, "Secret", secret, AES_KEY_SIZE) ||
-	    lookup_b64(s, "Seed", t->enc_seed, AES_BLOCK_SIZE))
-		goto err;
-
+	if (lookup_b64(s, "Seed", t->enc_seed, AES_BLOCK_SIZE))
+		return ERR_GENERAL;
 	t->has_enc_seed = 1;
 
-	hash_password(key0, pass ? pass : origin, dest, name);
-	decrypt_secret(key1, secret, name, key0);
-
-	calc_key(tmpkey, "BatchMAC", name, key1, batch_mac_iv);
 	if (lookup_b64(s, "HeaderMAC", good_mac, AES_BLOCK_SIZE) ||
-	    hash_section(s, s->header_node, mac, tmpkey, batch_mac_iv) ||
+	    hash_section(s, s->header_node, mac, s->batch_mac_key, batch_mac_iv) ||
 	    memcmp(mac, good_mac, AES_BLOCK_SIZE)) {
-		ret = pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
-		goto err;
+		return pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
 	}
 
-	calc_key(tmpkey, "TokenMAC", sn, key1, token_mac_iv);
 	if (lookup_b64(s, "TokenMAC", good_mac, AES_BLOCK_SIZE) ||
-	    hash_section(s, s->tkn_node, mac, tmpkey, token_mac_iv) ||
+	    hash_section(s, s->tkn_node, mac, s->token_mac_key, token_mac_iv) ||
 	    memcmp(mac, good_mac, AES_BLOCK_SIZE)) {
-		ret = pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
-		goto err;
+		return pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
 	}
 
-	calc_key(tmpkey, "TokenEncrypt", sn, key1, token_enc_iv);
-	decrypt_seed(t->dec_seed, t->enc_seed, sn, tmpkey);
+	decrypt_seed(t->dec_seed, t->enc_seed, s->sn, s->token_enc_key);
 	t->has_dec_seed = 1;
-	ret = ERR_NONE;
-
-err:
-	free(origin);
-	free(dest);
-	free(name);
-	free(sn);
-	return s->error ? : ret;
+	return ERR_NONE;
 }
 
 static uint16_t parse_date(const char *in)
@@ -607,6 +624,7 @@ void securid_free_sdtid(struct sdtid *s)
 {
 	if (!s)
 		return;
+	free(s->sn);
 	xmlFreeDoc(s->doc);
 	free(s);
 }
