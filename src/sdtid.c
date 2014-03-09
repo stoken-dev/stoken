@@ -883,7 +883,8 @@ static int generate_sn(char *str)
 	return ERR_NONE;
 }
 
-int securid_issue_sdtid(const char *filename, const char *pass)
+int securid_issue_sdtid(const char *filename, const char *pass,
+			const char *devid)
 {
 	struct sdtid *s = NULL, *tpl = NULL;
 	int ret = ERR_GENERAL;
@@ -900,6 +901,9 @@ int securid_issue_sdtid(const char *filename, const char *pass)
 			goto out;
 		replace_string(s, s->tkn_node, "SN", str);
 	}
+
+	if (devid && strlen(devid))
+		replace_string(s, s->tkn_node, "DeviceSerialNumber", devid);
 
 	ret = generate_all_keys(s, pass);
 	if (ret != ERR_NONE || s->error != ERR_NONE)
@@ -973,6 +977,9 @@ int securid_export_sdtid(const char *filename, struct securid_token *t,
 		format_date(t->exp_date, str, 32);
 		replace_string(s, s->header_node, "DefDeath", str);
 	}
+
+	if (devid && strlen(devid))
+		replace_string(s, s->tkn_node, "DeviceSerialNumber", devid);
 
 	ret = generate_all_keys(s, pass);
 	if (ret != ERR_NONE || s->error != ERR_NONE)

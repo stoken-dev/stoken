@@ -364,7 +364,8 @@ int main(int argc, char **argv)
 				    stoken_errstr[rc]);
 		}
 	} else if (!strcmp(cmd, "issue")) {
-		rc = securid_issue_sdtid(opt_template, opt_new_password);
+		rc = securid_issue_sdtid(opt_template, opt_new_password,
+					 opt_new_devid);
 		if (rc != ERR_NONE)
 			die("issue: error generating sdtid: %s\n",
 			    stoken_errstr[rc]);
