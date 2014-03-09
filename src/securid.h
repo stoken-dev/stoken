@@ -104,15 +104,6 @@ struct securid_token {
 };
 
 int securid_decode_token(const char *in, struct securid_token *t);
-
-int securid_decode_sdtid(const char *in, struct securid_token *t);
-int securid_decrypt_sdtid(struct securid_token *t, const char *pass);
-int securid_issue_sdtid(const char *filename, const char *pass,
-			const char *devid);
-int securid_export_sdtid(const char *filename, struct securid_token *t,
-			 const char *pass, const char *devid);
-void securid_free_sdtid(struct sdtid *s);
-
 int securid_decrypt_seed(struct securid_token *t, const char *pass,
 	const char *devid);
 void securid_compute_tokencode(struct securid_token *t, time_t now,

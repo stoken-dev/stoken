@@ -34,6 +34,7 @@
 
 #include "common.h"
 #include "securid.h"
+#include "sdtid.h"
 
 struct sdtid {
 	xmlDoc			*doc;
@@ -555,7 +556,7 @@ err:
  * Public functions
  ************************************************************************/
 
-int securid_decrypt_sdtid(struct securid_token *t, const char *pass)
+int sdtid_decrypt(struct securid_token *t, const char *pass)
 {
 	struct sdtid *s = t->sdtid;
 	uint8_t good_mac0[AES_BLOCK_SIZE], mac0[AES_BLOCK_SIZE],
@@ -681,7 +682,7 @@ static int decode_fields(struct securid_token *t)
 	 * We never set FL_SNPROT - it isn't necessary to decrypt the seed
 	 * so there is no point prompting the user for it.
 	 */
-	ret = securid_decrypt_sdtid(t, NULL);
+	ret = sdtid_decrypt(t, NULL);
 	if (ret == ERR_MISSING_PASSWORD) {
 		t->flags |= FL_PASSPROT;
 		ret = ERR_NONE;
@@ -772,11 +773,11 @@ static int decode_one(const char *in, struct securid_token *t, int which)
 	return ERR_NONE;
 
 err:
-	securid_free_sdtid(s);
+	sdtid_free(s);
 	return ret;
 }
 
-int securid_decode_sdtid(const char *in, struct securid_token *t)
+int sdtid_decode(const char *in, struct securid_token *t)
 {
 	return decode_one(in, t, -1);
 }
@@ -864,7 +865,7 @@ static struct sdtid *new_sdtid(struct sdtid *tpl)
 	return s;
 
 bad:
-	securid_free_sdtid(s);
+	sdtid_free(s);
 	return NULL;
 }
 
@@ -894,8 +895,8 @@ static int clone_from_template(const char *filename, struct sdtid **tpl,
 	ret = ERR_NO_MEMORY;
 
 out:
-	securid_free_sdtid(*tpl);
-	securid_free_sdtid(*dst);
+	sdtid_free(*tpl);
+	sdtid_free(*dst);
 	return ret;
 }
 
@@ -957,8 +958,8 @@ static int generate_sn(char *str)
 	return ERR_NONE;
 }
 
-int securid_issue_sdtid(const char *filename, const char *pass,
-			const char *devid)
+int sdtid_issue(const char *filename, const char *pass,
+		const char *devid)
 {
 	struct sdtid *s = NULL, *tpl = NULL;
 	int ret = ERR_GENERAL;
@@ -1006,14 +1007,14 @@ int securid_issue_sdtid(const char *filename, const char *pass,
 	ret = ERR_NONE;
 
 out:
-	securid_free_sdtid(tpl);
-	securid_free_sdtid(s);
+	sdtid_free(tpl);
+	sdtid_free(s);
 	memset(dec_seed, 0, sizeof(dec_seed));
 	return ret;
 }
 
-int securid_export_sdtid(const char *filename, struct securid_token *t,
-			 const char *pass, const char *devid)
+int sdtid_export(const char *filename, struct securid_token *t,
+		 const char *pass, const char *devid)
 {
 	struct sdtid *s = NULL, *tpl = NULL;
 	int ret;
@@ -1081,12 +1082,12 @@ int securid_export_sdtid(const char *filename, struct securid_token *t,
 	ret = ERR_NONE;
 
 out:
-	securid_free_sdtid(tpl);
-	securid_free_sdtid(s);
+	sdtid_free(tpl);
+	sdtid_free(s);
 	return ret;
 }
 
-void securid_free_sdtid(struct sdtid *s)
+void sdtid_free(struct sdtid *s)
 {
 	if (!s)
 		return;

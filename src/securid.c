@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include "securid.h"
+#include "sdtid.h"
 
 void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
@@ -318,7 +319,7 @@ int securid_decrypt_seed(struct securid_token *t, const char *pass,
 	int rc;
 
 	if (t->sdtid)
-		return securid_decrypt_sdtid(t, pass);
+		return sdtid_decrypt(t, pass);
 
 	if (t->flags & FL_PASSPROT && !pass)
 		return ERR_MISSING_PASSWORD;

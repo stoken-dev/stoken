@@ -33,6 +33,7 @@
 
 #include "common.h"
 #include "securid.h"
+#include "sdtid.h"
 
 static void print_token_info_line(const char *key, const char *value)
 {
@@ -357,15 +358,13 @@ int main(int argc, char **argv)
 			securid_encode_token(t, pass, opt_new_devid, buf);
 			print_formatted(buf);
 		} else {
-			rc = securid_export_sdtid(opt_template, t,
-						  pass, opt_new_devid);
+			rc = sdtid_export(opt_template, t, pass, opt_new_devid);
 			if (rc != ERR_NONE)
 				die("export: error writing sdtid: %s\n",
 				    stoken_errstr[rc]);
 		}
 	} else if (!strcmp(cmd, "issue")) {
-		rc = securid_issue_sdtid(opt_template, opt_new_password,
-					 opt_new_devid);
+		rc = sdtid_issue(opt_template, opt_new_password, opt_new_devid);
 		if (rc != ERR_NONE)
 			die("issue: error generating sdtid: %s\n",
 			    stoken_errstr[rc]);

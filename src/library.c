@@ -21,6 +21,7 @@
 #include "config.h"
 #include "common.h"
 #include "securid.h"
+#include "sdtid.h"
 #include "stoken.h"
 #include "stoken-internal.h"
 
@@ -73,7 +74,7 @@ int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
 		/* sdtid (XML) token format */
 		p = strcasestr(str, "<?xml ");
 		if (p)
-			return securid_decode_sdtid(p, t);
+			return sdtid_decode(p, t);
 
 		p = str;
 		if (isdigit(*p))
@@ -263,7 +264,7 @@ int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,
 static void zap_current_token(struct stoken_ctx *ctx)
 {
 	if (ctx->t) {
-		securid_free_sdtid(ctx->t->sdtid);
+		sdtid_free(ctx->t->sdtid);
 		free(ctx->t);
 	}
 	ctx->t = NULL;

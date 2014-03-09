@@ -13,7 +13,8 @@ libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
 libstoken_la_LIBADD	= $(TOMCRYPT_LIBS) $(LIBXML2_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
-noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h
+noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h \
+			  src/sdtid.h
 pkgconfig_DATA		= stoken.pc
 
 if USE_JNI

@@ -34,8 +34,15 @@ global:
 	securid_pin_required;
 	securid_random_token;
 	securid_token_info;
+	sdtid_decode;
+	sdtid_decrypt;
+	sdtid_issue;
+	sdtid_export;
+	sdtid_free;
 	__stoken_parse_and_decode_token;
 	__stoken_read_rcfile;
 	__stoken_write_rcfile;
 	__stoken_zap_rcfile_data;
+local:
+	*;
 };
