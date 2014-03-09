@@ -72,18 +72,19 @@ int securid_rand(void *out, int len, int paranoid)
 		 * is limited.
 		 */
 		int fd, ret;
+		char *p = out;
 
 		fd = open("/dev/random", O_RDONLY);
 		if (fd < 0)
 			return ERR_GENERAL;
 
 		while (len) {
-			ret = read(fd, out, len);
+			ret = read(fd, p, len);
 			if (ret < 0) {
 				close(fd);
 				return ERR_GENERAL;
 			}
-			out += ret;
+			p += ret;
 			len -= ret;
 		}
 		close(fd);
