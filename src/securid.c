@@ -20,6 +20,8 @@
 
 #include "config.h"
 
+#define _POSIX_SOURCE
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdint.h>
@@ -381,15 +383,15 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	uint8_t key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
 	int i, j;
 	uint32_t tokencode;
-	struct tm *gmt;
+	struct tm gmt;
 	int pin_len = strlen(t->pin);
 
-	gmt = gmtime(&now);
-	bcd_write(&bcd_time[0], gmt->tm_year + 1900, 2);
-	bcd_write(&bcd_time[2], gmt->tm_mon + 1, 1);
-	bcd_write(&bcd_time[3], gmt->tm_mday, 1);
-	bcd_write(&bcd_time[4], gmt->tm_hour, 1);
-	bcd_write(&bcd_time[5], gmt->tm_min & ~0x03, 1);
+	gmtime_r(&now, &gmt);
+	bcd_write(&bcd_time[0], gmt.tm_year + 1900, 2);
+	bcd_write(&bcd_time[2], gmt.tm_mon + 1, 1);
+	bcd_write(&bcd_time[3], gmt.tm_mday, 1);
+	bcd_write(&bcd_time[4], gmt.tm_hour, 1);
+	bcd_write(&bcd_time[5], gmt.tm_min & ~0x03, 1);
 	bcd_time[6] = bcd_time[7] = 0;
 
 	key_from_time(bcd_time, 2, t->serial, key0);
@@ -404,7 +406,7 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	aes128_ecb_encrypt(key1, key0, key0);
 
 	/* key0 now contains 4 consecutive token codes */
-	i = (gmt->tm_min & 0x03) << 2;
+	i = (gmt.tm_min & 0x03) << 2;
 	tokencode = (key0[i + 0] << 24) | (key0[i + 1] << 16) |
 		    (key0[i + 2] << 8)  | (key0[i + 3] << 0);
 
@@ -506,7 +508,7 @@ void securid_token_info(const struct securid_token *t,
 {
 	char str[256];
 	unsigned int i;
-	struct tm *exp_tm;
+	struct tm exp_tm;
 	time_t exp_unix_time;
 
 	callback("Serial number", t->serial);
@@ -529,8 +531,8 @@ void securid_token_info(const struct securid_token *t,
 	}
 
 	exp_unix_time = SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
-	exp_tm = gmtime(&exp_unix_time);
-	strftime(str, 32, "%Y/%m/%d", exp_tm);
+	gmtime_r(&exp_unix_time, &exp_tm);
+	strftime(str, 32, "%Y/%m/%d", &exp_tm);
 	callback("Expiration date", str);
 
 	callback("Key length", t->flags & FL_128BIT ? "128" : "64");
