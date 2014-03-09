@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,6 +143,24 @@ static const struct sec_contents trailer_fields[] = {
 	{ "BatchCertificate", " " },
 	{ NULL, NULL },
 };
+
+static void err_printf(struct sdtid *s, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (!s->interactive)
+		return;
+	va_start(ap, fmt);
+	fflush(stdout);
+	fprintf(stderr, "error: ");
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+}
+
+static void missing_node(struct sdtid *s, const char *name)
+{
+	err_printf(s, "missing required xml node '%s'\n", name);
+}
 
 /************************************************************************
  * XML utility functions
@@ -483,6 +502,25 @@ static void calc_key(uint8_t *result, const char *str0, const char *str1,
 	cbc_hash(result, key, iv, buf, sizeof(buf));
 }
 
+static int str_or_warn(struct sdtid *s, const char *name, char **out)
+{
+	*out = lookup_string(s, name, NULL);
+	if (*out)
+		return ERR_NONE;
+
+	missing_node(s, name);
+	return ERR_GENERAL;
+}
+
+static int b64_or_warn(struct sdtid *s, const char *name, uint8_t *out,
+		       int buf_len)
+{
+	int ret = lookup_b64(s, name, out, buf_len);
+	if (ret != ERR_NONE)
+		missing_node(s, name);
+	return ret;
+}
+
 static int generate_all_keys(struct sdtid *s, const char *pass)
 {
 	uint8_t secret[AES_BLOCK_SIZE], key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
@@ -490,15 +528,12 @@ static int generate_all_keys(struct sdtid *s, const char *pass)
 	char *origin = NULL, *dest = NULL, *name = NULL;
 	int ret = ERR_GENERAL;
 
-	origin = lookup_string(s, "Origin", NULL);
-	dest = lookup_string(s, "Dest", NULL);
-	name = lookup_string(s, "Name", NULL);
-
 	free(s->sn);
-	s->sn = lookup_string(s, "SN", NULL);
-
-	if (!origin || !dest || !name || !s->sn ||
-	    lookup_b64(s, "Secret", secret, AES_KEY_SIZE))
+	if (str_or_warn(s, "SN", &s->sn) ||
+	    str_or_warn(s, "Origin", &origin) ||
+	    str_or_warn(s, "Dest", &dest) ||
+	    str_or_warn(s, "Name", &name) ||
+	    b64_or_warn(s, "Secret", secret, AES_KEY_SIZE))
 		goto err;
 
 	hash_password(key0, pass ? pass : origin, dest, name);
@@ -523,8 +558,9 @@ err:
 int securid_decrypt_sdtid(struct securid_token *t, const char *pass)
 {
 	struct sdtid *s = t->sdtid;
-	uint8_t good_mac[AES_BLOCK_SIZE], mac[AES_BLOCK_SIZE];
-	int ret;
+	uint8_t good_mac0[AES_BLOCK_SIZE], mac0[AES_BLOCK_SIZE],
+		good_mac1[AES_BLOCK_SIZE], mac1[AES_BLOCK_SIZE];
+	int ret, mac0_passed, mac1_passed;
 
 	if (pass && !strlen(pass))
 		pass = NULL;
@@ -533,20 +569,33 @@ int securid_decrypt_sdtid(struct securid_token *t, const char *pass)
 	if (ret != ERR_NONE)
 		return ret;
 
-	if (lookup_b64(s, "Seed", t->enc_seed, AES_BLOCK_SIZE))
+	if (b64_or_warn(s, "Seed", t->enc_seed, AES_BLOCK_SIZE))
 		return ERR_GENERAL;
 	t->has_enc_seed = 1;
 
-	if (lookup_b64(s, "HeaderMAC", good_mac, AES_BLOCK_SIZE) ||
-	    hash_section(s, s->header_node, mac, s->batch_mac_key, batch_mac_iv) ||
-	    memcmp(mac, good_mac, AES_BLOCK_SIZE)) {
-		return pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
-	}
+	if (b64_or_warn(s, "HeaderMAC", good_mac0, AES_BLOCK_SIZE) ||
+	    hash_section(s, s->header_node, mac0,
+			 s->batch_mac_key, batch_mac_iv))
+		return ERR_GENERAL;
 
-	if (lookup_b64(s, "TokenMAC", good_mac, AES_BLOCK_SIZE) ||
-	    hash_section(s, s->tkn_node, mac, s->token_mac_key, token_mac_iv) ||
-	    memcmp(mac, good_mac, AES_BLOCK_SIZE)) {
-		return pass ? ERR_GENERAL : ERR_MISSING_PASSWORD;
+	if (b64_or_warn(s, "TokenMAC", good_mac1, AES_BLOCK_SIZE) ||
+	    hash_section(s, s->tkn_node, mac1,
+			 s->token_mac_key, token_mac_iv))
+		return ERR_GENERAL;
+
+	mac0_passed = !memcmp(mac0, good_mac0, AES_BLOCK_SIZE);
+	mac1_passed = !memcmp(mac1, good_mac1, AES_BLOCK_SIZE);
+
+	/* note that we cannot diagnose a corrupted <Secret> field */
+	if (!mac0_passed && !mac1_passed)
+		return pass ? ERR_DECRYPT_FAILED : ERR_MISSING_PASSWORD;
+
+	if (!mac0_passed) {
+		err_printf(s, "header MAC check failed - malformed input\n");
+		return ERR_DECRYPT_FAILED;
+	} else if (!mac1_passed) {
+		err_printf(s, "token MAC check failed - malformed input\n");
+		return ERR_DECRYPT_FAILED;
 	}
 
 	decrypt_seed(t->dec_seed, t->enc_seed, s->sn, s->token_enc_key);
@@ -589,12 +638,13 @@ static int decode_fields(struct securid_token *t)
 {
 	struct sdtid *s = t->sdtid;
 	char *tmps;
-	int tmpi;
+	int tmpi, ret;
 
 	t->version = 2;
 
 	tmps = lookup_string(s, "SN", NULL);
 	if (!tmps || strlen(tmps) > SERIAL_CHARS) {
+		missing_node(s, "SN");
 		free(tmps);
 		goto err;
 	}
@@ -631,10 +681,13 @@ static int decode_fields(struct securid_token *t)
 	 * We never set FL_SNPROT - it isn't necessary to decrypt the seed
 	 * so there is no point prompting the user for it.
 	 */
-	if (securid_decrypt_sdtid(t, NULL) == ERR_MISSING_PASSWORD)
+	ret = securid_decrypt_sdtid(t, NULL);
+	if (ret == ERR_MISSING_PASSWORD) {
 		t->flags |= FL_PASSPROT;
+		ret = ERR_NONE;
+	}
 
-	return s->error;
+	return s->error ? : ret;
 
 err:
 	return ERR_GENERAL;
@@ -652,8 +705,10 @@ static int parse_sdtid(const char *in, struct sdtid *s, int which, int strict)
 		return ERR_GENERAL;
 
 	batch = find_child_named(xmlDocGetRootElement(s->doc), "TKNBatch");
-	if (!batch)
+	if (!batch) {
+		missing_node(s, "TKNBatch");
 		goto err;
+	}
 
 	s->header_node = find_child_named(batch->children, "TKNHeader");
 	s->trailer_node = find_child_named(batch->children, "TKNTrailer");
@@ -669,8 +724,20 @@ static int parse_sdtid(const char *in, struct sdtid *s, int which, int strict)
 		}
 	}
 
-	if (strict && (!s->header_node || !s->tkn_node || !s->trailer_node))
-		goto err;
+	if (strict) {
+		if (!s->header_node) {
+			missing_node(s, "TKNHeader");
+			goto err;
+		}
+		if (!s->tkn_node) {
+			missing_node(s, "TKN");
+			goto err;
+		}
+		if (!s->trailer_node) {
+			missing_node(s, "TKNTrailer");
+			goto err;
+		}
+	}
 
 	return ERR_NONE;
 
@@ -994,7 +1061,7 @@ int securid_export_sdtid(const char *filename, struct securid_token *t,
 
 	/* special case: this is an unencrypted seed in base64 format */
 	if (node_present(tpl, "Seed")) {
-		if (lookup_b64(tpl, "Seed", dec_seed, AES_KEY_SIZE)) {
+		if (b64_or_warn(tpl, "Seed", dec_seed, AES_KEY_SIZE)) {
 			ret = ERR_GENERAL;
 			goto out;
 		}
