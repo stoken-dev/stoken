@@ -33,7 +33,8 @@ struct stoken_cfg {
 typedef void (warn_fn_t)(const char *, ...);
 static inline void __stoken_warn_empty(const char *fmt, ...) { }
 
-int __stoken_parse_and_decode_token(const char *str, struct securid_token *t);
+int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
+				    int interactive);
 int __stoken_read_rcfile(const char *override, struct stoken_cfg *cfg,
 	warn_fn_t warn_fn);
 int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,

@@ -39,7 +39,9 @@ struct sdtid {
 	xmlNode			*header_node;
 	xmlNode			*tkn_node;
 	xmlNode			*trailer_node;
+
 	int			error;
+	int			interactive;
 
 	char			*sn;
 	uint8_t			batch_mac_key[AES_KEY_SIZE];
@@ -642,7 +644,9 @@ static int parse_sdtid(const char *in, struct sdtid *s, int which, int strict)
 	xmlNode *batch, *node;
 	int ret = ERR_GENERAL, idx = 0;
 
-	s->doc = xmlReadMemory(in, strlen(in), "sdtid.xml", NULL, 0);
+	s->doc = xmlReadMemory(in, strlen(in), "sdtid.xml", NULL,
+			       s->interactive ? XML_PARSE_PEDANTIC :
+			       (XML_PARSE_NOERROR | XML_PARSE_NOWARNING));
 	if (!s->doc)
 		return ERR_GENERAL;
 
@@ -683,13 +687,14 @@ static int decode_one(const char *in, struct securid_token *t, int which)
 	if (!s)
 		return ERR_NO_MEMORY;
 
+	s->interactive = t->interactive;
+
 	ret = parse_sdtid(in, s, which, 1);
 	if (ret) {
 		free(s);
 		return ret;
 	}
 
-	memset(t, 0, sizeof(*t));
 	t->sdtid = s;
 	if (decode_fields(t) != ERR_NONE) {
 		ret = ERR_GENERAL;
@@ -808,6 +813,7 @@ static int clone_from_template(const char *filename, struct sdtid **tpl,
 		if (!*tpl)
 			return ERR_NO_MEMORY;
 
+		(*tpl)->interactive = 1;
 		ret = read_template_file(filename, *tpl);
 		if (ret != ERR_NONE)
 			goto out;

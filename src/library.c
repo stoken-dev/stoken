@@ -45,11 +45,15 @@ static int strstarts(const char *str, const char *prefix)
 	return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
-int __stoken_parse_and_decode_token(const char *str, struct securid_token *t)
+int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
+				    int interactive)
 {
 	char buf[BUFLEN];
 	const char *p;
 	int i, ret;
+
+	memset(t, 0, sizeof(*t));
+	t->interactive = interactive;
 
 	do {
 		/* try to handle broken quoted-printable input */
@@ -309,7 +313,7 @@ int stoken_import_rcfile(struct stoken_ctx *ctx, const char *path)
 	else if (rc != ERR_NONE)
 		goto bad;
 
-	if (__stoken_parse_and_decode_token(ctx->cfg.rc_token, &tmp) !=
+	if (__stoken_parse_and_decode_token(ctx->cfg.rc_token, &tmp, 0) !=
 	    ERR_NONE)
 		goto bad;
 
@@ -337,7 +341,7 @@ int stoken_import_string(struct stoken_ctx *ctx, const char *token_string)
 
 	zap_current_token(ctx);
 
-	if (__stoken_parse_and_decode_token(token_string, &tmp) != ERR_NONE)
+	if (__stoken_parse_and_decode_token(token_string, &tmp, 0) != ERR_NONE)
 		return -EINVAL;
 	return clone_token(ctx, &tmp);
 }

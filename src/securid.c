@@ -237,8 +237,6 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	if (in[0] != '1' && in[0] != '2')
 		return ERR_TOKEN_VERSION;
 
-	memset(t, 0, sizeof(*t));
-
 	/* the last 5 digits provide a checksum for the rest of the string */
 	numinput_to_bits(&in[len - CHECKSUM_CHARS], d, 15);
 	token_mac = get_bits(d, 0, 15);

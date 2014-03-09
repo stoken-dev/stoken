@@ -301,7 +301,7 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 	buf[len] = 0;
 
 	for (p = buf; *p; ) {
-		rc = __stoken_parse_and_decode_token(p, t);
+		rc = __stoken_parse_and_decode_token(p, t, 1);
 
 		/*
 		 * keep checking more lines until we find something that
@@ -366,10 +366,10 @@ int common_init(char *cmd)
 
 	/* accept a token from the command line, or fall back to the rcfile */
 	do {
-		t = xmalloc(sizeof(struct securid_token));
+		t = xzalloc(sizeof(struct securid_token));
 
 		if (opt_token) {
-			rc = __stoken_parse_and_decode_token(opt_token, t);
+			rc = __stoken_parse_and_decode_token(opt_token, t, 1);
 			if (rc != ERR_NONE)
 				die("error: --token string is garbled: %s\n",
 				    stoken_errstr[rc]);

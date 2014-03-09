@@ -100,6 +100,7 @@ struct securid_token {
 	char			*enc_pin_str;
 
 	struct sdtid		*sdtid;
+	int			interactive;
 };
 
 int securid_decode_token(const char *in, struct securid_token *t);
