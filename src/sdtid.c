@@ -59,14 +59,16 @@ static const uint8_t token_enc_iv[] =
  * XML utility functions
  ************************************************************************/
 
+#define XCAST(x) ((const xmlChar *)(x))
+
 static int xmlnode_is_named(xmlNode *xml_node, const char *name)
 {
 	if (xml_node->type != XML_ELEMENT_NODE)
 		return 0;
-	return !strcmp((char *)xml_node->name, name);
+	return !strcmp(xml_node->name, name);
 }
 
-static xmlNode *find_node_named(xmlNode *node, const char *name)
+static xmlNode *find_child_named(xmlNode *node, const char *name)
 {
 	for (; ; node = node->next) {
 		if (!node)
@@ -77,14 +79,73 @@ static xmlNode *find_node_named(xmlNode *node, const char *name)
 	return NULL;
 }
 
+static int __replace_string(struct sdtid *s, xmlNode *node,
+			    const char *name, const char *value)
+{
+	int ret;
+
+	for (node = node->children; node; node = node->next) {
+		ret = __replace_string(s, node, name, value);
+		if (ret != ERR_GENERAL)
+			return ret;
+		if (xmlnode_is_named(node, name)) {
+			xmlChar *input = xmlEncodeSpecialChars(s->doc, value);
+			if (!input)
+				return ERR_NO_MEMORY;
+			xmlNodeSetContent(node, input);
+			return ERR_NONE;
+		}
+	}
+	return ERR_GENERAL;
+}
+
+static int replace_string(struct sdtid *s, xmlNode *node,
+			  const char *name, const char *value)
+{
+	int ret = __replace_string(s, node, name, value);
+	if (ret != ERR_GENERAL) {
+		s->error = ret;
+		return ret;
+	}
+
+	/* not found => create a new string at the end of the section */
+	if (xmlNewTextChild(node, NULL, XCAST(name), XCAST(value)) == NULL) {
+		s->error = ERR_NO_MEMORY;
+		return ERR_NO_MEMORY;
+	}
+
+	return ERR_NONE;
+}
+
+static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
+		       const uint8_t *data, int len)
+{
+	/* this matches src/misc/base64/base64_encode.c in tomcrypt */
+	unsigned long enclen = 4 * ((len + 2) / 3) + 1;
+	char *out = malloc(enclen);
+	int ret;
+
+	if (!out)
+		return ERR_NO_MEMORY;
+
+	base64_encode(data, len, out, &enclen);
+	ret = replace_string(s, node, name, out);
+
+	free(out);
+	return ret;
+}
+
 static char *__lookup_common(struct sdtid *s, xmlNode *node, const char *name)
 {
-	if (s->error != ERR_NONE)
+	if (s->error != ERR_NONE || !node)
 		return NULL;
 
 	for (node = node->children; node; node = node->next) {
+		char *val = __lookup_common(s, node, name);
+		if (val)
+			return val;
 		if (xmlnode_is_named(node, name)) {
-			char *val = (char *)xmlNodeGetContent(node);
+			val = xmlNodeGetContent(node);
 			if (!val)
 				s->error = ERR_NO_MEMORY;
 			return val;
@@ -113,6 +174,13 @@ static char *lookup_common(struct sdtid *s, const char *name)
 		return ret;
 
 	return __lookup_common(s, s->header_node, name);
+}
+
+static int node_present(struct sdtid *s, const char *name)
+{
+	char *str = s ? lookup_common(s, name) : NULL;
+	free(str);
+	return !!str;
 }
 
 static char *lookup_string(struct sdtid *s, const char *name, const char *def)
@@ -462,12 +530,12 @@ static int parse_sdtid(const char *in, struct sdtid *s, int which)
 	if (!s->doc)
 		return ERR_GENERAL;
 
-	batch = find_node_named(xmlDocGetRootElement(s->doc), "TKNBatch");
+	batch = find_child_named(xmlDocGetRootElement(s->doc), "TKNBatch");
 	if (!batch)
 		goto err;
 
-	s->header_node = find_node_named(batch->children, "TKNHeader");
-	s->trailer_node = find_node_named(batch->children, "TKNTrailer");
+	s->header_node = find_child_named(batch->children, "TKNHeader");
+	s->trailer_node = find_child_named(batch->children, "TKNTrailer");
 
 	for (node = batch->children; node; node = node->next) {
 		if (xmlnode_is_named(node, "TKN")) {
