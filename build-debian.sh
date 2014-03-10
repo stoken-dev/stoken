@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ver=0.2
+ver=0.5
 
 set -ex
 

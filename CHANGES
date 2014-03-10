@@ -1,12 +1,21 @@
-v0.3 - UNRELEASED
+v0.5 - UNRELEASED
 
- - Fix build failures on kfreebsd and Android
+ - Add support for importing/exporting sdtid XML files.  The library now
+   depends on libxml.
 
- - Don't strip stoken / stoken-gui binaries by default
+ - Add JNI code for integration into Android apps
 
  - Add support for 6-digit tokencodes
 
+ - Fix problems decrypting some device-ID-bound tokens (bug #3)
+
+ - Fix build failures on kfreebsd and Android
+
  - Fix handling of PIN-less tokens
+
+ - Fix out-of-tree builds
+
+ - Don't strip stoken / stoken-gui binaries by default
 
 v0.2 - 2013/05/18
 

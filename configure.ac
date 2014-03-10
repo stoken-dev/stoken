@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([stoken], [0.2], [cernekee@gmail.com], [stoken], [http://stoken.sf.net/])
+AC_INIT([stoken], [0.5], [cernekee@gmail.com], [stoken], [http://stoken.sf.net/])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
