@@ -52,4 +52,7 @@ endif
 dist_noinst_SCRIPTS	= autogen.sh
 
 EXTRA_DIST		= .gitignore libstoken.map
+EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
+			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
+
 DISTCLEANFILES		= *~
