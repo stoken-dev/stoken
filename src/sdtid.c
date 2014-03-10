@@ -197,10 +197,12 @@ static int __replace_string(struct sdtid *s, xmlNode *node,
 		if (ret != ERR_GENERAL)
 			return ret;
 		if (xmlnode_is_named(node, name)) {
-			xmlChar *input = xmlEncodeSpecialChars(s->doc, value);
+			xmlChar *input = xmlEncodeEntitiesReentrant(s->doc,
+								    value);
 			if (!input)
 				return ERR_NO_MEMORY;
 			xmlNodeSetContent(node, input);
+			free(input);
 			return ERR_NONE;
 		}
 	}
