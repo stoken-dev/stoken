@@ -54,7 +54,7 @@ dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore libstoken.map
+EXTRA_DIST		= .gitignore libstoken.map CHANGES
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
 			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
 
