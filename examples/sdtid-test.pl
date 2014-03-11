@@ -3,8 +3,14 @@
 use strict;
 use XML::LibXML;
 
-my $stoken = "../stoken";
-my $tc = "./TokenConverter";
+my $stoken = "stoken";
+my $tc = "TokenConverter";
+
+# --strict uses more problematic character sequences and string lengths
+my $strict = 0;
+
+# --once means exit after the first try, leaving a sample sdtid file in cwd
+my $once = 0;
 
 sub add_str_node($$$)
 {
@@ -18,12 +24,24 @@ sub add_str_node($$$)
 sub rand_str
 {
 	my ($len) = @_;
+	my $max_rand = $strict ? 35 : 10;
 	if (!defined($len)) {
-		$len = int(rand() * 30) + 5;
+		$len = int(rand() * $max_rand) + 5;
 	}
 	my $ret = "";
 	for (my $i = 0; $i < $len; $i++) {
-		$ret .= chr(32 + int(rand() * 95));
+		my $c;
+		while (1) {
+			$c = chr(32 + int(rand() * 95));
+			if ($strict) {
+				last;
+			} else {
+				if ($c ne '<' && $c ne '>') {
+					last;
+				}
+			}
+		}
+		$ret .= $c;
 	}
 	return $ret;
 }
@@ -85,7 +103,25 @@ sub random_doc()
 # MAIN
 #
 
-while (1) {
+# allow running from the source dir
+if (-x "../stoken") {
+	$ENV{'PATH'} = "..:".$ENV{'PATH'};
+}
+
+while (@ARGV != 0) {
+	my $a = $ARGV[0];
+	shift @ARGV;
+
+	if ($a eq "--strict") {
+		$strict = 1;
+	} elsif ($a eq "--once") {
+		$once = 1;
+	} else {
+		die "unknown arg: '$a'";
+	}
+}
+
+do {
 	my $doc = random_doc();
 	open(F, ">tpl.xml") or die;
 	print F $doc->toString(1);
@@ -101,4 +137,6 @@ while (1) {
 		== 0 or die "can't read seed from sdtid";
 
 	system("cmp seed.txt seed-test.txt") == 0 or die "seed mismatch";
-}
+} while (!$once);
+
+exit 0;
