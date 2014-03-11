@@ -1,4 +1,4 @@
-usr/lib/libstoken.so
-usr/lib/libstoken.a
-usr/lib/pkgconfig
+usr/lib/*/libstoken.so
+usr/lib/*/libstoken.a
+usr/lib/*/pkgconfig
 usr/include

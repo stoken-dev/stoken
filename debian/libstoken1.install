@@ -1,1 +1,1 @@
-usr/lib/libstoken.so.*
+usr/lib/*/libstoken.so.*

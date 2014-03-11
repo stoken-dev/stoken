@@ -1,11 +1,16 @@
-stoken (0.2-1) UNRELEASED; urgency=low
+stoken (0.2-1) unstable; urgency=low
 
   * New upstream release.
+  * 01-desktop-encoding-utf8.patch,
+    02-remove-libtomcrypt-deps-on-executables.patch,
+    03-libtomcrypt-requires-private.patch:
+    Remove, applied upstream.
+  * Upload to unstable.
 
- -- Kevin Cernekee <cernekee@gmail.com>  Sat, 17 Nov 2012 13:21:50 -0800
+ -- Kevin Cernekee <cernekee@gmail.com>  Sat, 18 May 2013 09:44:47 -0700
 
-stoken (0.1-1) experimental; urgency=low
+stoken (0.1-5) experimental; urgency=low
 
-  * Initial release.
+  * Initial packaging. (Closes: #700218)
 
- -- Kevin Cernekee <cernekee@gmail.com>  Sat, 15 Sep 2012 15:24:34 -0700
+ -- Kevin Cernekee <cernekee@gmail.com>  Sun, 24 Feb 2013 14:53:25 -0800

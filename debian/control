@@ -2,37 +2,64 @@ Source: stoken
 Maintainer: Kevin Cernekee <cernekee@gmail.com>
 Section: utils
 Priority: optional
-Standards-Version: 3.9.1
-Build-Depends: debhelper (>= 8), libgtk2.0-dev (>= 2.6.4), libtomcrypt-dev (>= 1.17)
+Standards-Version: 3.9.4
+Build-Depends: debhelper (>= 9),
+	       libgtk2.0-dev (>= 2.6.4),
+	       libtomcrypt-dev (>= 1.17),
+	       dh-autoreconf
 Homepage: http://stoken.sf.net/
 
 Package: stoken
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Software Token for cryptographic authentication
- stoken is a software token compatible with RSA SecurID 128-bit (AES)
- tokens.  It generates one-time passwords through a scriptable command-line
- interface or a GTK+ GUI.
+ stoken is a software token which generates one-time passwords compatible
+ with RSA SecurID 128-bit (AES) tokens.  SecurID tokens are commonly
+ used to authenticate end users to protected network resources and VPNs,
+ as OTPs provide greater resistance to many attacks associated with static
+ passwords.
+ .
+ stoken aims to provide a Linux-friendly, free software alternative to the
+ proprietary RSA SecurID Software Authenticators.
+ .
+ This package contains standalone command-line and GTK+ GUI programs that
+ allow for importing token seeds, generating tokencodes, and various
+ utility/testing functions.
 
 Package: libstoken1
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Software Token for cryptographic authentication - shared library
- stoken is a software token compatible with RSA SecurID 128-bit (AES)
- tokens.  It generates one-time passwords through a scriptable command-line
- interface or a GTK+ GUI.
+ stoken is a software token which generates one-time passwords compatible
+ with RSA SecurID 128-bit (AES) tokens.  SecurID tokens are commonly
+ used to authenticate end users to protected network resources and VPNs,
+ as OTPs provide greater resistance to many attacks associated with static
+ passwords.
  .
- This package provides a shared library allowing other applications to
- generate tokencodes.
+ stoken aims to provide a Linux-friendly, free software alternative to the
+ proprietary RSA SecurID Software Authenticators.
+ .
+ This package provides a shared library allowing other applications, such
+ as VPN clients and web browsers, to generate tokencodes.  This can improve
+ both ease of use and security, as the user does not need to copy and paste
+ tokencodes between applications.
 
 Package: libstoken-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libstoken1 (= ${binary:Version}), libtomcrypt-dev (>= 1.17)
-Description: Software Token for cryptographic authentication - shared library
- stoken is a software token compatible with RSA SecurID 128-bit (AES)
- tokens.  It generates one-time passwords through a scriptable command-line
- interface or a GTK+ GUI.
+Description: Software Token for cryptographic authentication - development files
+ stoken is a software token which generates one-time passwords compatible
+ with RSA SecurID 128-bit (AES) tokens.  SecurID tokens are commonly
+ used to authenticate end users to protected network resources and VPNs,
+ as OTPs provide greater resistance to many attacks associated with static
+ passwords.
  .
- This package provides the header and development files.
+ stoken aims to provide a Linux-friendly, free software alternative to the
+ proprietary RSA SecurID Software Authenticators.
+ .
+ This package provides the headers and static libraries for libstoken.
