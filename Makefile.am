@@ -49,6 +49,9 @@ dist_desktop_DATA	= stoken-gui.desktop
 
 endif
 
+dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
+			  README
+
 dist_noinst_SCRIPTS	= autogen.sh
 
 EXTRA_DIST		= .gitignore libstoken.map
