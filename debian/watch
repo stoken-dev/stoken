@@ -1,2 +1,2 @@
 version=3
-http://sf.net/stoken/stoken-(.+)\.tar\.gz
+opts=pgpsigurlmangle=s/$/.asc/ http://sf.net/stoken/stoken-(.+)\.tar\.gz

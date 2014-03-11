@@ -2,16 +2,17 @@ Source: stoken
 Maintainer: Kevin Cernekee <cernekee@gmail.com>
 Section: utils
 Priority: optional
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Build-Depends: debhelper (>= 9),
 	       libgtk2.0-dev (>= 2.6.4),
 	       libtomcrypt-dev (>= 1.17),
+	       libxml2-dev (>= 2.7.8),
 	       dh-autoreconf
 Homepage: http://stoken.sf.net/
 
 Package: stoken
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libstoken1 (= ${binary:Version})
 Description: Software Token for cryptographic authentication
  stoken is a software token which generates one-time passwords compatible
  with RSA SecurID 128-bit (AES) tokens.  SecurID tokens are commonly
@@ -32,6 +33,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: stoken (<< 0.5)
 Description: Software Token for cryptographic authentication - shared library
  stoken is a software token which generates one-time passwords compatible
  with RSA SecurID 128-bit (AES) tokens.  SecurID tokens are commonly

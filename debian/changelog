@@ -1,3 +1,15 @@
+stoken (0.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add Depends: and Breaks: to keep the utility in sync with the library.
+  * Add build-dep for new required library libxml2-dev.
+  * Add upstream-signing-key.
+  * Install the upstream changelog.
+  * Update shlibs and symbols files for libstoken1.
+  * Bump Standards-Version to 3.9.5.
+
+ -- Kevin Cernekee <cernekee@gmail.com>  Mon, 10 Mar 2014 23:28:24 -0700
+
 stoken (0.2-1) unstable; urgency=low
 
   * New upstream release.
