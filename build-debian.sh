@@ -23,7 +23,7 @@ function build_one
 		debuild "$arg" -us -uc
 	fi
 	cd ..
-	lintian -IE --pedantic *.changes >> ../lintian.txt || true
+	lintian -IE --pedantic *.changes | tee -a ../lintian.txt || true
 	popd
 }
 
