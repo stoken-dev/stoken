@@ -1,0 +1,27 @@
+language: c
+compiler:
+  - gcc
+  - clang
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk2.0-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core
+
+script:
+  - ./autogen.sh &&
+    mkdir build &&
+    pushd build &&
+    ../configure &&
+    make &&
+    make dist &&
+    mv stoken*.tar.gz ../ &&
+    popd &&
+    ./build-debian.sh &&
+    sudo dpkg -i *.deb &&
+    stoken import --random --new-password="" &&
+    stoken --pin=0000
