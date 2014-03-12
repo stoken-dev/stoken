@@ -1,6 +1,7 @@
 #!/bin/bash
 
 gpgkey="BC0B0D65"
+builddir=tmp.debian
 
 set -ex
 
@@ -8,9 +9,9 @@ function build_one
 {
 	arg="$1"
 
-	rm -rf tmp.deb
-	mkdir tmp.deb
-	pushd tmp.deb
+	rm -rf $builddir
+	mkdir $builddir
+	pushd $builddir
 
 	cp ../$tarball stoken_${ver}.orig.tar.gz
 	tar zxf ../$tarball
@@ -49,7 +50,7 @@ rm -f lintian.txt stoken*.deb
 touch lintian.txt
 
 build_one ""
-cp tmp.deb/*.deb .
+cp $builddir/*.deb .
 echo "------------" >> lintian.txt
 build_one "-S"
 
