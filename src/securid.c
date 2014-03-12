@@ -72,7 +72,7 @@ int securid_rand(void *out, int len, int paranoid)
 		 * test purposes.  This can block for a long time if entropy
 		 * is limited.
 		 */
-		int fd, ret;
+		int fd;
 		char *p = out;
 
 		fd = open("/dev/random", O_RDONLY);
@@ -80,7 +80,7 @@ int securid_rand(void *out, int len, int paranoid)
 			return ERR_GENERAL;
 
 		while (len) {
-			ret = read(fd, p, len);
+			ssize_t ret = read(fd, p, len);
 			if (ret < 0) {
 				close(fd);
 				return ERR_GENERAL;

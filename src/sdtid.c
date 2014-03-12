@@ -820,7 +820,7 @@ int sdtid_decode(const char *in, struct securid_token *t)
 
 static int read_template_file(const char *filename, struct sdtid *s)
 {
-	ssize_t len;
+	size_t len;
 	char buf[65536];
 	FILE *f;
 
@@ -828,9 +828,11 @@ static int read_template_file(const char *filename, struct sdtid *s)
 	if (f == NULL)
 		return ERR_FILE_READ;
 	len = fread(buf, 1, sizeof(buf) - 1, f);
+	if (ferror(f))
+		len = 0;
 	fclose(f);
 
-	if (len < 0)
+	if (len == 0)
 		return ERR_FILE_READ;
 	buf[len] = 0;
 

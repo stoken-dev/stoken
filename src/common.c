@@ -287,16 +287,18 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 	char buf[65536], *p;
 	int rc = ERR_BAD_LEN;
 	FILE *f;
-	ssize_t len;
+	size_t len;
 
 	f = fopen(filename, "r");
 	if (f == NULL)
 		return ERR_FILE_READ;
 
 	len = fread(buf, 1, sizeof(buf) - 1, f);
+	if (ferror(f))
+		len = 0;
 	fclose(f);
 
-	if (len < 0)
+	if (len == 0)
 		return ERR_FILE_READ;
 	buf[len] = 0;
 
