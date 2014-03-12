@@ -1,7 +1,9 @@
 #!/bin/bash
 
+gpgkey="BC0B0D65"
+
 set -ex
-set pipefail
+set -o pipefail
 
 rm -rf tmp.rel tmp.build stoken-*.tar.gz stoken-*.tar.gz.asc
 git clone . tmp.rel
@@ -28,6 +30,8 @@ popd
 
 rm -rf tmp.rel tmp.build
 
-gpg --yes --armor --detach-sign --default-key BC0B0D65 $tarball
+if gpg --list-secret-keys $gpgkey >& /dev/null; then
+	gpg --yes --armor --detach-sign --default-key $gpgkey $tarball
+fi
 
 exit 0
