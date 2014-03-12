@@ -1,5 +1,7 @@
 #!/bin/bash
 
+gpgkey="BC0B0D65"
+
 set -ex
 
 function build_one
@@ -14,7 +16,11 @@ function build_one
 	tar zxf ../$tarball
 	cd stoken-${ver}
 	cp -a ../../debian .
-	debuild "$arg"
+	if [ "$nosign" = "0" ]; then
+		debuild "$arg"
+	else
+		debuild "$arg" -us -uc
+	fi
 	cd ..
 	lintian -IE --pedantic *.changes >> ../lintian.txt || true
 	popd
@@ -33,10 +39,17 @@ fi
 ver=${tarball#*-}
 ver=${ver%%.tar.gz}
 
-rm -f lintian.txt
+if gpg --list-secret-keys $gpgkey >& /dev/null; then
+	nosign=0
+else
+	nosign=1
+fi
+
+rm -f lintian.txt stoken*.deb
 touch lintian.txt
 
 build_one ""
+cp tmp.deb/*.deb .
 echo "------------" >> lintian.txt
 build_one "-S"
 
