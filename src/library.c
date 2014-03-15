@@ -84,7 +84,7 @@ int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
 	} while (0);
 
 	for (i = 0; *p; p++) {
-		if (i >= BUFLEN)
+		if (i >= BUFLEN - 1)
 			return ERR_BAD_LEN;
 		if (isdigit(*p))
 			buf[i++] = *p;
