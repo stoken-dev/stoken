@@ -1055,7 +1055,7 @@ int sdtid_export(const char *filename, struct securid_token *t,
 		 const char *pass, const char *devid)
 {
 	struct sdtid *s = NULL, *tpl = NULL;
-	int ret;
+	int ret, tmp;
 	uint8_t dec_seed[AES_KEY_SIZE], enc_seed[AES_KEY_SIZE];
 
 	ret = clone_from_template(filename, &tpl, &s);
@@ -1076,10 +1076,10 @@ int sdtid_export(const char *filename, struct securid_token *t,
 			    !!(t->flags & FL_APPSEEDS));
 	check_and_store_int(s, tpl, "Mode", !!(t->flags & FL_FEAT4));
 	check_and_store_int(s, tpl, "Alg", !!(t->flags & FL_128BIT));
-	check_and_store_int(s, tpl, "AddPIN",
-			    !!(t->flags >> (FLD_PINMODE_SHIFT + 1)));
-	check_and_store_int(s, tpl, "LocalPIN",
-			    !!(t->flags >> (FLD_PINMODE_SHIFT + 0)));
+
+	tmp = (t->flags & FLD_PINMODE_MASK) >> FLD_PINMODE_SHIFT;
+	check_and_store_int(s, tpl, "AddPIN", !!(tmp & 0x02));
+	check_and_store_int(s, tpl, "LocalPIN", !!(tmp & 0x01));
 	check_and_store_int(s, tpl, "Digits", 1 +
 			    ((t->flags & FLD_DIGIT_MASK) >> FLD_DIGIT_SHIFT));
 	check_and_store_int(s, tpl, "Interval",
