@@ -1,3 +1,9 @@
+stoken (0.5-2) unstable; urgency=low
+
+  * Rename upstream-signing-key to match new devscripts convention.
+
+ -- Kevin Cernekee <cernekee@gmail.com>  Sat, 15 Mar 2014 16:29:29 -0700
+
 stoken (0.5-1) unstable; urgency=low
 
   * New upstream release.
