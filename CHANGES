@@ -1,4 +1,4 @@
-v0.5 - UNRELEASED
+v0.5 - 2014/03/15
 
  - Add support for importing/exporting sdtid XML files.  The library now
    depends on libxml.

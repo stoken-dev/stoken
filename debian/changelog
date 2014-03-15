@@ -4,6 +4,7 @@ stoken (0.5-1) unstable; urgency=low
   * Add Depends: and Breaks: to keep the utility in sync with the library.
   * Add build-dep for new required library libxml2-dev.
   * Add upstream-signing-key.
+  * Add /usr/share/doc/stoken/examples directory.
   * Install the upstream changelog.
   * Update shlibs and symbols files for libstoken1.
   * Bump Standards-Version to 3.9.5.
