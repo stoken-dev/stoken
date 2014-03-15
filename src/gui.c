@@ -261,7 +261,7 @@ static int do_password_dialog(struct securid_token *t)
 		pin_required = 1;
 		if (opt_pin) {
 			if (securid_pin_format_ok(opt_pin) == ERR_NONE) {
-				strncpy(t->pin, opt_pin, MAX_PIN + 1);
+				xstrncpy(t->pin, opt_pin, MAX_PIN + 1);
 				pin_required = 0;
 			} else
 				warn("warning: --pin argument is invalid\n");
@@ -314,7 +314,7 @@ static int do_password_dialog(struct securid_token *t)
 					"Please enter 4-8 digits, or '0000' to skip.");
 				continue;
 			}
-			strncpy(t->pin, pin, MAX_PIN + 1);
+			xstrncpy(t->pin, pin, MAX_PIN + 1);
 		}
 		break;
 	}

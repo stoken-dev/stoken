@@ -105,6 +105,12 @@ char *xconcat(const char *s1, const char *s2)
 	return ret;
 }
 
+void xstrncpy(char *dest, const char *src, size_t n)
+{
+	strncpy(dest, src, n);
+	dest[n - 1] = 0;
+}
+
 void *xmalloc(size_t size)
 {
 	void *ret = malloc(size);
@@ -335,7 +341,7 @@ static int decode_rc_token(struct stoken_cfg *cfg, struct securid_token *t)
 			t->enc_pin_str = xstrdup(cfg->rc_pin);
 		else {
 			if (securid_pin_format_ok(cfg->rc_pin) == ERR_NONE)
-				strncpy(t->pin, cfg->rc_pin, MAX_PIN + 1);
+				xstrncpy(t->pin, cfg->rc_pin, MAX_PIN + 1);
 			else
 				warn("rcfile: invalid PIN format\n");
 		}

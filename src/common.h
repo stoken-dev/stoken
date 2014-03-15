@@ -53,6 +53,7 @@ void die(const char *fmt, ...);
 
 char *xstrdup(const char *s);
 char *xconcat(const char *s1, const char *s2);
+void xstrncpy(char *dest, const char *src, size_t n);
 void *xmalloc(size_t size);
 void *xzalloc(size_t size);
 

@@ -152,7 +152,7 @@ static void request_devid(struct securid_token *t, char *devid)
 	if (opt_devid) {
 		rc = securid_decrypt_seed(t, "", opt_devid);
 		if (rc != ERR_BAD_DEVID) {
-			strncpy(devid, opt_devid, BUFLEN);
+			xstrncpy(devid, opt_devid, BUFLEN);
 			return;
 		}
 		warn("warning: --devid parameter is incorrect\n");
@@ -181,7 +181,7 @@ static void request_pass(const char *prompt_msg, struct securid_token *t,
 	if (opt_password) {
 		rc = securid_decrypt_seed(t, opt_password, devid);
 		if (rc != ERR_DECRYPT_FAILED && rc != ERR_BAD_PASSWORD) {
-			strncpy(pass, opt_password, BUFLEN);
+			xstrncpy(pass, opt_password, BUFLEN);
 			return;
 		}
 		warn("warning: --password parameter is incorrect\n");
@@ -210,7 +210,7 @@ static void request_new_pass(char *pass)
 		len = strlen(opt_new_password);
 		if (len > MAX_PASS)
 			die("error: new password is too long\n");
-		strncpy(pass, opt_new_password, BUFLEN);
+		xstrncpy(pass, opt_new_password, BUFLEN);
 	} else {
 		prompt("Enter new password: ");
 		len = read_user_input(pass, BUFLEN, 1);
@@ -236,7 +236,7 @@ static void request_pin(const char *prompt_msg, char *pin)
 		else if (rc == ERR_GENERAL)
 			warn("warning: --pin argument is not numeric, ignoring\n");
 		else {
-			strncpy(pin, opt_pin, BUFLEN);
+			xstrncpy(pin, opt_pin, BUFLEN);
 			return;
 		}
 	}
@@ -287,7 +287,7 @@ static void unlock_token(struct securid_token *t, int get_pin, char **ret_pass)
 	if (get_pin && securid_pin_required(t) &&
 	    (!strlen(t->pin) || opt_pin)) {
 		request_pin("Enter PIN:", pin);
-		strncpy(t->pin, pin, MAX_PIN + 1);
+		xstrncpy(t->pin, pin, MAX_PIN + 1);
 	}
 }
 
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
 		if (opt_new_pin) {
 			if (securid_pin_format_ok(opt_new_pin) != ERR_NONE)
 				die("error: invalid --new-pin format\n");
-			strncpy(pin, opt_new_pin, BUFLEN);
+			xstrncpy(pin, opt_new_pin, BUFLEN);
 			len = strlen(pin);
 		} else {
 			prompt("Enter new PIN: ");
