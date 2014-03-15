@@ -274,13 +274,13 @@ save the PIN in \fI~/.stokenrc\fP, and pass the PIN to \fBstoken \-\-stdin\fP
 via standard input.
 .SH "BUGS/TODO"
 .PP
-\fIsdtid\fP support is very rough and may choke on unexpected input.
+\fIsdtid\fP support is still new and may choke on unexpected input.
 As a short\-term workaround you can try commenting out the
 sanity checks in \fBsdtid_decrypt()\fP to see if the problem goes away.
 .PP
 Features under development include: 30\-second tokens, v3 ctf strings,
 hardware token seeds (and the \fBstoken split\fP command needed to work with
-them), and support for non-Linux hosts.
+them), and support for non\-Linux hosts.
 .PP
 Patches are always welcome.
 .SH "SEE ALSO"
