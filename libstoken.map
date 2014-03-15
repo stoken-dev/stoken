@@ -43,6 +43,8 @@ global:
 	__stoken_read_rcfile;
 	__stoken_write_rcfile;
 	__stoken_zap_rcfile_data;
+	/* NOTE: this can break non-GNU toolchains */
+	Java_*;
 local:
 	*;
 };
