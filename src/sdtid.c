@@ -42,6 +42,7 @@ struct sdtid {
 	xmlNode			*tkn_node;
 	xmlNode			*trailer_node;
 
+	int			is_template;
 	int			error;
 	int			interactive;
 
@@ -293,7 +294,8 @@ static char *__lookup_common(struct sdtid *s, xmlNode *node, const char *name)
 		if (val)
 			return val;
 		if (xmlnode_is_named(node, name)) {
-			val = mangle_encoding(node);
+			val = s->is_template ? (char *)xmlNodeGetContent(node) :
+					       mangle_encoding(node);
 			if (!val)
 				s->error = ERR_NO_MEMORY;
 			return val;
@@ -849,6 +851,8 @@ static int read_template_file(const char *filename, struct sdtid *s)
 
 	if (parse_sdtid(buf, s, -1, 0) != ERR_NONE)
 		return ERR_GENERAL;
+
+	s->is_template = 1;
 	return ERR_NONE;
 }
 
