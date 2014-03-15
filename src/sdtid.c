@@ -266,13 +266,14 @@ static char *mangle_encoding(xmlNode *node)
 {
 	char *str = xmlNodeGetContent(node), *enc;
 
-	if (!str || !strchr(str, '&'))
+	if (!str)
 		return str;
 
 	enc = xmlEncodeEntitiesReentrant(node->doc, str);
 	free(str);
-	if (!enc)
-		return NULL;
+
+	if (!enc || !strchr(enc, '&'))
+		return enc;
 
 	/* FIXME: add encodings for non-ASCII characters */
 	__mangle_encoding(enc, "&amp;", "&;");
@@ -447,8 +448,18 @@ static int __hash_section(struct hash_status *hs, const char *pfx, xmlNode *node
 		if (!val)
 			goto err;
 
-		bytes = snprintf(&hs->data[hs->pos], remain,
-				 "%s %s\n", longname, val);
+		if (!strlen(val)) {
+			/*
+			 * An empty string is valid XML but it might violate
+			 * the sdtid format.  We'll handle it the same bizarre
+			 * way as RSA just to be safe.
+			 */
+			bytes = snprintf(&hs->data[hs->pos], remain,
+					 "%s </%s>\n", longname, name);
+		} else {
+			bytes = snprintf(&hs->data[hs->pos], remain,
+					 "%s %s\n", longname, val);
+		}
 		free(val);
 		if (bytes >= remain)
 			goto err;
