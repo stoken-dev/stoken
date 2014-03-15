@@ -6,9 +6,6 @@ use XML::LibXML;
 my $stoken = "stoken";
 my $tc = "TokenConverter";
 
-# --strict uses more problematic character sequences and string lengths
-my $strict = 0;
-
 # --once means exit after the first try, leaving a sample sdtid file in cwd
 my $once = 0;
 
@@ -24,22 +21,23 @@ sub add_str_node($$$)
 sub rand_str
 {
 	my ($len) = @_;
-	my $max_rand = $strict ? 35 : 10;
+	my $max_rand = 28;
 	if (!defined($len)) {
 		$len = int(rand() * $max_rand) + 5;
 	}
+
 	my $ret = "";
-	for (my $i = 0; $i < $len; $i++) {
-		my $c;
-		while (1) {
-			$c = chr(32 + int(rand() * 95));
-			if ($strict) {
-				last;
-			} else {
-				if ($c ne '<' && $c ne '>') {
-					last;
-				}
-			}
+	while (1) {
+		my $c = chr(32 + int(rand() * 95));
+
+		# these expand to 2-byte sequences. see mangle_encoding()
+		if ($c eq '&' || $c eq '<' || $c eq '>') {
+			$len -= 2;
+		} else {
+			$len--;
+		}
+		if ($len <= 0) {
+			last;
 		}
 		$ret .= $c;
 	}
@@ -112,9 +110,7 @@ while (@ARGV != 0) {
 	my $a = $ARGV[0];
 	shift @ARGV;
 
-	if ($a eq "--strict") {
-		$strict = 1;
-	} elsif ($a eq "--once") {
+	if ($a eq "--once") {
 		$once = 1;
 	} else {
 		die "unknown arg: '$a'";
