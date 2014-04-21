@@ -142,6 +142,12 @@ char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
  *
  * This can be called over and over again, as needed.
  *
+ * If stoken_pin_required() returns 0, PIN may be NULL.  If PIN is not
+ * NULL and the user stored a PIN in ~/.stokenrc, the PIN string passed
+ * into this function will override the stored PIN.  This will affect
+ * subsequent calls to stoken_compute_tokencode() but the change will not
+ * be stored on disk.
+ *
  * Return values:
  *
  *   0:       success
