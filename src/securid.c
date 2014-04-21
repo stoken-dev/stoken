@@ -501,13 +501,18 @@ int securid_random_token(struct securid_token *t)
 	return ERR_NONE;
 }
 
+time_t securid_unix_exp_date(const struct securid_token *t)
+{
+	return SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
+}
+
 void securid_token_info(const struct securid_token *t,
 	void (*callback)(const char *key, const char *value))
 {
 	char str[256];
 	unsigned int i;
 	struct tm exp_tm;
-	time_t exp_unix_time;
+	time_t exp_unix_time = securid_unix_exp_date(t);
 
 	callback("Serial number", t->serial);
 
@@ -528,7 +533,6 @@ void securid_token_info(const struct securid_token *t,
 			t->flags & FL_SNPROT ? "yes" : "no");
 	}
 
-	exp_unix_time = SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
 	gmtime_r(&exp_unix_time, &exp_tm);
 	strftime(str, 32, "%Y/%m/%d", &exp_tm);
 	callback("Expiration date", str);
@@ -563,10 +567,8 @@ void securid_token_info(const struct securid_token *t,
 
 int securid_check_exp(struct securid_token *t, time_t now)
 {
-	time_t exp_unix_time;
+	time_t exp_unix_time = securid_unix_exp_date(t);
 	const int halfday = 60 * 60 * 12, wholeday = 60 * 60 * 24;
-
-	exp_unix_time = SECURID_EPOCH + (t->exp_date + 1) * wholeday;
 
 	/*
 	 * Other soft token implementations seem to allow ~12hrs as a grace
