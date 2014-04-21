@@ -346,6 +346,16 @@ int stoken_import_string(struct stoken_ctx *ctx, const char *token_string)
 	return clone_token(ctx, &tmp);
 }
 
+struct stoken_info *stoken_get_info(struct stoken_ctx *ctx)
+{
+	struct stoken_info *info = calloc(1, sizeof(*info));
+	if (!info)
+		return NULL;
+	strncpy(info->serial, ctx->t->serial, sizeof(info->serial) - 1);
+	info->exp_date = securid_unix_exp_date(ctx->t);
+	return info;
+}
+
 void stoken_pin_range(struct stoken_ctx *ctx, int *min_pin, int *max_pin)
 {
 	*min_pin = MIN_PIN;

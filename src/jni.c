@@ -202,6 +202,36 @@ JNIEXPORT jint JNICALL Java_org_stoken_LibStoken_importString(
 	return translate_errno(jenv, ret);
 }
 
+JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getInfo(
+	JNIEnv *jenv, jobject jobj)
+{
+	struct libctx *ctx = getctx(jenv, jobj);
+	struct stoken_info *info = stoken_get_info(ctx->instance);
+	jmethodID mid;
+	jclass jcls;
+
+	if (!info)
+		return NULL;
+
+	jcls = (*ctx->jenv)->FindClass(ctx->jenv,
+				       "org/stoken/LibStoken$StokenInfo");
+	if (jcls == NULL)
+		return NULL;
+
+	mid = (*ctx->jenv)->GetMethodID(ctx->jenv, jcls, "<init>", "()V");
+	if (!mid)
+		return NULL;
+	jobj = (*ctx->jenv)->NewObject(ctx->jenv, jcls, mid);
+	if (!jobj)
+		return NULL;
+
+	if (set_string(ctx, jobj, "serial", info->serial) ||
+	    set_long(ctx, jobj, "unixExpDate", info->exp_date))
+		return NULL;
+
+	return jobj;
+}
+
 JNIEXPORT jint JNICALL Java_org_stoken_LibStoken_getMinPIN(
 	JNIEnv *jenv, jobject jobj)
 {

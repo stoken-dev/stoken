@@ -22,6 +22,7 @@ package com.example;
 
 import java.io.*;
 import java.util.*;
+import java.text.*;
 import org.stoken.LibStoken;
 
 public final class LibTest {
@@ -87,6 +88,13 @@ public final class LibTest {
 		if (ret != LibStoken.SUCCESS) {
 			die("Unable to decrypt seed", ret);
 		}
+
+		LibStoken.StokenInfo info = lib.getInfo();
+
+		System.out.println("SN: " + info.serial);
+
+		Date d = new Date(info.unixExpDate * 1000);
+		System.out.println("Exp: " + new SimpleDateFormat("yyyy-MM-dd").format(d));
 
 		String PIN = null;
 		if (lib.isPINRequired()) {

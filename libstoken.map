@@ -19,6 +19,11 @@ global:
 	stoken_encrypt_seed;
 } STOKEN_1.0;
 
+STOKEN_1.2 {
+global:
+	stoken_get_info;
+} STOKEN_1.1;
+
 STOKEN_PRIVATE {
 global:
 	securid_check_exp;

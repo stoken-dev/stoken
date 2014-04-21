@@ -30,11 +30,16 @@ extern "C" {
 #endif
 
 #define STOKEN_API_VER_MAJOR	1
-#define STOKEN_API_VER_MINOR	1
+#define STOKEN_API_VER_MINOR	2
 
 #define STOKEN_MAX_TOKENCODE	8
 
 struct stoken_ctx;
+
+struct stoken_info {
+	char			serial[16];
+	time_t			exp_date;
+};
 
 /*
  * Create/destroy library context.
@@ -67,6 +72,17 @@ int stoken_import_rcfile(struct stoken_ctx *ctx, const char *path);
  *   -EIO:    any other failure (e.g. ran out of memory)
  */
 int stoken_import_string(struct stoken_ctx *ctx, const char *token_string);
+
+/*
+ * Retrieve metadata for the currently imported token.  This returns a
+ * callee-allocated, caller-freed struct, which may grow larger in the future.
+ *
+ * Return values:
+ *
+ *   ptr:     success
+ *   NULL:    any failure (e.g. ran out of memory)
+ */
+struct stoken_info *stoken_get_info(struct stoken_ctx *ctx);
 
 /*
  * Set *MIN_PIN and *MAX_PIN to reflect the valid range of PIN lengths

@@ -42,10 +42,16 @@ public class LibStoken {
 		}
 	}
 
+	public static class StokenInfo {
+		public String serial;
+		public long unixExpDate;
+	};
+
 	/* public APIs */
 
 	public synchronized native int importRCFile(String path);
 	public synchronized native int importString(String str);
+	public synchronized native StokenInfo getInfo();
 	public synchronized native int getMinPIN();
 	public synchronized native int getMaxPIN();
 	public synchronized native boolean isPINRequired();
