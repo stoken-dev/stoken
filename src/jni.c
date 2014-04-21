@@ -85,6 +85,43 @@ static struct libctx *getctx(JNIEnv *jenv, jobject jobj)
 	return (void *)(unsigned long)(*jenv)->GetLongField(jenv, jobj, jfld);
 }
 
+static int set_long(struct libctx *ctx, jobject jobj, const char *name, uint64_t value)
+{
+	jclass jcls = (*ctx->jenv)->GetObjectClass(ctx->jenv, jobj);
+	jfieldID jfld = (*ctx->jenv)->GetFieldID(ctx->jenv, jcls, name, "J");
+
+	if (!jfld)
+		return -1;
+	(*ctx->jenv)->SetLongField(ctx->jenv, jobj, jfld, (jlong)value);
+	return 0;
+}
+
+static jstring dup_to_jstring(JNIEnv *jenv, const char *in)
+{
+	/*
+	 * Many implementations of NewStringUTF() will return NULL on
+	 * NULL input, but that isn't guaranteed:
+	 * http://gcc.gnu.org/bugzilla/show_bug.cgi?id=35979
+	 */
+	return in ? (*jenv)->NewStringUTF(jenv, in) : NULL;
+}
+
+static int set_string(struct libctx *ctx, jobject jobj, const char *name, const char *value)
+{
+	jclass jcls = (*ctx->jenv)->GetObjectClass(ctx->jenv, jobj);
+	jfieldID jfld = (*ctx->jenv)->GetFieldID(ctx->jenv, jcls, name, "Ljava/lang/String;");
+	jstring jarg;
+
+	if (!jfld)
+		return -1;
+
+	jarg = dup_to_jstring(ctx->jenv, value);
+	if (value && !jarg)
+		return -1;
+	(*ctx->jenv)->SetObjectField(ctx->jenv, jobj, jfld, jarg);
+	return 0;
+}
+
 JNIEXPORT jlong JNICALL Java_org_stoken_LibStoken_init(
 	JNIEnv *jenv, jobject jobj)
 {
