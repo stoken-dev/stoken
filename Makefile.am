@@ -45,7 +45,7 @@ icondir			= $(datadir)/pixmaps
 dist_icon_DATA		= stoken-gui.png
 
 desktopdir		= $(datadir)/applications
-dist_desktop_DATA	= stoken-gui.desktop
+dist_desktop_DATA	= stoken-gui.desktop stoken-gui-small.desktop
 
 endif
 

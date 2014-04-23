@@ -38,7 +38,7 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_seed, opt_sdtid;
+	opt_seed, opt_sdtid, opt_small;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
@@ -146,6 +146,9 @@ static const struct option long_opts[] = {
 	{ "devid",          1, NULL,                    OPT_DEVID         },
 	{ "password",       1, NULL,                    'p'               },
 	{ "pin",            1, NULL,                    'n'               },
+
+	/* GUI: use smaller window */
+	{ "small",          0, &opt_small,              1                 },
 
 	/* global: misc/debug */
 	{ "debug",          0, NULL,                    'd'               },

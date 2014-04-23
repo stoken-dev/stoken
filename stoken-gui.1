@@ -6,7 +6,7 @@
 .SH NAME
 stoken-gui \- GTK+ software token
 .SH SYNOPSIS
-\fBstoken-gui\fP [\fIopts\fB]
+\fBstoken-gui\fP [\fIopts\fP]
 .SH "DESCRIPTION"
 .PP
 \fBstoken-gui\fP is a software token compatible with RSA SecurID 128-bit (AES)
@@ -23,6 +23,10 @@ forever and will copy the current tokencode to the clipboard on demand.
 If a password and/or PIN is required, \fBstoken-gui\fP will pop up a
 dialog box requesting the appropriate information.
 .SH "OPTIONS"
+.TP
+\fB\-\-small\fP
+Show a minimal window that only displays a tokencode and a progress bar.
+Clicking on the tokencode copies it to the clipboard.
 .TP
 \fB\-\-rcfile=\fIfile\fP
 Use an alternate \fI.stokenrc\fP file.  This is typically used to support

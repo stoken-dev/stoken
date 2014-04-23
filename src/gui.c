@@ -83,13 +83,15 @@ static gint update_tokencode(gpointer data)
 		str[j++] = tokencode_str[i];
 	}
 	str[j] = 0;
-
 	gtk_label_set_text(GTK_LABEL(tokencode_text), str);
 
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar),
 		(double)sec / 59);
-	sprintf(str, "00:%02d", sec);
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress_bar), str);
+
+	if (!opt_small) {
+		sprintf(str, "00:%02d", sec);
+		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress_bar), str);
+	}
 
 	return TRUE;
 }
@@ -123,9 +125,9 @@ static void warning_dialog(GtkWidget *parent, const char *heading,
 	return __error_dialog(GTK_WINDOW(parent), heading, msg, 1);
 }
 
-static GtkWidget *create_app_window(void)
+static GtkWidget *app_window_common(void)
 {
-	GtkWidget *window, *vbox, *parent, *widget;
+	GtkWidget *window;
 	PangoAttrList *attr;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -134,6 +136,27 @@ static GtkWidget *create_app_window(void)
 
 	g_signal_connect(window, "delete-event", G_CALLBACK(delete_event),
 			 NULL);
+
+	tokencode_text = gtk_label_new(NULL);
+	attr = pango_attr_list_new();
+	pango_attr_list_insert(attr, pango_attr_scale_new(PANGO_SCALE_XX_LARGE));
+	pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+	gtk_label_set_attributes(GTK_LABEL(tokencode_text), attr);
+	pango_attr_list_unref(attr);
+
+	/* hack to turn off progress bar animation seen on some themes */
+	gtk_rc_parse_string("style \"default\" { engine \"\" { }\n"
+		"bg[PRELIGHT] = \"#4b6785\" }\n"
+		"widget_class \"*.<GtkProgressBar>\" style \"default\"");
+
+	return window;
+}
+
+static GtkWidget *create_app_window(void)
+{
+	GtkWidget *window, *vbox, *parent, *widget;
+
+	window = app_window_common();
 
 	vbox = gtk_vbox_new(FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
@@ -146,24 +169,12 @@ static GtkWidget *create_app_window(void)
 	gtk_container_add(GTK_CONTAINER(parent), widget);
 	parent = widget;
 
-	tokencode_text = gtk_label_new(NULL);
-	attr = pango_attr_list_new();
-	pango_attr_list_insert(attr, pango_attr_scale_new(PANGO_SCALE_XX_LARGE));
-	pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
-	gtk_label_set_attributes(GTK_LABEL(tokencode_text), attr);
-	pango_attr_list_unref(attr);
-
 	gtk_table_attach_defaults(GTK_TABLE(parent), tokencode_text,
 		0, 3, 2, 3);
 
 	/* progress bar */
 	progress_bar = gtk_progress_bar_new();
 	gtk_box_pack_start(GTK_BOX(vbox), progress_bar, FALSE, FALSE, 0);
-
-	/* hack to turn off progress bar animation seen on some themes */
-	gtk_rc_parse_string("style \"default\" { engine \"\" { }\n"
-		"bg[PRELIGHT] = \"#4b6785\" }\n"
-		"widget_class \"*.<GtkProgressBar>\" style \"default\"");
 
 	widget = gtk_hseparator_new();
 	gtk_widget_set_size_request(widget, 200, 50);
@@ -183,6 +194,51 @@ static GtkWidget *create_app_window(void)
 	g_signal_connect_swapped(widget, "clicked", G_CALLBACK(gtk_main_quit),
 				 window);
 	gtk_container_add(GTK_CONTAINER(parent), widget);
+
+	return window;
+}
+
+static GtkWidget *create_small_app_window(void)
+{
+	GtkWidget *window, *parent, *widget;
+	GtkTooltips *tt;
+
+	window = app_window_common();
+
+	/* event box to catch clicks on the tokencode frame */
+	widget = gtk_event_box_new();
+	g_signal_connect(widget, "button-press-event",
+		G_CALLBACK(clipboard_callback), NULL);
+	gtk_container_add(GTK_CONTAINER(window), widget);
+	parent = widget;
+
+	/* tooltip */
+	tt = gtk_tooltips_new();
+	gtk_tooltips_set_tip(tt, parent, "Click to copy to clipboard", NULL);
+
+	/* tokencode frame */
+	widget = gtk_frame_new("Tokencode");
+	gtk_container_add(GTK_CONTAINER(parent), widget);
+	parent = widget;
+
+	/* spacing inside the frame */
+	widget = gtk_alignment_new(0.5, 0.5, 1.0, 1.0);
+	gtk_alignment_set_padding(GTK_ALIGNMENT(widget), 10, 10, 10, 10);
+	gtk_container_add(GTK_CONTAINER(parent), widget);
+	parent = widget;
+
+	/* vbox */
+	widget = gtk_vbox_new(FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(parent), widget);
+	parent = widget;
+
+	/* tokencode */
+	gtk_box_pack_start(GTK_BOX(parent), tokencode_text, FALSE, FALSE, 0);
+
+	/* progress bar */
+	progress_bar = gtk_progress_bar_new();
+	gtk_widget_set_size_request(progress_bar, 0, 10);
+	gtk_box_pack_start(GTK_BOX(parent), progress_bar, FALSE, FALSE, 0);
 
 	return window;
 }
@@ -369,7 +425,7 @@ int main(int argc, char **argv)
 	if (do_password_dialog(current_token) != ERR_NONE)
 		return 1;
 
-	window = create_app_window();
+	window = opt_small ? create_small_app_window() : create_app_window();
 	update_tokencode(NULL);
 	gtk_widget_show_all(window);
 
