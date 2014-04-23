@@ -174,12 +174,12 @@ static GtkWidget *create_app_window(void)
 	gtk_box_set_spacing(GTK_BOX(parent), 10);
 	gtk_box_pack_start(GTK_BOX(vbox), parent, FALSE, FALSE, 0);
 
-	widget = gtk_button_new_with_label("Copy to clipboard");
+	widget = gtk_button_new_with_mnemonic("_Copy to clipboard");
 	g_signal_connect(widget, "clicked", G_CALLBACK(clipboard_callback),
 		NULL);
 	gtk_container_add(GTK_CONTAINER(parent), widget);
 
-	widget = gtk_button_new_with_label("Quit");
+	widget = gtk_button_new_with_mnemonic("_Quit");
 	g_signal_connect_swapped(widget, "clicked", G_CALLBACK(gtk_main_quit),
 				 window);
 	gtk_container_add(GTK_CONTAINER(parent), widget);
