@@ -1,6 +1,7 @@
 libstoken.so.1 libstoken1 #MINVER#
  STOKEN_1.0@STOKEN_1.0 0.1
  STOKEN_1.1@STOKEN_1.1 0.5
+ STOKEN_1.2@STOKEN_1.2 0.6
  STOKEN_PRIVATE@STOKEN_PRIVATE 0.1
  __stoken_parse_and_decode_token@STOKEN_PRIVATE 0.1
  __stoken_read_rcfile@STOKEN_PRIVATE 0.1
@@ -24,6 +25,7 @@ libstoken.so.1 libstoken1 #MINVER#
  securid_pin_required@STOKEN_PRIVATE 0.1
  securid_random_token@STOKEN_PRIVATE 0.1
  securid_token_info@STOKEN_PRIVATE 0.1
+ stoken_get_info@STOKEN_1.2 0.6
  stoken_check_devid@STOKEN_1.1 0.5
  stoken_check_pin@STOKEN_1.0 0.1
  stoken_compute_tokencode@STOKEN_1.0 0.1
