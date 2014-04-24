@@ -1,3 +1,15 @@
+v0.6 - UNRELEASED
+
+ - Add "stoken-gui --small" mode to conserve desktop space
+
+ - Enable Alt-C and Alt-Q keyboard shortcuts in stoken-gui
+
+ - Fix handling of cached PINs for library callers
+
+ - Fix JNI symbol exports
+
+ - Add new stoken_get_info() API to query the S/N and expiration date
+
 v0.5 - 2014/03/15
 
  - Add support for importing/exporting sdtid XML files.  The library now
