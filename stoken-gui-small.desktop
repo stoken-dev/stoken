@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Software Token (small)
 GenericName=Software Token
-Comment=Software token for cryptographic authentication
+Comment=RSA SecurID-compatible software token
 Exec=stoken-gui --small
 Icon=stoken-gui
 Terminal=false
