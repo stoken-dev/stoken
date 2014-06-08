@@ -36,6 +36,17 @@
 #include "securid.h"
 #include "sdtid.h"
 
+static uint8_t hex2nibble(char in)
+{
+	uint8_t ret = in - '0';
+	return (ret <= 9) ? ret : (10 + toupper(in) - 'A');
+}
+
+static uint8_t hex2byte(const char *in)
+{
+	return (hex2nibble(in[0]) << 4) | hex2nibble(in[1]);
+}
+
 void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
 	symmetric_key skey;
@@ -639,20 +650,6 @@ char *securid_encrypt_pin(const char *pin, const char *password)
 	for (i = 0; i < AES_BLOCK_SIZE; i++)
 		sprintf(&ret[(AES_BLOCK_SIZE + i) * 2], "%02x", buf[i]);
 
-	return ret;
-}
-
-static uint8_t hex2byte(const char *in)
-{
-	uint8_t ret = in[1] - '0';
-	const uint8_t hex_offs = 'a' - '0' - 10;
-
-	if (ret > 9)
-		ret -= hex_offs;
-	if (in[0] > '9')
-		ret += (in[0] - hex_offs) << 4;
-	else
-		ret += (in[0] - '0') << 4;
 	return ret;
 }
 
