@@ -231,8 +231,7 @@ static int replace_string(struct sdtid *s, xmlNode *node,
 static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
 		       const uint8_t *data, int len)
 {
-	/* this matches src/misc/base64/base64_encode.c in tomcrypt */
-	unsigned long enclen = 4 * ((len + 2) / 3) + 1;
+	unsigned long enclen = BASE64_INPUT_LEN(len);
 	char *out = malloc(enclen + 1);
 	int ret;
 

@@ -58,6 +58,9 @@
 #define MIN_TOKEN_CHARS		((MIN_TOKEN_BITS / TOKEN_BITS_PER_CHAR) + \
 				 SERIAL_CHARS + VER_CHARS + CHECKSUM_CHARS)
 
+/* this matches src/misc/base64/base64_encode.c in tomcrypt */
+#define BASE64_INPUT_LEN(x)	((4 * ((x) + 2) / 3) + 1)
+
 #define BIT(x)			(1 << (x))
 
 #define FL_128BIT		BIT(14)
