@@ -554,12 +554,25 @@ static void calc_key(uint8_t *result, const char *str0, const char *str1,
 
 static int str_or_warn(struct sdtid *s, const char *name, char **out)
 {
-	*out = lookup_string(s, name, NULL);
-	if (*out)
-		return ERR_NONE;
+	char *p;
+	int len;
 
-	missing_node(s, name);
-	return ERR_GENERAL;
+	*out = lookup_string(s, name, NULL);
+	if (!*out) {
+		missing_node(s, name);
+		return ERR_GENERAL;
+	}
+
+	/* trim leading and trailing whitespace */
+	len = strlen(*out);
+	for (p = *out; isspace(*p); p++)
+		len--;
+	memmove(*out, p, len + 1);
+
+	for (p = *out + len - 1; len && isspace(*p); p--, len--)
+		*p = 0;
+
+	return ERR_NONE;
 }
 
 static int b64_or_warn(struct sdtid *s, const char *name, uint8_t *out,
