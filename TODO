@@ -1,10 +1,5 @@
 TODO list:
 
-Library stuff still seems a bit flaky.  Does static linking work the way it's
-supposed to?
-
-Fix library symbol visibility/versions.
-
 Library functions probably need man pages.
 
 Consider sanitizing memory, and figure out how to avoid leaking key material.
