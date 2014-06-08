@@ -45,6 +45,7 @@ public class LibStoken {
 	public static class StokenInfo {
 		public String serial;
 		public long unixExpDate;
+		public int interval;
 	};
 
 	/* public APIs */

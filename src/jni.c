@@ -85,6 +85,17 @@ static struct libctx *getctx(JNIEnv *jenv, jobject jobj)
 	return (void *)(unsigned long)(*jenv)->GetLongField(jenv, jobj, jfld);
 }
 
+static int set_int(struct libctx *ctx, jobject jobj, const char *name, int value)
+{
+	jclass jcls = (*ctx->jenv)->GetObjectClass(ctx->jenv, jobj);
+	jfieldID jfld = (*ctx->jenv)->GetFieldID(ctx->jenv, jcls, name, "I");
+
+	if (!jfld)
+		return -1;
+	(*ctx->jenv)->SetIntField(ctx->jenv, jobj, jfld, value);
+	return 0;
+}
+
 static int set_long(struct libctx *ctx, jobject jobj, const char *name, uint64_t value)
 {
 	jclass jcls = (*ctx->jenv)->GetObjectClass(ctx->jenv, jobj);
@@ -226,7 +237,8 @@ JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getInfo(
 		return NULL;
 
 	if (set_string(ctx, jobj, "serial", info->serial) ||
-	    set_long(ctx, jobj, "unixExpDate", info->exp_date))
+	    set_long(ctx, jobj, "unixExpDate", info->exp_date) ||
+	    set_int(ctx, jobj, "interval", info->interval))
 		return NULL;
 
 	return jobj;
