@@ -39,6 +39,7 @@ struct stoken_ctx;
 struct stoken_info {
 	char			serial[16];
 	time_t			exp_date;
+	int			interval;
 };
 
 /*

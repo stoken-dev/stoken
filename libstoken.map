@@ -39,6 +39,7 @@ global:
 	securid_pin_required;
 	securid_random_token;
 	securid_token_info;
+	securid_token_interval;
 	sdtid_decode;
 	sdtid_decrypt;
 	sdtid_issue;

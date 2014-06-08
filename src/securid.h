@@ -135,6 +135,7 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 int securid_random_token(struct securid_token *t);
 int securid_check_exp(struct securid_token *t, time_t now);
 time_t securid_unix_exp_date(const struct securid_token *t);
+int securid_token_interval(const struct securid_token *t);
 
 char *securid_encrypt_pin(const char *pin, const char *password);
 int securid_decrypt_pin(const char *enc_pin, const char *password, char *pin);

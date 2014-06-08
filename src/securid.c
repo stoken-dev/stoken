@@ -842,13 +842,14 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	uint32_t tokencode;
 	struct tm gmt;
 	int pin_len = strlen(t->pin);
+	int is_30 = securid_token_interval(t) == 30;
 
 	gmtime_r(&now, &gmt);
 	bcd_write(&bcd_time[0], gmt.tm_year + 1900, 2);
 	bcd_write(&bcd_time[2], gmt.tm_mon + 1, 1);
 	bcd_write(&bcd_time[3], gmt.tm_mday, 1);
 	bcd_write(&bcd_time[4], gmt.tm_hour, 1);
-	bcd_write(&bcd_time[5], gmt.tm_min & ~0x03, 1);
+	bcd_write(&bcd_time[5], gmt.tm_min & ~(is_30 ? 0x01 : 0x03), 1);
 	bcd_time[6] = bcd_time[7] = 0;
 
 	key_from_time(bcd_time, 2, t->serial, key0);
@@ -863,7 +864,11 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	aes128_ecb_encrypt(key1, key0, key0);
 
 	/* key0 now contains 4 consecutive token codes */
-	i = (gmt.tm_min & 0x03) << 2;
+	if (is_30)
+		i = ((gmt.tm_min & 0x01) << 3) | ((gmt.tm_sec >= 30) << 2);
+	else
+		i = (gmt.tm_min & 0x03) << 2;
+
 	tokencode = (key0[i + 0] << 24) | (key0[i + 1] << 16) |
 		    (key0[i + 2] << 8)  | (key0[i + 3] << 0);
 
@@ -947,6 +952,14 @@ time_t securid_unix_exp_date(const struct securid_token *t)
 	if (t->version == 3 && !t->exp_date)
 		return 0x7fffffff;
 	return SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
+}
+
+int securid_token_interval(const struct securid_token *t)
+{
+	if (((t->flags & FLD_NUMSECONDS_MASK) >> FLD_NUMSECONDS_SHIFT) == 0)
+		return 30;
+	else
+		return 60;
 }
 
 void securid_token_info(const struct securid_token *t,

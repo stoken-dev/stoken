@@ -363,6 +363,7 @@ struct stoken_info *stoken_get_info(struct stoken_ctx *ctx)
 		return NULL;
 	strncpy(info->serial, ctx->t->serial, sizeof(info->serial) - 1);
 	info->exp_date = securid_unix_exp_date(ctx->t);
+	info->interval = securid_token_interval(ctx->t);
 	return info;
 }
 

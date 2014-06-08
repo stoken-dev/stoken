@@ -34,7 +34,8 @@
 static GtkWidget *tokencode_text, *progress_bar;
 
 static char tokencode_str[16];
-static int last_min = -1;
+static int last_sec = -1;
+static int interval;
 
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event,
 	gpointer data)
@@ -68,12 +69,14 @@ static gint update_tokencode(gpointer data)
 	char str[16];
 
 	tm = gmtime(&now);
-	if (tm->tm_min != last_min) {
-		last_min = tm->tm_min;
+	if ((tm->tm_sec >= 30 && last_sec < 30) ||
+	    (tm->tm_sec < 30 && last_sec >= 30) ||
+	    last_sec == -1) {
+		last_sec = tm->tm_sec;
 		securid_compute_tokencode(current_token, now, tokencode_str);
 	}
 
-	sec = 59 - tm->tm_sec;
+	sec = interval - (tm->tm_sec % interval) - 1;
 
 	/* inject a space in the middle of the code, e.g. "1234 5678" */
 	code_len = strlen(tokencode_str);
@@ -86,7 +89,7 @@ static gint update_tokencode(gpointer data)
 	gtk_label_set_text(GTK_LABEL(tokencode_text), str);
 
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar),
-		(double)sec / 59);
+		(double)sec / (interval - 1));
 
 	if (!opt_small) {
 		sprintf(str, "00:%02d", sec);
@@ -425,6 +428,7 @@ int main(int argc, char **argv)
 	if (do_password_dialog(current_token) != ERR_NONE)
 		return 1;
 
+	interval = securid_token_interval(current_token);
 	window = opt_small ? create_small_app_window() : create_app_window();
 	update_tokencode(NULL);
 	gtk_widget_show_all(window);
