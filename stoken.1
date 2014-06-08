@@ -19,7 +19,7 @@ stoken \- software token for cryptographic authentication
 \fBstoken\fP \fBshow\fP [\fB\-\-seed\fP] [\fIopts\fB]
 .PP
 \fBstoken\fP \fBexport\fP
-[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP|\fB\-\-sdtid\fP}]
+[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP|\fB\-\-v3\fP|\fB\-\-sdtid\fP}]
 [\fIopts\fB]
 .PP
 \fBstoken\fP \fBissue\fP [\-\-\fBtemplate\fP=\fIfile\fP]
@@ -160,7 +160,7 @@ See notes in \fBSECURITY CONSIDERATIONS\fP below.
 Used with the \fBexport\fP or \fBissue\fP command to encrypt the new token
 with a specific device ID.  This is only used for testing purposes.
 .TP
-\fB\-\-blocks\fP, \fB\-\-iphone\fP, \fB\-\-android\fP
+\fB\-\-blocks\fP, \fB\-\-iphone\fP, \fB\-\-android\fP, \fB\-\-v3\fP
 Used with the \fBexport\fP command to select the output format.  See examples
 in \fBBASIC USAGE\fP.  By default, the \fBexport\fP command will print an
 unformatted 81-digit string to standard output.

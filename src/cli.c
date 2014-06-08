@@ -355,7 +355,8 @@ int main(int argc, char **argv)
 			pass = NULL;
 
 		if (!opt_sdtid) {
-			t->is_smartphone = opt_iphone || opt_android;
+			t->is_smartphone = opt_iphone || opt_android || opt_v3;
+			t->version = opt_v3 ? 3 : 2;
 			securid_encode_token(t, pass, opt_new_devid, buf);
 			print_formatted(buf);
 		} else {

@@ -733,6 +733,62 @@ static int v3_decrypt_seed(struct securid_token *t,
 	return ERR_NONE;
 }
 
+static int v3_encode_token(struct securid_token *t, const char *pass,
+			   const char *devid, char *out)
+{
+	struct v3_payload payload;
+	struct v3_token v3;
+	uint8_t key[SHA256_HASH_SIZE];
+	unsigned long enclen = BASE64_MIN_CHARS;
+	char raw_b64[BASE64_MIN_CHARS];
+	int i;
+
+	memset(&payload, 0, sizeof(payload));
+	strncpy(payload.serial, t->serial, sizeof(payload.serial));
+	memcpy(payload.dec_seed, t->dec_seed, AES_KEY_SIZE);
+	payload.unk0[0] = payload.unk0[1] = 1;
+	payload.mode = !!(t->flags & FL_FEAT4);
+	payload.digits = ((t->flags & FLD_DIGIT_MASK) >> FLD_DIGIT_SHIFT) + 1;
+	payload.addpin = (t->flags & (0x2 << FLD_PINMODE_SHIFT)) ?
+			 V3_ADDPIN_ON : V3_ADDPIN_OFF;
+	payload.interval = (t->flags & FLD_NUMSECONDS_MASK) ? 60 : 30;
+
+	v3_encode_date(payload.exp_date, t->exp_date);
+
+	memset(payload.padding, 0x10, 0x10);
+
+	memset(&v3, 0, sizeof(v3));
+	if (securid_rand(v3.nonce, sizeof(v3.nonce), 0))
+		return ERR_GENERAL;
+
+	v3.version = 3;
+	v3.password_locked = !!pass;
+	v3.devid_locked = !!devid;
+
+	v3_derive_key(pass, devid, v3.nonce, 1, key);
+	aes256_cbc_encrypt(key, (void *)&payload, sizeof(struct v3_payload),
+			   v3.nonce, v3.enc_payload);
+
+	v3_compute_hash(NULL, devid, v3.nonce, v3.nonce_devid_hash);
+	v3_compute_hash(pass, devid, v3.nonce, v3.nonce_devid_pass_hash);
+	v3_compute_hmac(&v3, pass, devid, v3.mac);
+
+	base64_encode((void *)&v3, sizeof(v3), raw_b64, &enclen);
+
+	for (i = 0; i < enclen; i++) {
+		char c = raw_b64[i];
+		if (!isalnum(c)) {
+			sprintf(out, "%%%02X", c);
+			out += 3;
+		} else
+			*(out++) = c;
+	}
+	*out = 0;
+
+	return ERR_NONE;
+}
+
+
 /********************************************************************
  * Public functions
  ********************************************************************/
@@ -828,7 +884,10 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 	} else
 		newt.flags |= FL_SNPROT;
 
-	return v2_encode_token(&newt, pass, devid, out);
+	if (t->version == 3)
+		return v3_encode_token(&newt, pass, devid, out);
+	else
+		return v2_encode_token(&newt, pass, devid, out);
 }
 
 int securid_random_token(struct securid_token *t)

@@ -38,7 +38,7 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_seed, opt_sdtid, opt_small;
+	opt_v3, opt_seed, opt_sdtid, opt_small;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
@@ -171,6 +171,7 @@ static const struct option long_opts[] = {
 	{ "blocks",         0, &opt_blocks,             1                 },
 	{ "iphone",         0, &opt_iphone,             1                 },
 	{ "android",        0, &opt_android,            1                 },
+	{ "v3",             0, &opt_v3,                 1                 },
 	{ "sdtid",          0, &opt_sdtid,              1                 },
 	{ "xml",            0, &opt_sdtid,              1                 },
 	{ "seed",           0, &opt_seed,               1                 },
@@ -451,7 +452,7 @@ char *format_token(const char *token_str)
 	if (opt_iphone)
 		return xconcat("com.rsa.securid.iphone://ctf?ctfData=",
 			token_str);
-	else if (opt_android)
+	else if (opt_android || opt_v3)
 		return xconcat("http://127.0.0.1/securid/ctf?ctfData=",
 			token_str);
 	else if (!opt_blocks)
