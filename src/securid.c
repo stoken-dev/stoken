@@ -504,45 +504,27 @@ static void bcd_write(uint8_t *out, int val, unsigned int bytes)
 	}
 }
 
-static int v2_encode_token(const struct securid_token *t, const char *pass,
+static int v2_encode_token(struct securid_token *t, const char *pass,
 			   const char *devid, char *out)
 {
-	struct securid_token newt = *t;
 	uint8_t d[MAX_TOKEN_BITS / 8 + 2];
 	uint8_t key_hash[AES_BLOCK_SIZE];
 	int rc;
 
-	/* empty password means "no password" */
-	if (pass && !strlen(pass))
-		pass = NULL;
-	if (devid && !strlen(devid))
-		devid = NULL;
-
-	rc = generate_key_hash(key_hash, pass, devid, &newt.device_id_hash,
-			       &newt);
+	rc = generate_key_hash(key_hash, pass, devid, &t->device_id_hash, t);
 	if (rc)
 		return rc;
 
-	if (pass)
-		newt.flags |= FL_PASSPROT;
-	else
-		newt.flags &= ~FL_PASSPROT;
-
-	if (devid)
-		newt.flags |= FL_SNPROT;
-	else
-		newt.flags &= ~FL_SNPROT;
-
 	memset(d, 0, sizeof(d));
-	aes128_ecb_encrypt(key_hash, newt.dec_seed, newt.enc_seed);
-	memcpy(d, newt.enc_seed, AES_KEY_SIZE);
+	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
+	memcpy(d, t->enc_seed, AES_KEY_SIZE);
 
-	set_bits(d, 128, 16, newt.flags);
-	set_bits(d, 144, 14, newt.exp_date);
-	set_bits(d, 159, 15, securid_shortmac(newt.dec_seed, AES_KEY_SIZE));
-	set_bits(d, 174, 15, newt.device_id_hash);
+	set_bits(d, 128, 16, t->flags);
+	set_bits(d, 144, 14, t->exp_date);
+	set_bits(d, 159, 15, securid_shortmac(t->dec_seed, AES_KEY_SIZE));
+	set_bits(d, 174, 15, t->device_id_hash);
 
-	sprintf(out, "%d%s", newt.version, newt.serial);
+	sprintf(out, "%d%s", t->version, t->serial);
 	bits_to_numoutput(d, &out[BINENC_OFS], BINENC_BITS);
 
 	set_bits(d, 0, 15, securid_shortmac(out, CHECKSUM_OFS));
@@ -795,9 +777,24 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 }
 
 int securid_encode_token(const struct securid_token *t, const char *pass,
-	const char *devid, char *out)
+			 const char *devid, char *out)
 {
-	return v2_encode_token(t, pass, devid, out);
+	struct securid_token newt = *t;
+
+	/* empty password means "no password" */
+	if (!pass || !strlen(pass)) {
+		pass = NULL;
+		newt.flags &= ~FL_PASSPROT;
+	} else
+		newt.flags |= FL_PASSPROT;
+
+	if (!devid || !strlen(devid)) {
+		devid = NULL;
+		newt.flags &= ~FL_SNPROT;
+	} else
+		newt.flags |= FL_SNPROT;
+
+	return v2_encode_token(&newt, pass, devid, out);
 }
 
 int securid_random_token(struct securid_token *t)
