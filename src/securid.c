@@ -689,14 +689,26 @@ static void v3_compute_hmac(struct v3_token *v3, const char *pass,
 		    (void *)v3, sizeof(*v3) - SHA256_HASH_SIZE, out);
 }
 
+static void v3_scrub_devid(const char *in, char *out)
+{
+	int j;
+	for (j = 0; in && *in && j < V3_DEVID_CHARS; in++) {
+		if (isalnum(*in))
+			out[j++] = toupper(*in);
+	}
+	out[j] = 0;
+}
+
 static int v3_decrypt_seed(struct securid_token *t,
-			   const char *pass, const char *devid)
+			   const char *pass, const char *raw_devid)
 {
 	struct v3_payload payload;
 	uint8_t hash[SHA256_HASH_SIZE];
+	char devid[V3_DEVID_CHARS + 1];
 
 	if (pass && strlen(pass) > MAX_PASS)
 		return ERR_BAD_PASSWORD;
+	v3_scrub_devid(raw_devid, devid);
 
 	v3_compute_hash(NULL, devid, t->v3->nonce, hash);
 	if (memcmp(hash, t->v3->nonce_devid_hash, SHA256_HASH_SIZE) != 0)
@@ -734,13 +746,14 @@ static int v3_decrypt_seed(struct securid_token *t,
 }
 
 static int v3_encode_token(struct securid_token *t, const char *pass,
-			   const char *devid, char *out)
+			   const char *raw_devid, char *out)
 {
 	struct v3_payload payload;
 	struct v3_token v3;
 	uint8_t key[SHA256_HASH_SIZE];
 	unsigned long enclen = BASE64_MIN_CHARS;
 	char raw_b64[BASE64_MIN_CHARS];
+	char devid[V3_DEVID_CHARS + 1];
 	int i;
 
 	memset(&payload, 0, sizeof(payload));
@@ -763,8 +776,9 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 
 	v3.version = 3;
 	v3.password_locked = !!pass;
-	v3.devid_locked = !!devid;
+	v3.devid_locked = !!raw_devid;
 
+	v3_scrub_devid(raw_devid, devid);
 	v3_derive_key(pass, devid, v3.nonce, 1, key);
 	aes256_cbc_encrypt(key, (void *)&payload, sizeof(struct v3_payload),
 			   v3.nonce, v3.enc_payload);
