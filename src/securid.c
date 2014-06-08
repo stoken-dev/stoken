@@ -572,7 +572,7 @@ static void v3_derive_key(const char *pass, const char *devid, const uint8_t *sa
 				 0x81, 0x60, 0xde, 0x44, 0x4e, 0x05, 0xc0, 0xdd };
 
 	buf0 = alloca(buf_len);
-	buf1 = alloca(buf_len / 2);
+	buf1 = alloca(buf_len >> 1);
 
 	memset(buf0, 0, buf_len);
 
@@ -751,8 +751,8 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 	struct v3_payload payload;
 	struct v3_token v3;
 	uint8_t key[SHA256_HASH_SIZE];
-	unsigned long enclen = BASE64_MIN_CHARS;
-	char raw_b64[BASE64_MIN_CHARS];
+	unsigned long enclen = BASE64_MIN_CHARS + 1;
+	char raw_b64[BASE64_MIN_CHARS + 1];
 	char devid[V3_DEVID_CHARS + 1];
 	int i;
 
