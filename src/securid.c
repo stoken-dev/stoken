@@ -688,7 +688,7 @@ static int v3_decrypt_seed(struct securid_token *t,
 
 	v3_compute_hash(pass, devid, t->v3->nonce, hash);
 	if (memcmp(hash, t->v3->nonce_devid_pass_hash, SHA256_HASH_SIZE) != 0)
-		return ERR_BAD_PASSWORD;
+		return ERR_DECRYPT_FAILED;
 
 	v3_compute_hmac(t->v3, pass, devid, hash);
 	if (memcmp(hash, t->v3->mac, SHA256_HASH_SIZE) != 0)
