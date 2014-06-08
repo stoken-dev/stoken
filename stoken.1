@@ -57,12 +57,19 @@ been derived from an \fIsdtid\fP file by the RSA \fITokenConverter\fP program.
 iPhone-compatible token strings.
 .TP
 .B http://127.0.0.1/securid/ctf?ctfData=250494932146245277466...
+.PD 0
+.TP
+.B http://127.0.0.1/securid/ctf?ctfData=AwAAfBc3QSopPxxjLGnxf...
 Android-compatible token strings.
+.PD
 .TP
 .B <?xml version=...
 RSA \fIsdtid\fP-formatted XML files.  These should be imported from a file:
 \fBstoken import \-\-file=FILE.SDTID\fP.
 .PD
+.PP
+Tokens supplied as QR codes can be converted back to standard URIs by running
+\fBzbarimg\fP(1) on the image file.
 .PP
 The device ID, if used, can be viewed in the "about" menu for the RSA soft
 token app on the phone.  Numeric ctf strings and smartphone tokens bound

@@ -30,6 +30,10 @@
 
 #define AES_BLOCK_SIZE		16
 #define AES_KEY_SIZE		16
+#define AES256_KEY_SIZE		32
+
+#define SHA256_BLOCK_SIZE	64
+#define SHA256_HASH_SIZE	32
 
 #define MIN_PIN			4
 #define MAX_PIN			8
@@ -51,6 +55,9 @@
 
 #define DEVID_CHARS		40
 
+#define V3_DEVID_CHARS		48
+#define V3_NONCE_BYTES		16
+
 #define TOKEN_BITS_PER_CHAR	3
 #define MIN_TOKEN_BITS		189
 #define MAX_TOKEN_BITS		255
@@ -60,6 +67,8 @@
 
 /* this matches src/misc/base64/base64_encode.c in tomcrypt */
 #define BASE64_INPUT_LEN(x)	((4 * ((x) + 2) / 3) + 1)
+#define BASE64_BYTES		0x123
+#define BASE64_MIN_INPUT	(BASE64_INPUT_LEN(BASE64_BYTES))
 
 #define BIT(x)			(1 << (x))
 
@@ -80,7 +89,11 @@
 /* UNIX time_t for 2000/01/01 00:00:00 GMT */
 #define SECURID_EPOCH		946684800
 
+/* V3 tokens use 1970/01/01 as the epoch, but each day has 337500 ticks */
+#define SECURID_V3_DAY		337500
+
 struct sdtid;
+struct v3_token;
 
 struct securid_token {
 	int			version;
@@ -104,6 +117,7 @@ struct securid_token {
 
 	struct sdtid		*sdtid;
 	int			interactive;
+	struct v3_token		*v3;
 };
 
 int securid_decode_token(const char *in, struct securid_token *t);

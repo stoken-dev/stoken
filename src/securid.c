@@ -36,6 +36,40 @@
 #include "securid.h"
 #include "sdtid.h"
 
+struct v3_token {
+	uint8_t			version;
+	uint8_t			password_locked;
+	uint8_t			devid_locked;
+	uint8_t			nonce_devid_hash[SHA256_HASH_SIZE];
+	uint8_t			nonce_devid_pass_hash[SHA256_HASH_SIZE];
+	uint8_t			nonce[V3_NONCE_BYTES];
+	uint8_t			enc_payload[0xb0];
+	uint8_t			mac[SHA256_HASH_SIZE];
+};
+
+#define V3_ADDPIN_OFF		0x1f
+#define V3_ADDPIN_ON		0x21
+
+struct v3_payload {
+	char			serial[16];
+	uint8_t			dec_seed[AES_KEY_SIZE];
+	uint8_t			unk0[2];
+	uint8_t			mode;
+	uint8_t			digits;
+	uint8_t			addpin;
+	uint8_t			interval;
+	uint8_t			res0[2];
+	uint8_t			birth_date[5];
+	uint8_t			res1[3];
+	uint8_t			exp_date[5];
+	uint8_t			res2[0x6b];
+	uint8_t			padding[0x10];
+};
+
+/********************************************************************
+ * Utility and crypto functions
+ ********************************************************************/
+
 static uint8_t hex2nibble(char in)
 {
 	uint8_t ret = in - '0';
@@ -73,6 +107,26 @@ void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 	rijndael_done(&skey);
 
 	memcpy(out, tmp, AES_BLOCK_SIZE);
+}
+
+void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
+			const uint8_t *iv, uint8_t *out)
+{
+	symmetric_key skey;
+	int i, j;
+	uint8_t local_iv[AES_BLOCK_SIZE];
+
+	rijndael_setup(key, AES256_KEY_SIZE, 0, &skey);
+
+	memcpy(local_iv, iv, AES_BLOCK_SIZE);
+	for (i = 0; i < in_len; i += AES_BLOCK_SIZE) {
+		rijndael_ecb_decrypt(in, out, &skey);
+		for (j = 0; j < AES_BLOCK_SIZE; j++)
+			out[j] ^= local_iv[j];
+		memcpy(local_iv, in, AES_BLOCK_SIZE);
+		in += AES_BLOCK_SIZE;
+		out += AES_BLOCK_SIZE;
+	}
 }
 
 int securid_rand(void *out, int len, int paranoid)
@@ -160,6 +214,244 @@ static uint16_t securid_shortmac(const uint8_t *in, int in_len)
 	return (hash[0] << 7) | (hash[1] >> 1);
 }
 
+static void sha256_hash(const uint8_t *in, int in_len, uint8_t *out)
+{
+	hash_state md;
+	sha256_init(&md);
+	sha256_process(&md, in, in_len);
+	sha256_done(&md, out);
+}
+
+static void sha256_hmac(const uint8_t *key, int key_len,
+			const uint8_t *msg, int msg_len, uint8_t *out)
+{
+	hash_state md;
+	uint8_t tmp_key[SHA256_HASH_SIZE], o_key_pad[SHA256_BLOCK_SIZE],
+		i_key_pad[SHA256_BLOCK_SIZE], inner_hash[SHA256_BLOCK_SIZE];
+	int i;
+
+	if (key_len > SHA256_BLOCK_SIZE) {
+		sha256_hash(key, key_len, tmp_key);
+		key = tmp_key;
+		key_len = SHA256_HASH_SIZE;
+	}
+
+	memset(o_key_pad, 0x5c, SHA256_BLOCK_SIZE);
+	memset(i_key_pad, 0x36, SHA256_BLOCK_SIZE);
+	for (i = 0; i < key_len; i++) {
+		o_key_pad[i] ^= key[i];
+		i_key_pad[i] ^= key[i];
+	}
+
+	sha256_init(&md);
+	sha256_process(&md, i_key_pad, SHA256_BLOCK_SIZE);
+	sha256_process(&md, msg, msg_len);
+	sha256_done(&md, inner_hash);
+
+	sha256_init(&md);
+	sha256_process(&md, o_key_pad, SHA256_BLOCK_SIZE);
+	sha256_process(&md, inner_hash, SHA256_HASH_SIZE);
+	sha256_done(&md, out);
+}
+
+static void sha256_pbkdf2(const uint8_t *pass, int pass_len,
+			  const uint8_t *salt, int salt_len,
+			  int n_rounds, uint8_t *key_out)
+{
+	uint8_t *ext_salt;
+	uint8_t hash[SHA256_HASH_SIZE];
+	int i, round;
+
+	ext_salt = alloca(salt_len + 4);
+	memcpy(ext_salt, salt, salt_len);
+
+	/* always 0x00000001, as the output size is fixed at SHA256_HASH_SIZE */
+	ext_salt[salt_len + 0] = 0;
+	ext_salt[salt_len + 1] = 0;
+	ext_salt[salt_len + 2] = 0;
+	ext_salt[salt_len + 3] = 1;
+
+	sha256_hmac(pass, pass_len, ext_salt, salt_len + 4, key_out);
+	memcpy(hash, key_out, SHA256_HASH_SIZE);
+
+	for (round = 2; round <= n_rounds; round++) {
+		sha256_hmac(pass, pass_len, hash, SHA256_HASH_SIZE, hash);
+
+		for (i = 0; i < SHA256_HASH_SIZE; i++)
+			key_out[i] ^= hash[i];
+	}
+}
+
+/********************************************************************
+ * V3 token handling
+ ********************************************************************/
+
+static void v3_derive_key(const char *pass, const char *devid, const uint8_t *salt,
+			  int key_id, uint8_t *out)
+{
+	uint8_t *buf0, *buf1;
+	int pass_len = pass ? strlen(pass) : 0;
+	int buf_len = V3_DEVID_CHARS + 16 + V3_NONCE_BYTES + pass_len;
+	unsigned int i;
+	const uint8_t key0[] = { 0xd0, 0x14, 0x43, 0x3c, 0x6d, 0x17, 0x9f, 0xeb,
+				 0xda, 0x09, 0xab, 0xfc, 0x32, 0x49, 0x63, 0x4c };
+	const uint8_t key1[] = { 0x3b, 0xaf, 0xff, 0x4d, 0x91, 0x8d, 0x89, 0xb6,
+				 0x81, 0x60, 0xde, 0x44, 0x4e, 0x05, 0xc0, 0xdd };
+
+	buf0 = alloca(buf_len);
+	buf1 = alloca(buf_len / 2);
+
+	memset(buf0, 0, buf_len);
+
+	if (pass)
+		strncpy(buf0, pass, pass_len);
+	if (devid)
+		strncpy(&buf0[pass_len], devid, V3_DEVID_CHARS);
+	memcpy(&buf0[pass_len + V3_DEVID_CHARS], key_id ? key1 : key0, 16);
+	memcpy(&buf0[pass_len + V3_DEVID_CHARS + 16], salt, V3_NONCE_BYTES);
+
+	/* yup, the PBKDF2 password is really "every 2nd byte of the input" */
+	for (i = 1; i < buf_len; i += 2)
+		buf1[i >> 1] = buf0[i];
+
+	sha256_pbkdf2(buf1, buf_len >> 1, salt, V3_NONCE_BYTES, 1000, out);
+}
+
+static int v3_decode(const char *in, struct securid_token *t)
+{
+	char decoded[BASE64_MIN_INPUT + 1];
+	int i, j;
+	unsigned long actual;
+
+	/* remove URL-encoding */
+	for (i = 0, j = 0; in[i]; ) {
+		if (j == BASE64_MIN_INPUT)
+			return ERR_BAD_LEN;
+		if (in[i] == '%') {
+			if (!isxdigit(in[i + 1]) || !isxdigit(in[i + 2]))
+				return ERR_BAD_LEN;
+			decoded[j++] = hex2byte(&in[i + 1]);
+			i += 3;
+		} else {
+			decoded[j++] = in[i++];
+		}
+	}
+	decoded[j] = 0;
+
+	t->v3 = malloc(sizeof(struct v3_token));
+	if (!t->v3)
+		return ERR_NO_MEMORY;
+
+	actual = sizeof(struct v3_token);
+	if (base64_decode(decoded, strlen(decoded),
+			  (void *)t->v3, &actual) != CRYPT_OK ||
+	    actual != sizeof(struct v3_token) ||
+	    t->v3->version != 0x03) {
+		free(t->v3);
+		t->v3 = NULL;
+		return ERR_GENERAL;
+	}
+
+	t->version = 3;
+	t->has_enc_seed = 1;
+
+	/* more flags will get populated later when we decrypt the payload */
+	t->flags = t->v3->password_locked ? FL_PASSPROT : 0;
+	t->flags |= t->v3->devid_locked ? FL_SNPROT : 0;
+
+	return ERR_NONE;
+}
+
+static uint16_t v3_parse_date(uint8_t *in)
+{
+	uint64_t longdate;
+
+	longdate = ((uint64_t)in[0] << 32) |
+		   ((uint64_t)in[1] << 24) |
+		   ((uint64_t)in[2] << 16) |
+		   ((uint64_t)in[3] <<  8) |
+		   ((uint64_t)in[4] <<  0);
+	longdate /= SECURID_V3_DAY;
+	return longdate - (SECURID_EPOCH / (24*60*60));
+}
+
+static void v3_compute_hash(const char *pass, const char *devid,
+			    const uint8_t *salt, uint8_t *hash)
+{
+	uint8_t hash_buf[V3_NONCE_BYTES + V3_DEVID_CHARS + MAX_PASS];
+	int pass_len = 0;
+
+	memset(hash_buf, 0, sizeof(hash_buf));
+	memcpy(&hash_buf[0], salt, V3_NONCE_BYTES);
+
+	if (devid)
+		strncpy(&hash_buf[V3_NONCE_BYTES], devid, V3_DEVID_CHARS);
+
+	if (pass) {
+		pass_len = strlen(pass);
+		strncpy(&hash_buf[V3_NONCE_BYTES + V3_DEVID_CHARS], pass, MAX_PASS);
+	}
+	sha256_hash(hash_buf, V3_NONCE_BYTES + V3_DEVID_CHARS + pass_len, hash);
+}
+
+static void v3_compute_hmac(struct v3_token *v3, const char *pass,
+			    const char *devid, uint8_t *out)
+{
+	uint8_t hash[SHA256_HASH_SIZE];
+
+	v3_derive_key(pass, devid, v3->nonce, 0, hash);
+	sha256_hmac(hash, SHA256_HASH_SIZE,
+		    (void *)v3, sizeof(*v3) - SHA256_HASH_SIZE, out);
+}
+
+static int v3_decrypt(struct securid_token *t,
+		      const char *pass, const char *devid)
+{
+	struct v3_payload payload;
+	uint8_t hash[SHA256_HASH_SIZE];
+
+	if (pass && strlen(pass) > MAX_PASS)
+		return ERR_BAD_PASSWORD;
+
+	v3_compute_hash(NULL, devid, t->v3->nonce, hash);
+	if (memcmp(hash, t->v3->nonce_devid_hash, SHA256_HASH_SIZE) != 0)
+		return ERR_BAD_DEVID;
+
+	v3_compute_hash(pass, devid, t->v3->nonce, hash);
+	if (memcmp(hash, t->v3->nonce_devid_pass_hash, SHA256_HASH_SIZE) != 0)
+		return ERR_BAD_PASSWORD;
+
+	v3_compute_hmac(t->v3, pass, devid, hash);
+	if (memcmp(hash, t->v3->mac, SHA256_HASH_SIZE) != 0)
+		return ERR_CHECKSUM_FAILED;
+
+	v3_derive_key(pass, devid, t->v3->nonce, 1, hash);
+	aes256_cbc_decrypt(hash,
+			   t->v3->enc_payload, sizeof(struct v3_payload),
+			   t->v3->nonce, (void *)&payload);
+
+	strncpy(t->serial, payload.serial, SERIAL_CHARS);
+	t->serial[SERIAL_CHARS] = 0;
+
+	memcpy(t->dec_seed, &payload.dec_seed, AES_KEY_SIZE);
+	t->has_dec_seed = 1;
+
+	t->flags |= FL_TIMESEEDS | FL_128BIT;
+	t->flags |= payload.mode ? FL_FEAT4 : 0;
+	t->flags |= ((payload.digits-1) << FLD_DIGIT_SHIFT) & FLD_DIGIT_MASK;
+	t->flags |= (payload.addpin != V3_ADDPIN_OFF) ?
+		    (0x2 << FLD_PINMODE_SHIFT) : 0;
+	t->flags |= payload.interval == 60 ? (1 << FLD_NUMSECONDS_SHIFT) : 0;
+
+	t->exp_date = v3_parse_date(payload.exp_date);
+
+	return ERR_NONE;
+}
+
+/********************************************************************
+ * V1/V2 token handling
+ ********************************************************************/
+
 static void numinput_to_bits(const char *in, uint8_t *out, unsigned int n_bits)
 {
 	int bitpos = 13;
@@ -241,6 +533,10 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	uint8_t d[MAX_TOKEN_BITS / 8 + 2];
 	int len = strlen(in);
 	uint16_t token_mac, computed_mac;
+
+	/* V3 token always starts with a base64-encoded 0x03 byte */
+	if (len >= BASE64_MIN_INPUT && (in[0] == 'A'))
+		return v3_decode(in, t);
 
 	if (len < MIN_TOKEN_CHARS || len > MAX_TOKEN_CHARS)
 		return ERR_BAD_LEN;
@@ -331,6 +627,8 @@ int securid_decrypt_seed(struct securid_token *t, const char *pass,
 
 	if (t->sdtid)
 		return sdtid_decrypt(t, pass);
+	if (t->v3)
+		return v3_decrypt(t, pass, devid);
 
 	if (t->flags & FL_PASSPROT && !pass)
 		return ERR_MISSING_PASSWORD;
@@ -478,6 +776,10 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 
 	return ERR_NONE;
 }
+
+/********************************************************************
+ * Misc operations
+ ********************************************************************/
 
 int securid_random_token(struct securid_token *t)
 {

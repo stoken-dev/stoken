@@ -83,16 +83,25 @@ int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
 		return ERR_GENERAL;
 	} while (0);
 
-	for (i = 0; *p; p++) {
-		if (i >= BUFLEN - 1)
-			return ERR_BAD_LEN;
-		if (isdigit(*p))
+	if (p[0] == '1' || p[0] == '2') {
+		for (i = 0; *p; p++) {
+			if (i >= BUFLEN - 1)
+				return ERR_BAD_LEN;
+			if (isdigit(*p))
+				buf[i++] = *p;
+			else if (*p != '-')
+				break;
+		}
+	} else if (p[0] == 'A') {
+		for (i = 0; *p; p++) {
+			if (i >= BUFLEN - 1)
+				return ERR_BAD_LEN;
 			buf[i++] = *p;
-		else if (*p != '-')
-			break;
-	}
-	buf[i] = 0;
+		}
+	} else
+		return ERR_GENERAL;
 
+	buf[i] = 0;
 	ret = securid_decode_token(buf, t);
 
 	if (strstarts(str, "com.rsa.securid.iphone://ctf") ||
@@ -262,6 +271,7 @@ int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,
 
 static void zap_current_token(struct stoken_ctx *ctx)
 {
+	free(ctx->t->v3);
 	if (ctx->t) {
 		sdtid_free(ctx->t->sdtid);
 		free(ctx->t);
