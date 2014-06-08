@@ -90,6 +90,7 @@
 
 /* UNIX time_t for 2000/01/01 00:00:00 GMT */
 #define SECURID_EPOCH		946684800
+#define SECURID_EPOCH_DAYS	(SECURID_EPOCH / (24*60*60))
 
 /* V3 tokens use 1970/01/01 as the epoch, but each day has 337500 ticks */
 #define SECURID_V3_DAY		337500

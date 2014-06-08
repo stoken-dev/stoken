@@ -109,8 +109,8 @@ void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 	memcpy(out, tmp, AES_BLOCK_SIZE);
 }
 
-void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
-			const uint8_t *iv, uint8_t *out)
+static void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
+			       const uint8_t *iv, uint8_t *out)
 {
 	symmetric_key skey;
 	int i, j;
@@ -127,6 +127,28 @@ void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
 		in += AES_BLOCK_SIZE;
 		out += AES_BLOCK_SIZE;
 	}
+	rijndael_done(&skey);
+}
+
+static void aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
+			       const uint8_t *iv, uint8_t *out)
+{
+	symmetric_key skey;
+	int i, j;
+	uint8_t xored_in[AES_BLOCK_SIZE];
+
+	rijndael_setup(key, AES256_KEY_SIZE, 0, &skey);
+
+	for (i = 0; i < in_len; i += AES_BLOCK_SIZE) {
+		for (j = 0; j < AES_BLOCK_SIZE; j++) {
+			xored_in[j] = in[j] ^
+				      (i ? out[j - AES_BLOCK_SIZE] : iv[j]);
+		}
+		rijndael_ecb_encrypt(xored_in, out, &skey);
+		in += AES_BLOCK_SIZE;
+		out += AES_BLOCK_SIZE;
+	}
+	rijndael_done(&skey);
 }
 
 int securid_rand(void *out, int len, int paranoid)
@@ -623,7 +645,19 @@ static uint16_t v3_parse_date(uint8_t *in)
 		   ((uint64_t)in[3] <<  8) |
 		   ((uint64_t)in[4] <<  0);
 	longdate /= SECURID_V3_DAY;
-	return longdate - (SECURID_EPOCH / (24*60*60));
+	return longdate - SECURID_EPOCH_DAYS;
+}
+
+static void v3_encode_date(uint8_t *out, uint16_t in)
+{
+	uint64_t longdate;
+
+	longdate = ((uint64_t)in + SECURID_EPOCH_DAYS) * SECURID_V3_DAY;
+	out[0] = longdate >> 32;
+	out[1] = longdate >> 24;
+	out[2] = longdate >> 16;
+	out[3] = longdate >>  8;
+	out[4] = longdate >>  0;
 }
 
 static void v3_compute_hash(const char *pass, const char *devid,
