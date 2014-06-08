@@ -249,41 +249,6 @@ static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
 	return ret;
 }
 
-static void __mangle_encoding(char *str, const char *pat, const char *replace)
-{
-	/* replace must be shorter than pat */
-	int plen = strlen(pat), rlen = strlen(replace);
-
-	while (1) {
-		char *p = strstr(str, pat);
-		if (!p)
-			return;
-		memcpy(p, replace, rlen);
-		memmove(&p[rlen], &p[plen], strlen(&p[plen]) + 1);
-	}
-}
-
-static char *mangle_encoding(xmlNode *node)
-{
-	char *str = xmlNodeGetContent(node), *enc;
-
-	if (!str)
-		return str;
-
-	enc = xmlEncodeEntitiesReentrant(node->doc, str);
-	free(str);
-
-	if (!enc || !strchr(enc, '&'))
-		return enc;
-
-	/* FIXME: add encodings for non-ASCII characters */
-	__mangle_encoding(enc, "&amp;", "&;");
-	__mangle_encoding(enc, "&lt;", ">;");
-	__mangle_encoding(enc, "&gt;", "<;");
-
-	return enc;
-}
-
 static char *__lookup_common(struct sdtid *s, xmlNode *node, const char *name)
 {
 	if (s->error != ERR_NONE || !node)
@@ -294,8 +259,7 @@ static char *__lookup_common(struct sdtid *s, xmlNode *node, const char *name)
 		if (val)
 			return val;
 		if (xmlnode_is_named(node, name)) {
-			val = s->is_template ? (char *)xmlNodeGetContent(node) :
-					       mangle_encoding(node);
+			val = (char *)xmlNodeGetContent(node);
 			if (!val)
 				s->error = ERR_NO_MEMORY;
 			return val;
@@ -446,7 +410,7 @@ static int __hash_section(struct hash_status *hs, const char *pfx, xmlNode *node
 		if (ret > 0)
 			continue;
 
-		val = mangle_encoding(node);
+		val = (char *)xmlNodeGetContent(node);
 		if (!val)
 			goto err;
 
@@ -507,6 +471,8 @@ static void hash_password(uint8_t *result, const char *pass, const char *salt0,
 	memset(iv, 0, sizeof(iv));
 
 	memset(key, 0, sizeof(key));
+
+	/* FIXME: this should probably use a hash if salt1 is >16 chars */
 	strncpy(key, salt1, sizeof(key));
 
 	memset(data, 0, sizeof(data));

@@ -60,7 +60,7 @@ sub random_doc()
 	add_str_node($node, "Version", "0");
 	add_str_node($node, "Origin", rand_str());
 	add_str_node($node, "Dest", rand_str());
-	add_str_node($node, "Name", rand_str());
+	add_str_node($node, "Name", rand_str(16));
 	add_str_node($node, "FirstToken", rand_str());
 	add_str_node($node, "LastToken", rand_str());
 # NumTokens: default
