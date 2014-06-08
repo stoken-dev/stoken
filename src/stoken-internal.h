@@ -23,7 +23,7 @@
 
 #include "stoken.h"
 
-#define BUFLEN			1024
+#define BUFLEN			2048
 #define RC_NAME			".stokenrc"
 #define RC_VER			1
 

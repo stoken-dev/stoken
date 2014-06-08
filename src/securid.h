@@ -68,7 +68,9 @@
 /* this matches src/misc/base64/base64_encode.c in tomcrypt */
 #define BASE64_INPUT_LEN(x)	((4 * ((x) + 2) / 3) + 1)
 #define BASE64_BYTES		0x123
-#define BASE64_MIN_INPUT	(BASE64_INPUT_LEN(BASE64_BYTES))
+#define BASE64_MIN_CHARS	(BASE64_INPUT_LEN(BASE64_BYTES))
+/* '+' and '/' expand to "%2B" and "%2F", so worst case... */
+#define BASE64_MAX_CHARS	(3*BASE64_INPUT_LEN(BASE64_BYTES))
 
 #define BIT(x)			(1 << (x))
 

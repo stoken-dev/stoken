@@ -570,13 +570,13 @@ static void v3_derive_key(const char *pass, const char *devid, const uint8_t *sa
 
 static int v3_decode_token(const char *in, struct securid_token *t)
 {
-	char decoded[BASE64_MIN_INPUT + 1];
+	char decoded[BASE64_MIN_CHARS + 1];
 	int i, j;
 	unsigned long actual;
 
 	/* remove URL-encoding */
 	for (i = 0, j = 0; in[i]; ) {
-		if (j == BASE64_MIN_INPUT)
+		if (j == BASE64_MIN_CHARS)
 			return ERR_BAD_LEN;
 		if (in[i] == '%') {
 			if (!isxdigit(in[i + 1]) || !isxdigit(in[i + 2]))
@@ -712,7 +712,7 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	 */
 	if (in[0] == '1' || in[0] == '2')
 		return v2_decode_token(in, t);
-	else if (strlen(in) >= BASE64_MIN_INPUT && (in[0] == 'A'))
+	else if (strlen(in) >= BASE64_MIN_CHARS && (in[0] == 'A'))
 		return v3_decode_token(in, t);
 	else
 		return ERR_TOKEN_VERSION;
