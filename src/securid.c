@@ -925,6 +925,13 @@ int securid_random_token(struct securid_token *t)
 
 time_t securid_unix_exp_date(const struct securid_token *t)
 {
+	/*
+	 * v3 tokens encrypt the expiration date, so if the user has not
+	 * been prompted for a password yet, we'll need to bypass the
+	 * expiration checks.
+	 */
+	if (t->version == 3 && !t->exp_date)
+		return 0x7fffffff;
 	return SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
 }
 
