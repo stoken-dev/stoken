@@ -592,13 +592,13 @@ static void v3_derive_key(const char *pass, const char *devid, const uint8_t *sa
 
 static int v3_decode_token(const char *in, struct securid_token *t)
 {
-	char decoded[BASE64_MIN_CHARS + 1];
+	char decoded[V3_BASE64_SIZE];
 	int i, j;
 	unsigned long actual;
 
 	/* remove URL-encoding */
 	for (i = 0, j = 0; in[i]; ) {
-		if (j == BASE64_MIN_CHARS)
+		if (j == V3_BASE64_SIZE - 1)
 			return ERR_BAD_LEN;
 		if (in[i] == '%') {
 			if (!isxdigit(in[i + 1]) || !isxdigit(in[i + 2]))
@@ -611,11 +611,11 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 	}
 	decoded[j] = 0;
 
-	t->v3 = malloc(sizeof(struct v3_token));
+	actual = sizeof(struct v3_token);
+	t->v3 = malloc(actual);
 	if (!t->v3)
 		return ERR_NO_MEMORY;
 
-	actual = sizeof(struct v3_token);
 	if (base64_decode(decoded, strlen(decoded),
 			  (void *)t->v3, &actual) != CRYPT_OK ||
 	    actual != sizeof(struct v3_token) ||
@@ -751,8 +751,8 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 	struct v3_payload payload;
 	struct v3_token v3;
 	uint8_t key[SHA256_HASH_SIZE];
-	unsigned long enclen = BASE64_MIN_CHARS + 1;
-	char raw_b64[BASE64_MIN_CHARS + 1];
+	unsigned long enclen = V3_BASE64_SIZE;
+	char raw_b64[V3_BASE64_SIZE];
 	char devid[V3_DEVID_CHARS + 1];
 	int i;
 
@@ -816,7 +816,7 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	 */
 	if (in[0] == '1' || in[0] == '2')
 		return v2_decode_token(in, t);
-	else if (strlen(in) >= BASE64_MIN_CHARS && (in[0] == 'A'))
+	else if (strlen(in) >= V3_BASE64_MIN_CHARS && (in[0] == 'A'))
 		return v3_decode_token(in, t);
 	else
 		return ERR_TOKEN_VERSION;

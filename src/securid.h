@@ -65,12 +65,22 @@
 #define MIN_TOKEN_CHARS		((MIN_TOKEN_BITS / TOKEN_BITS_PER_CHAR) + \
 				 SERIAL_CHARS + VER_CHARS + CHECKSUM_CHARS)
 
-/* this matches src/misc/base64/base64_encode.c in tomcrypt */
+/*
+ * This matches src/misc/base64/base64_encode.c in tomcrypt.
+ * base64 produces 4 output characters (each carrying 6 bits of data) for
+ * up to 3 input bytes (each carrying 8 bits of data).  Plus one terminating
+ * NUL at the end.
+ */
 #define BASE64_INPUT_LEN(x)	((4 * ((x) + 2) / 3) + 1)
-#define BASE64_BYTES		0x123
-#define BASE64_MIN_CHARS	(BASE64_INPUT_LEN(BASE64_BYTES))
+
+/* decoded size (binary) */
+#define V3_BASE64_BYTES		0x123
+/* worst case, including terminating NUL */
+#define V3_BASE64_SIZE		(BASE64_INPUT_LEN(V3_BASE64_BYTES))
 /* '+' and '/' expand to "%2B" and "%2F", so worst case... */
-#define BASE64_MAX_CHARS	(3*BASE64_INPUT_LEN(BASE64_BYTES))
+#define V3_BASE64_URL_SIZE	(3*BASE64_INPUT_LEN(V3_BASE64_BYTES))
+/* strlen() of smallest possible encoded size */
+#define V3_BASE64_MIN_CHARS	(V3_BASE64_BYTES * 4 / 3)
 
 #define BIT(x)			(1 << (x))
 
