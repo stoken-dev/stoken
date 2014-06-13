@@ -271,8 +271,8 @@ int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,
 
 static void zap_current_token(struct stoken_ctx *ctx)
 {
-	free(ctx->t->v3);
 	if (ctx->t) {
+		free(ctx->t->v3);
 		sdtid_free(ctx->t->sdtid);
 		free(ctx->t);
 	}
