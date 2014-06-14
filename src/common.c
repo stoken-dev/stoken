@@ -223,7 +223,7 @@ static void usage_cli(void)
 static void show_version(void)
 {
 	puts(PACKAGE_STRING " - software token for Linux/UNIX systems");
-	puts("Copyright (C) 2012 Kevin Cernekee <cernekee@gmail.com>");
+	puts("Copyright (C) 2014 Kevin Cernekee <cernekee@gmail.com>");
 	puts("");
 	puts("This is free software with ABSOLUTELY NO WARRANTY.");
 	puts("For details see the COPYING.LIB file in the source distribution.");
