@@ -626,7 +626,6 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 	}
 
 	t->version = 3;
-	t->has_enc_seed = 1;
 
 	/* more flags will get populated later when we decrypt the payload */
 	t->flags = t->v3->password_locked ? FL_PASSPROT : 0;
