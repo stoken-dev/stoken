@@ -13,7 +13,11 @@ v0.6 - UNRELEASED
 
  - Fix JNI symbol exports
 
+ - Fix "stoken issue" if no token is imported
+
  - Add new stoken_get_info() API to query the S/N and expiration date
+
+ - Minor documentation updates
 
 v0.5 - 2014/03/15
 
