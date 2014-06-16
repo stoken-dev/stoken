@@ -311,6 +311,14 @@ int main(int argc, char **argv)
 	if (rc != ERR_NONE)
 		die("can't initialize: %s\n", stoken_errstr[rc]);
 
+	if (!strcmp(cmd, "issue")) {
+		rc = sdtid_issue(opt_template, opt_new_password, opt_new_devid);
+		if (rc != ERR_NONE)
+			die("issue: error generating sdtid: %s\n",
+			    stoken_errstr[rc]);
+		return 0;
+	}
+
 	t = current_token;
 	if (!t)
 		die("error: no token present.  Use 'stoken import' to add one.\n");
@@ -365,11 +373,6 @@ int main(int argc, char **argv)
 				die("export: error writing sdtid: %s\n",
 				    stoken_errstr[rc]);
 		}
-	} else if (!strcmp(cmd, "issue")) {
-		rc = sdtid_issue(opt_template, opt_new_password, opt_new_devid);
-		if (rc != ERR_NONE)
-			die("issue: error generating sdtid: %s\n",
-			    stoken_errstr[rc]);
 	} else if (!strcmp(cmd, "show")) {
 		unlock_token(t, 0, NULL);
 		securid_token_info(t, &print_token_info_line);
