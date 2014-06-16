@@ -348,6 +348,7 @@ int main(int argc, char **argv)
 		}
 
 		t->is_smartphone = 0;
+		t->version = 2;
 		securid_encode_token(t, pass, opt_new_devid, buf);
 		rc = write_token_and_pin(buf, NULL, pass);
 		if (rc != ERR_NONE)
