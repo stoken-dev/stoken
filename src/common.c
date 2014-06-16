@@ -368,7 +368,8 @@ int common_init(char *cmd)
 #endif
 
 	cfg = xzalloc(sizeof(*cfg));
-	if (__stoken_read_rcfile(opt_rcfile, cfg, &warn) != ERR_NONE)
+	if (__stoken_read_rcfile(opt_rcfile, cfg,
+				 is_import ? &dbg : &warn) != ERR_NONE)
 		__stoken_zap_rcfile_data(cfg);
 
 	if (cfg->rc_ver && atoi(cfg->rc_ver) != RC_VER) {
