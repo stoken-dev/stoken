@@ -116,7 +116,12 @@ encrypted and decrypted seed bytes (which should be treated as sensitive
 data, as they can be used to derive tokencodes).
 .PP
 \fBstoken export\fP translates the current token into a format suitable
-for importation to another device.
+for importation to another device.  It can be used in conjunction with
+\fBqrencode\fP(1) to send a token to a smartphone:
+.RS 4
+.PP
+qrencode \-l H `stoken export \-\-random \-\-android` \-o \- | display \-
+.RE
 .PP
 \fBstoken issue\fP generates a new software token in XML \fIsdtid\fP
 format.  A template file, itself in \fIsdtid\fP format, may be
