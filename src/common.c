@@ -213,7 +213,7 @@ static void usage_cli(void)
 	puts("Other commands:");
 	puts("");
 	puts("  stoken show [ --seed ]");
-	puts("  stoken export [ { --blocks | --iphone | --android | --sdtid } ]");
+	puts("  stoken export [ { --blocks | --iphone | --android | --v3 | --sdtid } ]");
 	puts("  stoken issue [ --template=<sdtid_skeleton> ]");
 	puts("");
 	usage_common();
