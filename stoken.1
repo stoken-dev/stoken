@@ -119,7 +119,11 @@ data, as they can be used to derive tokencodes).
 for importation to another device.
 .PP
 \fBstoken issue\fP generates a new software token in XML \fIsdtid\fP
-format.  Experimental.
+format.  A template file, itself in \fIsdtid\fP format, may be
+provided to override some or all of the human-readable fields.  This would
+permit appropriate serial numbers, expiration dates, usernames, etc. to be
+specified.  If Secret, Seed, or MAC fields are present in the template
+file, they will be ignored.
 .SH "GLOBAL OPTIONS"
 .TP
 \fB\-\-rcfile=\fIfile\fP

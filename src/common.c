@@ -214,7 +214,7 @@ static void usage_cli(void)
 	puts("");
 	puts("  stoken show [ --seed ]");
 	puts("  stoken export [ { --blocks | --iphone | --android | --sdtid } ]");
-	puts("  stoken issue [ --file=<token_file> ]");
+	puts("  stoken issue [ --template=<sdtid_skeleton> ]");
 	puts("");
 	usage_common();
 	exit(1);
