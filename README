@@ -8,6 +8,7 @@ RSA Security.
 Dependencies:
 
     libtomcrypt
+    libxml2
     libgtk2.0 (required for stoken-gui only)
 
 Building:
