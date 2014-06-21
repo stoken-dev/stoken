@@ -35,3 +35,7 @@ libtool
 # scratch files
 .*.sw*
 *~
+
+# Debian
+debian/changelog
+tmp.debian

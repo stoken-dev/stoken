@@ -6,8 +6,6 @@ ppaname="cernekee/ppa"
 builddir=tmp.debian
 pkg=stoken
 
-set -ex
-
 function build_one
 {
 	arg="$1"
@@ -35,6 +33,21 @@ function build_one
 # MAIN
 #
 
+release=0
+
+while [ -n "$1" ]; do
+	case "$1" in
+		-r)
+			release=1
+			;;
+		*)
+			echo "usage: $0 [-r]"
+			exit 1
+			;;
+	esac
+	shift
+done
+
 tarball=$(ls -1 ${pkg}-*.tar.gz 2> /dev/null || true)
 if [ -z "$tarball" -o ! -e "$tarball" ]; then
 	echo "missing release tarball"
@@ -53,18 +66,22 @@ fi
 rm -f lintian.txt ${pkg}*.deb
 touch lintian.txt
 
+set -ex
+
 dist=$(lsb_release -si)
 if [ "$dist" = "Ubuntu" ]; then
-	git checkout -f debian/changelog
+	rm -f debian/changelog
 	codename=$(lsb_release -sc)
 
-	today=$(date +%Y%m%d%H%M%S)
-	ver="${ver}~${today}"
-	uver="${ver}-1ubuntu1"
+	if [ $release != 1 ]; then
+		today=$(date +%Y%m%d%H%M%S)
+		ver="${ver}~${today}"
+	fi
+	uver="${ver}-1ppa1"
 
-	dch --newversion "${uver}~${codename}" \
+	dch --create --package $pkg \
+		--newversion "${uver}~${codename}" \
 		--distribution $codename \
-		--force-bad-version \
 		"New PPA build."
 fi
 
