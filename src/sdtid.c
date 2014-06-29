@@ -590,9 +590,6 @@ int sdtid_decrypt(struct securid_token *t, const char *pass)
 		good_mac1[AES_BLOCK_SIZE], mac1[AES_BLOCK_SIZE];
 	int ret, mac0_passed, mac1_passed;
 
-	if (pass && !strlen(pass))
-		pass = NULL;
-
 	ret = generate_all_keys(s, pass);
 	if (ret != ERR_NONE)
 		return ret;

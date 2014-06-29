@@ -473,15 +473,7 @@ static int v2_decrypt_seed(struct securid_token *t, const char *pass,
 	uint16_t device_id_hash;
 	int rc;
 
-	if (t->flags & FL_PASSPROT && !pass)
-		return ERR_MISSING_PASSWORD;
-	if (t->flags & FL_SNPROT && !devid)
-		return ERR_MISSING_PASSWORD;
-
-	rc = generate_key_hash(key_hash,
-			       t->flags & FL_PASSPROT ? pass : NULL,
-			       t->flags & FL_SNPROT ? devid : NULL,
-			       &device_id_hash, t);
+	rc = generate_key_hash(key_hash, pass, devid, &device_id_hash, t);
 	if (rc)
 		return rc;
 
@@ -705,8 +697,6 @@ static int v3_decrypt_seed(struct securid_token *t,
 	uint8_t hash[SHA256_HASH_SIZE];
 	char devid[V3_DEVID_CHARS + 1];
 
-	if (pass && strlen(pass) > MAX_PASS)
-		return ERR_BAD_PASSWORD;
 	v3_scrub_devid(raw_devid, devid);
 
 	v3_compute_hash(NULL, devid, t->v3->nonce, hash);
@@ -824,6 +814,21 @@ int securid_decode_token(const char *in, struct securid_token *t)
 int securid_decrypt_seed(struct securid_token *t, const char *pass,
 			 const char *devid)
 {
+	if (t->flags & FL_PASSPROT) {
+		if (!pass || !strlen(pass))
+			return ERR_MISSING_PASSWORD;
+		if (strlen(pass) > MAX_PASS)
+			return ERR_BAD_PASSWORD;
+	} else
+		pass = NULL;
+
+	if (t->flags & FL_SNPROT) {
+		if (!devid || !strlen(devid))
+			return ERR_MISSING_PASSWORD;
+		/* NOTE: max length is checked elsewhere, as it varies */
+	} else
+		devid = NULL;
+
 	if (t->sdtid)
 		return sdtid_decrypt(t, pass);
 	else if (t->v3)
