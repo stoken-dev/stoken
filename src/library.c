@@ -427,6 +427,8 @@ char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
 	ret = calloc(1, MAX_TOKEN_CHARS + 1);
 	if (!ret)
 		return NULL;
+
+	ctx->t->version = 2;
 	if (securid_encode_token(ctx->t, pass, devid, ret) != ERR_NONE) {
 		free(ret);
 		return NULL;
