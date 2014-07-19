@@ -30,7 +30,21 @@ extern "C" {
 #endif
 
 #define STOKEN_API_VER_MAJOR	1
-#define STOKEN_API_VER_MINOR	2
+#define STOKEN_API_VER_MINOR	3
+
+/* Before API version 1.3 (stoken 0.8) this macro didn't exist.
+ * Somewhat ironic, that the API version check itself needs to be
+ * conditionally used depending on the API version. A very simple way
+ * for users to handle this with an approximately correct answer is
+ *   #include <stoken.h>
+ *   #ifndef STOKEN_CHECK_VER
+ *   #define STOKEN_CHECK_VER(x,y) 0
+ *   #endif
+ */
+#define STOKEN_CHECK_VER(maj, min) \
+	(STOKEN_API_VER_MAJOR > (maj) || \
+	(STOKEN_API_VER_MAJOR == (maj) && \
+	 STOKEN_API_VER_MINOR >= (min)))
 
 #define STOKEN_MAX_TOKENCODE	8
 
