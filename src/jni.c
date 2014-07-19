@@ -338,6 +338,49 @@ JNIEXPORT jboolean JNICALL Java_org_stoken_LibStoken_checkDevID(
 	return !translate_errno(jenv, ret);
 }
 
+JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getGUIDList(
+	JNIEnv *jenv, jobject jobj)
+{
+	struct libctx *ctx = getctx(jenv, jobj);
+	jmethodID mid;
+	jclass jcls;
+	const struct stoken_guid *guidlist = stoken_get_guid_list();
+	int i, len;
+	jobjectArray jarr;
+
+	for (len = 0; guidlist[len].tag != NULL; len++)
+		;
+
+	jcls = (*ctx->jenv)->FindClass(ctx->jenv,
+				       "org/stoken/LibStoken$StokenGUID");
+	if (jcls == NULL)
+		return NULL;
+
+	mid = (*ctx->jenv)->GetMethodID(ctx->jenv, jcls, "<init>", "()V");
+	if (!mid)
+		return NULL;
+	jarr = (*ctx->jenv)->NewObjectArray(ctx->jenv, len, jcls, NULL);
+	if (!jarr)
+		return NULL;
+
+	for (i = 0; i < len; i++) {
+		const struct stoken_guid *g = &guidlist[i];
+
+		jobj = (*ctx->jenv)->NewObject(ctx->jenv, jcls, mid);
+		if (!jobj)
+			return NULL;
+
+		if (set_string(ctx, jobj, "tag", g->tag) ||
+		    set_string(ctx, jobj, "longName", g->long_name) ||
+		    set_string(ctx, jobj, "GUID", g->guid))
+			return NULL;
+
+		(*ctx->jenv)->SetObjectArrayElement(ctx->jenv, jarr, i, jobj);
+	}
+
+	return jarr;
+}
+
 JNIEXPORT jint JNICALL Java_org_stoken_LibStoken_decryptSeed(
 	JNIEnv *jenv, jobject jobj, jstring jarg0, jstring jarg1)
 {

@@ -58,6 +58,12 @@ struct stoken_info {
 	int			uses_pin;
 };
 
+struct stoken_guid {
+	const char		*tag;
+	const char		*long_name;
+	const char		*guid;
+};
+
 /*
  * Create/destroy library context.
  * stoken_new() returns NULL on error.
@@ -133,6 +139,12 @@ int stoken_devid_required(struct stoken_ctx *ctx);
  *   -EINVAL: invalid format
  */
 int stoken_check_pin(struct stoken_ctx *ctx, const char *pin);
+
+/*
+ * Obtain the list of known "class GUIDs" used to bind a token to a specific
+ * type of device (e.g. iPhone).
+ */
+const struct stoken_guid *stoken_get_guid_list(void);
 
 /*
  * Check the device ID by performing a partial seed decrypt.  This helps

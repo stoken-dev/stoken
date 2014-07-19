@@ -36,6 +36,17 @@ struct stoken_ctx {
 	struct stoken_cfg	cfg;
 };
 
+static struct stoken_guid stoken_guid_list[] = {
+	{ "iphone",   "iPhone",        "556f1985-33dd-442c-9155-3a0e994f21b1" },
+	{ "android",  "Android",       "a01c4380-fc01-4df0-b113-7fb98ec74694" },
+	{ "bb",       "BlackBerry",    "868c28f8-31bf-4911-9876-ebece5c3f2ab" },
+	{ "bb10",     "BlackBerry 10", "b77a1d06-d505-4200-90d3-1bb397748704" },
+	{ "winphone", "Windows Phone", "c483b592-63f0-4f19-b4cb-a6bce8e57159" },
+	{ "win",      "Windows",       "8f94b226-d362-4204-ac52-3b21fa333b6f" },
+	{ "mac",      "Mac OSX",       "d0955a53-569b-4ecc-9cf7-6c2a59d4e775" },
+	{ },
+};
+
 /***********************************************************************
  * Internal functions (only called from within the stoken package)
  ***********************************************************************/
@@ -398,6 +409,11 @@ int stoken_devid_required(struct stoken_ctx *ctx)
 int stoken_check_pin(struct stoken_ctx *ctx, const char *pin)
 {
 	return securid_pin_format_ok(pin) == ERR_NONE ? 0 : -EINVAL;
+}
+
+const struct stoken_guid *stoken_get_guid_list(void)
+{
+	return stoken_guid_list;
 }
 
 int stoken_check_devid(struct stoken_ctx *ctx, const char *devid)

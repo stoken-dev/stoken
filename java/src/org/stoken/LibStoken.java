@@ -55,6 +55,12 @@ public class LibStoken {
 		public boolean usesPin;
 	};
 
+	public static class StokenGUID {
+		public String tag;
+		public String longName;
+		public String GUID;
+	}
+
 	/* public APIs */
 
 	public synchronized native int importRCFile(String path);
@@ -67,6 +73,7 @@ public class LibStoken {
 	public synchronized native boolean isDevIDRequired();
 	public synchronized native boolean checkPIN(String PIN);
 	public synchronized native boolean checkDevID(String DevID);
+	public synchronized native StokenGUID[] getGUIDList();
 	public synchronized native int decryptSeed(String pass, String devID);
 	public synchronized native String encryptSeed(String pass, String devID);
 	public synchronized native String computeTokencode(long when, String PIN);

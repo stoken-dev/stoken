@@ -24,6 +24,11 @@ global:
 	stoken_get_info;
 } STOKEN_1.1;
 
+STOKEN_1.3 {
+global:
+	stoken_get_guid_list;
+} STOKEN_1.2;
+
 STOKEN_PRIVATE {
 global:
 	securid_check_exp;
