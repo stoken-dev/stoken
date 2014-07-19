@@ -52,12 +52,11 @@ static gboolean delete_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
-static gboolean clipboard_callback(GtkWidget *widget, GdkEvent *event,
-	gpointer data)
+static void copy_tokencode(gpointer user_data)
 {
 	GdkDisplay *disp = gdk_display_get_default();
 	GtkClipboard *clip;
-	char *str = data;
+	char *str = user_data;
 
 	/* CLIPBOARD - Control-V in most applications */
 	clip = gtk_clipboard_get_for_display(disp, GDK_SELECTION_CLIPBOARD);
@@ -66,8 +65,18 @@ static gboolean clipboard_callback(GtkWidget *widget, GdkEvent *event,
 	/* PRIMARY - middle-click in xterm */
 	clip = gtk_clipboard_get_for_display(disp, GDK_SELECTION_PRIMARY);
 	gtk_clipboard_set_text(clip, str, -1);
+}
 
-	return FALSE;
+static void clicked_to_clipboard(GtkButton *button, gpointer user_data)
+{
+	copy_tokencode(user_data);
+}
+
+static gboolean press_to_clipboard(GtkWidget *widget, GdkEvent *event,
+	gpointer user_data)
+{
+	copy_tokencode(user_data);
+	return TRUE;
 }
 
 static gboolean draw_progress_bar_callback(GtkWidget *widget, cairo_t *cr,
@@ -237,7 +246,7 @@ static GtkWidget *create_app_window(void)
 	/* buttons */
 
 	widget = GTK_WIDGET(gtk_builder_get_object(builder, "copy_button"));
-	g_signal_connect(widget, "clicked", G_CALLBACK(clipboard_callback),
+	g_signal_connect(widget, "clicked", G_CALLBACK(clicked_to_clipboard),
 		&tokencode_str);
 
 	/* next tokencode */
@@ -248,7 +257,7 @@ static GtkWidget *create_app_window(void)
 	widget = GTK_WIDGET(gtk_builder_get_object(builder,
 		"next_tokencode_eventbox"));
 	g_signal_connect(widget, "button-press-event",
-		G_CALLBACK(clipboard_callback), &next_tokencode_str);
+		G_CALLBACK(press_to_clipboard), &next_tokencode_str);
 
 	return create_app_window_common(builder);
 }
@@ -262,7 +271,7 @@ static GtkWidget *create_small_app_window(void)
 
 	widget = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
 	g_signal_connect(widget, "button-press-event",
-		G_CALLBACK(clipboard_callback), &tokencode_str);
+		G_CALLBACK(press_to_clipboard), &tokencode_str);
 
 	return create_app_window_common(builder);
 }
