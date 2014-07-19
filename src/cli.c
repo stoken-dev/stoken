@@ -32,6 +32,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "stoken.h"
 #include "securid.h"
 #include "sdtid.h"
 #include "stoken-internal.h"
@@ -156,6 +157,17 @@ static void request_devid(struct securid_token *t, char *devid)
 			return;
 		}
 		warn("warning: --devid parameter is incorrect\n");
+	} else {
+		const struct stoken_guid *glist = stoken_get_guid_list();
+		for (i = 0; glist[i].tag != NULL; i++) {
+			rc = securid_decrypt_seed(t, "", glist[i].guid);
+			if (rc != ERR_BAD_DEVID) {
+				prompt("Using class GUID for %s; use --devid to override\n",
+				       glist[i].long_name);
+				strncpy(devid, glist[i].guid, BUFLEN);
+				return;
+			}
+		}
 	}
 
 	prompt("This token is bound to a specific device.\n");
