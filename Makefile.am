@@ -43,10 +43,11 @@ stoken_gui_LDADD	= $(LDADD) libstoken.la $(GTK_LIBS)
 dist_man_MANS		+= stoken-gui.1
 
 icondir			= $(datadir)/pixmaps
-dist_icon_DATA		= stoken-gui.png
+dist_icon_DATA		= gui/stoken-gui.png
 
 desktopdir		= $(datadir)/applications
-dist_desktop_DATA	= stoken-gui.desktop stoken-gui-small.desktop
+dist_desktop_DATA	= gui/stoken-gui.desktop \
+			  gui/stoken-gui-small.desktop
 
 uidir			= $(datadir)/stoken
 ui_DATA			= gui/tokencode-small.ui \
