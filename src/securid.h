@@ -141,7 +141,7 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 void securid_token_info(const struct securid_token *t,
 	void (*callback)(const char *key, const char *value));
 int securid_encode_token(const struct securid_token *t, const char *pass,
-	const char *devid, char *out);
+	const char *devid, int version, char *out);
 int securid_random_token(struct securid_token *t);
 int securid_check_exp(struct securid_token *t, time_t now);
 time_t securid_unix_exp_date(const struct securid_token *t);

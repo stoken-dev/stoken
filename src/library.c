@@ -432,8 +432,7 @@ char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
 	if (!ret)
 		return NULL;
 
-	ctx->t->version = 2;
-	if (securid_encode_token(ctx->t, pass, devid, ret) != ERR_NONE) {
+	if (securid_encode_token(ctx->t, pass, devid, 2, ret) != ERR_NONE) {
 		free(ret);
 		return NULL;
 	}

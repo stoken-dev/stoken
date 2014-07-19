@@ -348,8 +348,7 @@ int main(int argc, char **argv)
 		}
 
 		t->is_smartphone = 0;
-		t->version = 2;
-		securid_encode_token(t, pass, opt_new_devid, buf);
+		securid_encode_token(t, pass, opt_new_devid, 2, buf);
 		rc = write_token_and_pin(buf, NULL, pass);
 		if (rc != ERR_NONE)
 			die("rcfile: error writing new token: %s\n",
@@ -365,8 +364,8 @@ int main(int argc, char **argv)
 
 		if (!opt_sdtid) {
 			t->is_smartphone = opt_iphone || opt_android || opt_v3;
-			t->version = opt_v3 ? 3 : 2;
-			securid_encode_token(t, pass, opt_new_devid, buf);
+			securid_encode_token(t, pass, opt_new_devid,
+					     opt_v3 ? 3 : 2, buf);
 			print_formatted(buf);
 		} else {
 			rc = sdtid_export(opt_template, t, pass, opt_new_devid);
@@ -403,7 +402,7 @@ int main(int argc, char **argv)
 				die("error: PINs do not match\n");
 		}
 
-		securid_encode_token(t, pass, NULL, buf);
+		securid_encode_token(t, pass, NULL, 2, buf);
 		rc = write_token_and_pin(buf, len ? pin : NULL, pass);
 		free(pass);
 
@@ -414,7 +413,7 @@ int main(int argc, char **argv)
 
 		unlock_token(t, 0, NULL);
 		request_new_pass(pass);
-		securid_encode_token(t, pass, NULL, buf);
+		securid_encode_token(t, pass, NULL, 2, buf);
 
 		/* just print to stdout if it didn't come from the rcfile */
 		if (opt_file || opt_token)

@@ -538,7 +538,7 @@ static int v2_encode_token(struct securid_token *t, const char *pass,
 	set_bits(d, 159, 15, securid_shortmac(t->dec_seed, AES_KEY_SIZE));
 	set_bits(d, 174, 15, t->device_id_hash);
 
-	sprintf(out, "%d%s", t->version, t->serial);
+	sprintf(out, "2%s", t->serial);
 	bits_to_numoutput(d, &out[BINENC_OFS], BINENC_BITS);
 
 	set_bits(d, 0, 15, securid_shortmac(out, CHECKSUM_OFS));
@@ -890,7 +890,7 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 }
 
 int securid_encode_token(const struct securid_token *t, const char *pass,
-			 const char *devid, char *out)
+			 const char *devid, int version, char *out)
 {
 	struct securid_token newt = *t;
 
@@ -907,7 +907,7 @@ int securid_encode_token(const struct securid_token *t, const char *pass,
 	} else
 		newt.flags |= FL_SNPROT;
 
-	if (t->version == 3)
+	if (version == 3)
 		return v3_encode_token(&newt, pass, devid, out);
 	else
 		return v2_encode_token(&newt, pass, devid, out);
