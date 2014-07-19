@@ -37,6 +37,7 @@ if ENABLE_GUI
 bin_PROGRAMS		+= stoken-gui
 stoken_gui_SOURCES	= src/gui.c src/common.c
 stoken_gui_CFLAGS	= $(AM_CFLAGS) $(GTK_CFLAGS)
+stoken_gui_CPPFLAGS	= $(AM_CPPFLAGS) -DUIDIR=\"$(uidir)\"
 stoken_gui_LDADD	= $(LDADD) libstoken.la $(GTK_LIBS)
 
 dist_man_MANS		+= stoken-gui.1
@@ -47,6 +48,12 @@ dist_icon_DATA		= stoken-gui.png
 desktopdir		= $(datadir)/applications
 dist_desktop_DATA	= stoken-gui.desktop stoken-gui-small.desktop
 
+uidir			= $(datadir)/stoken
+ui_DATA			= gui/tokencode-small.ui \
+			  gui/tokencode-detail.ui \
+			  gui/password-dialog.ui \
+			  gui/pin-dialog.ui
+
 endif
 
 dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
@@ -54,7 +61,7 @@ dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore libstoken.map CHANGES
+EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA)
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
 			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
 

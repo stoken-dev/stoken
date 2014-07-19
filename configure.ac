@@ -82,7 +82,7 @@ fi
 
 enable_gui=no
 AS_IF([test "x$with_gtk" != xno],
-	[PKG_CHECK_MODULES([GTK], [gtk+-2.0],
+	[PKG_CHECK_MODULES([GTK], [gtk+-3.0],
 		[enable_gui=yes],
 		[if test "x$with_gtk" != xcheck; then
 			AC_MSG_FAILURE(

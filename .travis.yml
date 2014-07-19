@@ -10,7 +10,7 @@ notifications:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk2.0-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core
+  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core
 
 script:
   - ./autogen.sh &&

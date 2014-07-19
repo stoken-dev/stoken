@@ -31,13 +31,21 @@
 
 #define WINDOW_TITLE		"Software Token"
 
-static GtkWidget *tokencode_text, *progress_bar;
+#define EXP_WARN_DAYS		14
+
+static GtkWidget *tokencode_text, *next_tokencode_text, *progress_bar;
 
 static char tokencode_str[16];
+static char next_tokencode_str[16];
 static int last_sec = -1;
-static int interval;
+static int token_sec;
 
-static gboolean delete_event(GtkWidget *widget, GdkEvent *event,
+static int token_days_left;
+static int token_interval;
+static int token_uses_pin;
+static int skipped_pin;
+
+static gboolean delete_callback(GtkWidget *widget, GdkEvent *event,
 	gpointer data)
 {
 	gtk_main_quit();
@@ -49,14 +57,36 @@ static gboolean clipboard_callback(GtkWidget *widget, GdkEvent *event,
 {
 	GdkDisplay *disp = gdk_display_get_default();
 	GtkClipboard *clip;
+	char *str = data;
 
 	/* CLIPBOARD - Control-V in most applications */
 	clip = gtk_clipboard_get_for_display(disp, GDK_SELECTION_CLIPBOARD);
-	gtk_clipboard_set_text(clip, tokencode_str, -1);
+	gtk_clipboard_set_text(clip, str, -1);
 
 	/* PRIMARY - middle-click in xterm */
 	clip = gtk_clipboard_get_for_display(disp, GDK_SELECTION_PRIMARY);
-	gtk_clipboard_set_text(clip, tokencode_str, -1);
+	gtk_clipboard_set_text(clip, str, -1);
+
+	return FALSE;
+}
+
+static gboolean draw_progress_bar_callback(GtkWidget *widget, cairo_t *cr,
+	gpointer data)
+{
+	guint width, height, boundary;
+
+	width = gtk_widget_get_allocated_width(widget);
+	height = gtk_widget_get_allocated_height(widget);
+
+	boundary = width * token_sec / (token_interval - 1);
+
+	cairo_set_source_rgb(cr, 0.3, 0.4, 0.5);
+	cairo_rectangle(cr, 0, 0, boundary, height);
+	cairo_fill(cr);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, boundary, 0, width - boundary, height);
+	cairo_fill(cr);
 
 	return FALSE;
 }
@@ -65,8 +95,7 @@ static gint update_tokencode(gpointer data)
 {
 	time_t now = time(NULL);
 	struct tm *tm;
-	int sec, i, j, code_len;
-	char str[16];
+	char str[128], *formatted;
 
 	tm = gmtime(&now);
 	if ((tm->tm_sec >= 30 && last_sec < 30) ||
@@ -74,26 +103,29 @@ static gint update_tokencode(gpointer data)
 	    last_sec == -1) {
 		last_sec = tm->tm_sec;
 		securid_compute_tokencode(current_token, now, tokencode_str);
+		securid_compute_tokencode(current_token, now + token_interval,
+			next_tokencode_str);
 	}
 
-	sec = interval - (tm->tm_sec % interval) - 1;
+	token_sec = token_interval - (tm->tm_sec % token_interval) - 1;
+	gtk_widget_queue_draw(GTK_WIDGET(progress_bar));
 
-	/* inject a space in the middle of the code, e.g. "1234 5678" */
-	code_len = strlen(tokencode_str);
-	for (i = 0, j = 0; i < code_len; i++) {
-		if (i == code_len / 2)
-			str[j++] = ' ';
-		str[j++] = tokencode_str[i];
-	}
-	str[j] = 0;
-	gtk_label_set_text(GTK_LABEL(tokencode_text), str);
+	formatted = stoken_format_tokencode(tokencode_str);
+	if (!formatted)
+		die("out of memory\n");
 
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar),
-		(double)sec / (interval - 1));
+	snprintf(str, sizeof(str),
+		"<span size=\"xx-large\" weight=\"bold\">%s</span>",
+		formatted);
+	gtk_label_set_markup(GTK_LABEL(tokencode_text), str);
+	free(formatted);
 
-	if (!opt_small) {
-		sprintf(str, "00:%02d", sec);
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress_bar), str);
+	if (next_tokencode_text) {
+		formatted = stoken_format_tokencode(next_tokencode_str);
+		if (!formatted)
+			die("out of memory\n");
+		gtk_label_set_text(GTK_LABEL(next_tokencode_text), formatted);
+		free(formatted);
 	}
 
 	return TRUE;
@@ -128,174 +160,125 @@ static void warning_dialog(GtkWidget *parent, const char *heading,
 	return __error_dialog(GTK_WINDOW(parent), heading, msg, 1);
 }
 
-static GtkWidget *app_window_common(void)
+static GtkWidget *create_app_window_common(GtkBuilder *builder)
 {
-	GtkWidget *window;
-	PangoAttrList *attr;
+	GtkWidget *widget;
 
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_container_set_border_width(GTK_CONTAINER(window), 10);
-	gtk_window_set_title(GTK_WINDOW(window), WINDOW_TITLE);
+	progress_bar = GTK_WIDGET(
+		gtk_builder_get_object(builder, "progress_bar"));
+	g_signal_connect(progress_bar, "draw",
+		G_CALLBACK(draw_progress_bar_callback), NULL);
 
-	g_signal_connect(window, "delete-event", G_CALLBACK(delete_event),
+	tokencode_text = GTK_WIDGET(
+		gtk_builder_get_object(builder, "tokencode_text"));
+
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "app_window"));
+	g_signal_connect(widget, "delete-event", G_CALLBACK(delete_callback),
 			 NULL);
+	return widget;
+}
 
-	tokencode_text = gtk_label_new(NULL);
-	attr = pango_attr_list_new();
-	pango_attr_list_insert(attr, pango_attr_scale_new(PANGO_SCALE_XX_LARGE));
-	pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
-	gtk_label_set_attributes(GTK_LABEL(tokencode_text), attr);
-	pango_attr_list_unref(attr);
+static void set_red_label(GtkWidget *widget, const char *text)
+{
+	char tmp[BUFLEN];
 
-	/* hack to turn off progress bar animation seen on some themes */
-	gtk_rc_parse_string("style \"default\" { engine \"\" { }\n"
-		"bg[PRELIGHT] = \"#4b6785\" }\n"
-		"widget_class \"*.<GtkProgressBar>\" style \"default\"");
+	snprintf(tmp, BUFLEN,
+		 "<span weight=\"bold\" foreground=\"red\">%s</span>", text);
+	gtk_label_set_markup(GTK_LABEL(widget), tmp);
+}
 
-	return window;
+static void format_exp_date(GtkWidget *widget)
+{
+	time_t exp = securid_unix_exp_date(current_token);
+	char tmp[BUFLEN];
+
+	/* FIXME: localization */
+	strftime(tmp, BUFLEN, "%Y-%m-%d", gmtime(&exp));
+
+	if (token_days_left < EXP_WARN_DAYS)
+		set_red_label(widget, tmp);
+	else
+		gtk_label_set_text(GTK_LABEL(widget), tmp);
 }
 
 static GtkWidget *create_app_window(void)
 {
-	GtkWidget *window, *vbox, *parent, *widget;
+	GtkBuilder *builder;
+	GtkWidget *widget;
 
-	window = app_window_common();
+	builder = gtk_builder_new_from_file(UIDIR "/tokencode-detail.ui");
 
-	vbox = gtk_vbox_new(FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(window), vbox);
+	/* static token info */
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "token_sn_text"));
+	gtk_label_set_text(GTK_LABEL(widget), current_token->serial);
 
-	/* tokencode frame */
-	parent = gtk_frame_new("Tokencode");
-	gtk_box_pack_start(GTK_BOX(vbox), parent, FALSE, FALSE, 0);
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "exp_date_text"));
+	format_exp_date(widget);
 
-	widget = gtk_table_new(5, 3, TRUE);
-	gtk_container_add(GTK_CONTAINER(parent), widget);
-	parent = widget;
-
-	gtk_table_attach_defaults(GTK_TABLE(parent), tokencode_text,
-		0, 3, 2, 3);
-
-	/* progress bar */
-	progress_bar = gtk_progress_bar_new();
-	gtk_box_pack_start(GTK_BOX(vbox), progress_bar, FALSE, FALSE, 0);
-
-	widget = gtk_hseparator_new();
-	gtk_widget_set_size_request(widget, 200, 50);
-	gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "using_pin_text"));
+	if (!token_uses_pin)
+		gtk_label_set_text(GTK_LABEL(widget), "Not required");
+	else if (skipped_pin)
+		set_red_label(widget, "No");
+	else
+		gtk_label_set_text(GTK_LABEL(widget), "Yes");
 
 	/* buttons */
-	parent = gtk_vbutton_box_new();
-	gtk_box_set_spacing(GTK_BOX(parent), 10);
-	gtk_box_pack_start(GTK_BOX(vbox), parent, FALSE, FALSE, 0);
 
-	widget = gtk_button_new_with_mnemonic("_Copy to clipboard");
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "copy_button"));
 	g_signal_connect(widget, "clicked", G_CALLBACK(clipboard_callback),
-		NULL);
-	gtk_container_add(GTK_CONTAINER(parent), widget);
+		&tokencode_str);
 
-	widget = gtk_button_new_with_mnemonic("_Quit");
-	g_signal_connect_swapped(widget, "clicked", G_CALLBACK(gtk_main_quit),
-				 window);
-	gtk_container_add(GTK_CONTAINER(parent), widget);
+	/* next tokencode */
 
-	return window;
+	next_tokencode_text = GTK_WIDGET(
+		gtk_builder_get_object(builder, "next_tokencode_text"));
+
+	widget = GTK_WIDGET(gtk_builder_get_object(builder,
+		"next_tokencode_eventbox"));
+	g_signal_connect(widget, "button-press-event",
+		G_CALLBACK(clipboard_callback), &next_tokencode_str);
+
+	return create_app_window_common(builder);
 }
 
 static GtkWidget *create_small_app_window(void)
 {
-	GtkWidget *window, *parent, *widget;
-	GtkTooltips *tt;
+	GtkBuilder *builder;
+	GtkWidget *widget;
 
-	window = app_window_common();
+	builder = gtk_builder_new_from_file(UIDIR "/tokencode-small.ui");
 
-	/* event box to catch clicks on the tokencode frame */
-	widget = gtk_event_box_new();
+	widget = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
 	g_signal_connect(widget, "button-press-event",
-		G_CALLBACK(clipboard_callback), NULL);
-	gtk_container_add(GTK_CONTAINER(window), widget);
-	parent = widget;
+		G_CALLBACK(clipboard_callback), &tokencode_str);
 
-	/* tooltip */
-	tt = gtk_tooltips_new();
-	gtk_tooltips_set_tip(tt, parent, "Click to copy to clipboard", NULL);
-
-	/* tokencode frame */
-	widget = gtk_frame_new("Tokencode");
-	gtk_container_add(GTK_CONTAINER(parent), widget);
-	parent = widget;
-
-	/* spacing inside the frame */
-	widget = gtk_alignment_new(0.5, 0.5, 1.0, 1.0);
-	gtk_alignment_set_padding(GTK_ALIGNMENT(widget), 10, 10, 10, 10);
-	gtk_container_add(GTK_CONTAINER(parent), widget);
-	parent = widget;
-
-	/* vbox */
-	widget = gtk_vbox_new(FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(parent), widget);
-	parent = widget;
-
-	/* tokencode */
-	gtk_box_pack_start(GTK_BOX(parent), tokencode_text, FALSE, FALSE, 0);
-
-	/* progress bar */
-	progress_bar = gtk_progress_bar_new();
-	gtk_widget_set_size_request(progress_bar, 0, 10);
-	gtk_box_pack_start(GTK_BOX(parent), progress_bar, FALSE, FALSE, 0);
-
-	return window;
+	return create_app_window_common(builder);
 }
 
-static void create_password_dialog(GtkWidget **dialog,
-	GtkWidget *pass_entry, GtkWidget *pin_entry)
+static char *do_password_dialog(const char *ui_file)
 {
-	GtkWidget *table, *widget;
-	int row = 0;
-
-	*dialog = gtk_dialog_new_with_buttons(WINDOW_TITLE,
-		NULL, 0,
-		GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		GTK_STOCK_QUIT, GTK_RESPONSE_REJECT,
-		NULL);
-	table = gtk_table_new(!!pin_entry + !!pass_entry, 2, FALSE);
-	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(*dialog)->vbox), table);
-
-	if (pass_entry) {
-		widget = gtk_label_new("Password:");
-		gtk_table_attach_defaults(GTK_TABLE(table), widget,
-			0, 1, row, row + 1);
-
-		gtk_entry_set_max_length(GTK_ENTRY(pass_entry), MAX_PASS);
-		gtk_entry_set_width_chars(GTK_ENTRY(pass_entry), MAX_PASS);
-		gtk_entry_set_visibility(GTK_ENTRY(pass_entry), FALSE);
-
-		gtk_table_attach_defaults(GTK_TABLE(table), pass_entry,
-			1, 2, row, row + 1);
-		row++;
-	}
-
-	if (pin_entry) {
-		widget = gtk_label_new("PIN:");
-		gtk_table_attach_defaults(GTK_TABLE(table), widget,
-			0, 1, row, row + 1);
-
-		gtk_entry_set_max_length(GTK_ENTRY(pin_entry), MAX_PIN);
-		gtk_entry_set_width_chars(GTK_ENTRY(pin_entry), MAX_PIN);
-		gtk_entry_set_visibility(GTK_ENTRY(pin_entry), FALSE);
-
-		gtk_table_attach_defaults(GTK_TABLE(table), pin_entry,
-			1, 2, row, row + 1);
-		row++;
-	}
-
-	gtk_widget_show_all(*dialog);
-}
-
-static int do_password_dialog(struct securid_token *t)
-{
-	GtkWidget *dialog;
-	GtkWidget *pass_entry = NULL, *pin_entry = NULL;
+	GtkBuilder *builder;
+	GtkWidget *widget, *dialog;
 	gint resp;
+	char *ret = NULL;
+
+	builder = gtk_builder_new_from_file(ui_file);
+	dialog = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_window"));
+	gtk_widget_show_all(dialog);
+	resp = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if (resp == GTK_RESPONSE_OK) {
+		widget = GTK_WIDGET(gtk_builder_get_object(builder, "password"));
+		ret = strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+	}
+
+	gtk_widget_destroy(dialog);
+	return ret;
+}
+
+static int request_credentials(struct securid_token *t)
+{
 	int rc, pass_required = 0, pin_required = 0;
 
 	if (securid_pass_required(t)) {
@@ -316,6 +299,29 @@ static int do_password_dialog(struct securid_token *t)
 			error_dialog("Token decrypt error", stoken_errstr[rc]);
 	}
 
+	while (pass_required) {
+		const char *pass =
+			do_password_dialog(UIDIR "/password-dialog.ui");
+		if (!pass)
+			return ERR_MISSING_PASSWORD;
+		rc = securid_decrypt_seed(t, pass, NULL);
+		if (rc == ERR_NONE) {
+			if (t->enc_pin_str) {
+				rc = securid_decrypt_pin(t->enc_pin_str,
+							 pass, t->pin);
+				if (rc != ERR_NONE)
+					error_dialog("PIN decrypt error",
+						     stoken_errstr[rc]);
+			}
+
+			pass_required = 0;
+		} else if (rc == ERR_DECRYPT_FAILED)
+			warning_dialog(NULL, "Bad password",
+				"Please enter the correct password for this seed.");
+		else
+			error_dialog("Token decrypt error", stoken_errstr[rc]);
+	}
+
 	if (securid_pin_required(t)) {
 		pin_required = 1;
 		if (opt_pin) {
@@ -328,56 +334,22 @@ static int do_password_dialog(struct securid_token *t)
 			pin_required = 0;
 	}
 
-	if (!pin_required && !pass_required)
-		return ERR_NONE;
-
-	if (pass_required)
-		pass_entry = gtk_entry_new();
-	if (pin_required)
-		pin_entry = gtk_entry_new();
-
-	create_password_dialog(&dialog, pass_entry, pin_entry);
-
-	while (1) {
-		const char *pass = NULL, *pin = NULL;
-
-		resp = gtk_dialog_run(GTK_DIALOG(dialog));
-		if (resp != GTK_RESPONSE_ACCEPT) {
-			gtk_widget_destroy(dialog);
-			return 1;
+	while (pin_required) {
+		const char *pin =
+			do_password_dialog(UIDIR "/pin-dialog.ui");
+		if (!pin) {
+			skipped_pin = 1;
+			xstrncpy(t->pin, "0000", MAX_PIN + 1);
+			break;
 		}
-
-		if (pass_required) {
-			pass = gtk_entry_get_text(GTK_ENTRY(pass_entry));
-			rc = securid_decrypt_seed(current_token, pass, NULL);
-			if (rc == ERR_DECRYPT_FAILED) {
-				warning_dialog(dialog, "Bad password",
-					"Please enter the correct password for this seed.");
-				continue;
-			} else if (rc != ERR_NONE)
-				error_dialog("Token decrypt error",
-					stoken_errstr[rc]);
-		}
-
-		if (t->enc_pin_str) {
-			rc = securid_decrypt_pin(t->enc_pin_str, pass, t->pin);
-			if (rc != ERR_NONE)
-				error_dialog("PIN decrypt error",
-					stoken_errstr[rc]);
-		}
-
-		if (pin_required) {
-			pin = gtk_entry_get_text(GTK_ENTRY(pin_entry));
-			if (securid_pin_format_ok(pin) != ERR_NONE) {
-				warning_dialog(dialog, "Bad PIN",
-					"Please enter 4-8 digits, or '0000' to skip.");
-				continue;
-			}
+		if (securid_pin_format_ok(pin) != ERR_NONE) {
+			warning_dialog(NULL, "Bad PIN",
+				"Please enter 4-8 digits, or click Skip for no PIN.");
+		} else {
 			xstrncpy(t->pin, pin, MAX_PIN + 1);
+			break;
 		}
-		break;
 	}
-	gtk_widget_destroy(dialog);
 
 	return ERR_NONE;
 }
@@ -385,7 +357,6 @@ static int do_password_dialog(struct securid_token *t)
 int main(int argc, char **argv)
 {
 	GtkWidget *window;
-	int days_left;
 	char *cmd;
 
 	gtk_init(&argc, &argv);
@@ -409,27 +380,31 @@ int main(int argc, char **argv)
 			"Please use 'stoken' to handle tokens encrypted with a device ID.");
 
 	/* check for token expiration */
-	days_left = securid_check_exp(current_token, time(NULL));
-	if (!opt_force) {
-		if (days_left < 0)
+	token_days_left = securid_check_exp(current_token, time(NULL));
+	if (!opt_force && !opt_small) {
+		if (token_days_left < 0)
 			error_dialog("Token expired",
 				"Please obtain a new token from your administrator.");
 
-		if (days_left < 14) {
+		if (token_days_left < EXP_WARN_DAYS) {
 			char msg[BUFLEN];
 
 			sprintf(msg, "This token will expire in %d day%s.",
-				days_left, days_left == 1 ? "" : "s");
+				token_days_left,
+				token_days_left == 1 ? "" : "s");
 			warning_dialog(NULL, "Expiration warning", msg);
 		}
 	}
 
-	/* request password + PIN, if missing */
-	if (do_password_dialog(current_token) != ERR_NONE)
+	/* request password / PIN, if missing */
+	if (request_credentials(current_token) != ERR_NONE)
 		return 1;
 
-	interval = securid_token_interval(current_token);
+	token_interval = securid_token_interval(current_token);
+	token_uses_pin = securid_pin_required(current_token);
+
 	window = opt_small ? create_small_app_window() : create_app_window();
+
 	update_tokencode(NULL);
 	gtk_widget_show_all(window);
 
