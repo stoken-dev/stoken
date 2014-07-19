@@ -153,13 +153,13 @@ static const struct option long_opts[] = {
 	/* global: misc/debug */
 	{ "debug",          0, NULL,                    'd'               },
 	{ "version",        0, NULL,                    'v'               },
+	{ "force",          0, NULL,                    'f'               },
 	{ "help",           0, NULL,                    'h'               },
 
 	/* all remaining options are for CLI only */
 #define FINAL_GUI_OPTION	"help"
 
 	{ "batch",          0, NULL,                    'b'               },
-	{ "force",          0, NULL,                    'f'               },
 	{ "use-time",       1, NULL,                    OPT_USE_TIME      },
 
 	/* used for specific commands */
