@@ -146,6 +146,15 @@ Use a PIN supplied from the command line, instead of prompting the user.
 See notes in \fBSECURITY CONSIDERATIONS\fP below.  If you save your PIN
 in \fI~/.stokenrc\fP, note that \fB\-\-pin=0000\fP is often required when
 activating a new soft token for the first time.
+.TP
+\fB\-\-devid=\fIdevid\fP
+Use a device ID supplied from the command line to decrypt the token.  A
+token can be bound to a class GUID device ID (i.e. a certain type of device,
+such as "iPhone" or "Android"), a unique device ID (one specific unit), or
+nothing.  \fBstoken\fP will attempt to autodetect matches with a class GUID,
+but on rare occasions this results in false positives due to hash collisions.
+In these cases, the bound device ID should be specified on the command line to
+override autodetection.
 .SH "OTHER OPTIONS"
 .TP
 \fB\-\-new\-password=\fIpassword\fP
