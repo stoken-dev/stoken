@@ -201,12 +201,23 @@ static void format_exp_date(GtkWidget *widget)
 		gtk_label_set_text(GTK_LABEL(widget), tmp);
 }
 
+/* gtk_builder_new_from_file() requires libgtk >= 3.10 */
+static GtkBuilder *__gtk_builder_new_from_file(const gchar *filename)
+{
+	GtkBuilder *builder;
+
+	builder = gtk_builder_new();
+	if (gtk_builder_add_from_file(builder, filename, NULL) == 0)
+		die("can't import '%s'\n", filename);
+	return builder;
+}
+
 static GtkWidget *create_app_window(void)
 {
 	GtkBuilder *builder;
 	GtkWidget *widget;
 
-	builder = gtk_builder_new_from_file(UIDIR "/tokencode-detail.ui");
+	builder = __gtk_builder_new_from_file(UIDIR "/tokencode-detail.ui");
 
 	/* static token info */
 	widget = GTK_WIDGET(gtk_builder_get_object(builder, "token_sn_text"));
@@ -247,7 +258,7 @@ static GtkWidget *create_small_app_window(void)
 	GtkBuilder *builder;
 	GtkWidget *widget;
 
-	builder = gtk_builder_new_from_file(UIDIR "/tokencode-small.ui");
+	builder = __gtk_builder_new_from_file(UIDIR "/tokencode-small.ui");
 
 	widget = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
 	g_signal_connect(widget, "button-press-event",
@@ -263,7 +274,7 @@ static char *do_password_dialog(const char *ui_file)
 	gint resp;
 	char *ret = NULL;
 
-	builder = gtk_builder_new_from_file(ui_file);
+	builder = __gtk_builder_new_from_file(ui_file);
 	dialog = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_window"));
 	gtk_widget_show_all(dialog);
 	resp = gtk_dialog_run(GTK_DIALOG(dialog));
