@@ -18,7 +18,7 @@ function build_one
 	mkdir "$pkg-$ver"
 	cd "$pkg-$ver"
 	tar --strip 1 -zxf ../../$tarball
-	cp -a ../../debian .
+	cp -a ../../ppa debian
 	if [ "$nosign" = "0" ]; then
 		debuild "$arg"
 	else
@@ -70,7 +70,7 @@ set -ex
 
 dist=$(lsb_release -si)
 if [ "$dist" = "Ubuntu" ]; then
-	rm -f debian/changelog
+	rm -f ppa/changelog
 	codename=$(lsb_release -sc)
 
 	if [ $release != 1 ]; then
@@ -79,7 +79,7 @@ if [ "$dist" = "Ubuntu" ]; then
 	fi
 	uver="${ver}-1ppa1"
 
-	dch --create --package $pkg \
+	dch --create --changelog ppa/changelog --package $pkg \
 		--newversion "${uver}~${codename}" \
 		--distribution $codename \
 		"New PPA build."
