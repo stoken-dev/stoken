@@ -54,6 +54,8 @@ struct stoken_info {
 	char			serial[16];
 	time_t			exp_date;
 	int			interval;
+	int			token_version;
+	int			uses_pin;
 };
 
 /*
@@ -105,7 +107,14 @@ struct stoken_info *stoken_get_info(struct stoken_ctx *ctx);
  */
 void stoken_pin_range(struct stoken_ctx *ctx, int *min_pin, int *max_pin);
 
-/* returns nonzero if the token in CTX requires a PIN */
+/*
+ * Returns nonzero if the token in CTX requires a PIN, and doesn't have one
+ * saved (i.e. you need to prompt for it).  stoken_info->uses_pin returns
+ * nonzero if a PIN is used in the calculation.  If stoken_info->uses_pin is
+ * 0, a PIN is not needed to generate the tokencode but you may need to
+ * request and concatenate a PIN in order to log in to a protected resource:
+ * PASSCODE = PIN + TOKENCODE
+ */
 int stoken_pin_required(struct stoken_ctx *ctx);
 
 /* returns nonzero if the token in CTX needs a password to decrypt the seed */

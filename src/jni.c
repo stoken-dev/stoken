@@ -107,6 +107,17 @@ static int set_long(struct libctx *ctx, jobject jobj, const char *name, uint64_t
 	return 0;
 }
 
+static int set_bool(struct libctx *ctx, jobject jobj, const char *name, int value)
+{
+	jclass jcls = (*ctx->jenv)->GetObjectClass(ctx->jenv, jobj);
+	jfieldID jfld = (*ctx->jenv)->GetFieldID(ctx->jenv, jcls, name, "Z");
+
+	if (!jfld)
+		return -1;
+	(*ctx->jenv)->SetBooleanField(ctx->jenv, jobj, jfld, value);
+	return 0;
+}
+
 static jstring dup_to_jstring(JNIEnv *jenv, const char *in)
 {
 	/*
@@ -238,7 +249,9 @@ JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getInfo(
 
 	if (set_string(ctx, jobj, "serial", info->serial) ||
 	    set_long(ctx, jobj, "unixExpDate", info->exp_date) ||
-	    set_int(ctx, jobj, "interval", info->interval))
+	    set_int(ctx, jobj, "interval", info->interval) ||
+	    set_int(ctx, jobj, "tokenVersion", info->token_version) ||
+	    set_bool(ctx, jobj, "usesPin", info->uses_pin))
 		return NULL;
 
 	return jobj;

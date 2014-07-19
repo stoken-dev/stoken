@@ -51,6 +51,8 @@ public class LibStoken {
 		public String serial;
 		public long unixExpDate;
 		public int interval;
+		public int tokenVersion;
+		public boolean usesPin;
 	};
 
 	/* public APIs */
