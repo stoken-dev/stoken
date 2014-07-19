@@ -209,6 +209,17 @@ char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
 int stoken_compute_tokencode(struct stoken_ctx *ctx, time_t when,
 	const char *pin, char *out);
 
+/*
+ * Inject a space in the middle of the code, e.g. "1234 5678".
+ * Typical libstoken users would use the formatted tokencode for display
+ * purposes only, and use the unformatted tokencode for "copy to clipboard",
+ * pasting into login forms, etc.
+ *
+ * The returned string must be freed by the caller.  Returns NULL on malloc
+ * failure.
+ */
+char *stoken_format_tokencode(const char *tokencode);
+
 #ifdef __cplusplus
 }
 #endif

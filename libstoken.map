@@ -26,6 +26,7 @@ global:
 
 STOKEN_1.3 {
 global:
+	stoken_format_tokencode;
 	stoken_get_guid_list;
 } STOKEN_1.2;
 

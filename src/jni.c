@@ -464,3 +464,26 @@ JNIEXPORT jstring JNICALL Java_org_stoken_LibStoken_computeTokencode(
 		(*jenv)->ReleaseStringUTFChars(jenv, jpin, pin);
 	return ret;
 }
+
+JNIEXPORT jstring JNICALL Java_org_stoken_LibStoken_formatTokencode(
+	JNIEnv *jenv, jobject jobj, jstring jarg0)
+{
+	const char *arg0;
+	char *ret;
+	jstring jret = NULL;
+
+	if (!jarg0)
+		return NULL;
+
+	arg0 = (*jenv)->GetStringUTFChars(jenv, jarg0, NULL);
+	if (!arg0)
+		return NULL;
+
+	ret = stoken_format_tokencode(arg0);
+	jret = (*jenv)->NewStringUTF(jenv, ret);
+
+	free(ret);
+	(*jenv)->ReleaseStringUTFChars(jenv, jarg0, arg0);
+
+	return jret;
+}

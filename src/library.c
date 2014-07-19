@@ -466,3 +466,22 @@ int stoken_compute_tokencode(struct stoken_ctx *ctx, time_t when,
 	securid_compute_tokencode(ctx->t, when, out);
 	return 0;
 }
+
+char *stoken_format_tokencode(const char *tokencode)
+{
+	int code_len = strlen(tokencode);
+	char *str = malloc(code_len + 2);
+	int i, j;
+
+	if (!str)
+		return NULL;
+
+	for (i = 0, j = 0; i < code_len; i++) {
+		if (i == code_len / 2)
+			str[j++] = ' ';
+		str[j++] = tokencode[i];
+	}
+	str[j] = 0;
+
+	return str;
+}

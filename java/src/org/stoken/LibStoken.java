@@ -77,6 +77,7 @@ public class LibStoken {
 	public synchronized native int decryptSeed(String pass, String devID);
 	public synchronized native String encryptSeed(String pass, String devID);
 	public synchronized native String computeTokencode(long when, String PIN);
+	public synchronized native String formatTokencode(String tokencode);
 
 	/* LibStoken internals */
 
