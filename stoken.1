@@ -6,21 +6,21 @@
 .SH NAME
 stoken \- software token for cryptographic authentication
 .SH SYNOPSIS
-\fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP] [\fIopts\fB]
+\fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP] [\fIopts\fP]
 .PP
 \fBstoken\fP \fBimport\fP
-{\fB\-\-file=\fIfile\fP|\fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
+{\fB\-\-file=\fIfile\fP | \fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
 [\fIopts\fB]
 .PP
-\fBstoken\fP \fBsetpin\fP [\fIopts\fB]
+\fBstoken\fP \fBsetpin\fP [\fIopts\fP]
 .PP
-\fBstoken\fP \fBsetpass\fP [\fIopts\fB]
+\fBstoken\fP \fBsetpass\fP [\fIopts\fP]
 .PP
-\fBstoken\fP \fBshow\fP [\fB\-\-seed\fP] [\fIopts\fB]
+\fBstoken\fP \fBshow\fP [\fB\-\-seed\fP] [\fIopts\fP]
 .PP
 \fBstoken\fP \fBexport\fP
-[{\fB\-\-blocks\fP|\fB\-\-iphone\fP|\fB\-\-android\fP|\fB\-\-v3\fP|\fB\-\-sdtid\fP}]
-[\fIopts\fB]
+[{\fB\-\-blocks\fP | \fB\-\-iphone\fP | \fB\-\-android\fP | \fB\-\-v3\fP |
+\fB\-\-sdtid\fP | \fB\-\-qr=\fIfile.png\fP | \fB\-\-show\-qr\fP}] [\fIopts\fP]
 .PP
 \fBstoken\fP \fBissue\fP [\-\-\fBtemplate\fP=\fIfile\fP]
 .PP
@@ -116,12 +116,7 @@ encrypted and decrypted seed bytes (which should be treated as sensitive
 data, as they can be used to derive tokencodes).
 .PP
 \fBstoken export\fP translates the current token into a format suitable
-for importation to another device.  It can be used in conjunction with
-\fBqrencode\fP(1) to send a token to a smartphone:
-.RS 4
-.PP
-qrencode \-l H `stoken export \-\-random \-\-android` \-o \- | display \-
-.RE
+for importation to another device.
 .PP
 \fBstoken issue\fP generates a new software token in XML \fIsdtid\fP
 format.  A template file, itself in \fIsdtid\fP format, may be
@@ -155,7 +150,7 @@ nothing.  \fBstoken\fP will attempt to autodetect matches with a class GUID,
 but on rare occasions this results in false positives due to hash collisions.
 In these cases, the bound device ID should be specified on the command line to
 override autodetection.
-.SH "OTHER OPTIONS"
+.SH "EXPORT OPTIONS"
 .TP
 \fB\-\-new\-password=\fIpassword\fP
 Supply the encryption password from the command line for operations that
@@ -187,6 +182,17 @@ unformatted 81-digit string to standard output.
 These options are synonyms.  Both export a token to standard output in
 RSA's \fIsdtid\fP XML format.
 .TP
+\fB\-\-qr=\fIfile.png\fP
+Encode the token as a QR code and write it to \fIfile.png\fP.  This requires
+the \fBqrencode\fP program to be installed.
+.TP
+\fB\-\-show\-qr\fP
+Encode the token as a QR code and immediately display it on the screen.
+This requires the \fBqrencode\fP program to be installed.  If the
+\fBQR_VIEWER\fP environment variable is set, \fBstoken\fP will use that
+program as the preferred viewer.  Otherwise it will try to execute a few
+common Linux image viewers, and give up if none of them exist.
+.TP
 \fB\-\-template=\fIfile\fP
 Used with the \fBexport\fP or \fBissue\fP commands to override fields in
 the XML output.  The template file should look like any standard \fIsdtid\fP
@@ -195,6 +201,7 @@ values if omitted.  This can be used to force the output XML to use a
 specific serial number, user name, expiration date, etc.  Correct MAC
 checksums will be (re)computed on the provided values.  See the
 \fIexamples\fP directory in the source distribution for more information.
+.SH "OTHER OPTIONS"
 .TP
 \fB\-\-use\-time=\fP{\fIunix_time\fP|\fB+\fIoffset\fP|\fB-\fIoffset\fP}
 Instead of generating a tokencode based on the current time of day,
@@ -265,6 +272,9 @@ multiuser systems, as other users may be able to view the command line
 arguments in \fBps\fP or similar utilities.  The command line could
 also be cached in shell history files.
 .PP
+Encoding QR tokens may expose the seed data through \fBps\fP, and
+the \fB\-\-show\-qr\fP option writes temporary PNG files in \fB/tmp\fP.
+.PP
 \fBstoken\fP attempts to lock pages to prevent swapping out to disk, but
 does not scrub secrets from process memory.
 .SH "NON\-INTERACTIVE USE"
@@ -303,7 +313,7 @@ via standard input.
 As a short\-term workaround you can try commenting out the
 sanity checks in \fBsdtid_decrypt()\fP to see if the problem goes away.
 .PP
-Features under development include: 30\-second tokens, v3 ctf strings,
+Features under development include:
 hardware token seeds (and the \fBstoken split\fP command needed to work with
 them), and support for non\-Linux hosts.
 .PP
