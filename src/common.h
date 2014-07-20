@@ -64,7 +64,7 @@ char *format_token(const char *raw_token_str);
 
 /* binary flags, long options */
 extern int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small;
+	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small, opt_next;
 
 /* binary flags, short/long options */
 extern int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;

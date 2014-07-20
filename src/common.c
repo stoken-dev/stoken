@@ -38,7 +38,7 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small;
+	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small, opt_next;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
@@ -161,9 +161,12 @@ static const struct option long_opts[] = {
 #define FINAL_GUI_OPTION	"help"
 
 	{ "batch",          0, NULL,                    'b'               },
-	{ "use-time",       1, NULL,                    OPT_USE_TIME      },
 
-	/* used for specific commands */
+	/* used for tokencode generation */
+	{ "use-time",       1, NULL,                    OPT_USE_TIME      },
+	{ "next",           0, &opt_next,               1                 },
+
+	/* these are mostly for exporting/issuing tokens */
 	{ "new-password",   1, NULL,                    OPT_NEW_PASSWORD  },
 	{ "new-devid",      1, NULL,                    OPT_NEW_DEVID     },
 	{ "new-pin",        1, NULL,                    OPT_NEW_PIN       },

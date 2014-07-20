@@ -130,10 +130,15 @@ static int read_user_input(char *out, int max_len, int hide_chars)
 	return rc;
 }
 
-static time_t adjusted_time(void)
+static time_t adjusted_time(struct securid_token *t)
 {
 	time_t now = time(NULL);
 	long new_time;
+
+	if (opt_next && opt_use_time)
+		die("error: --use-time and --next are mutually exclusive\n");
+	if (opt_next)
+		return now + securid_token_interval(t);
 
 	if (!opt_use_time)
 		return now;
@@ -429,13 +434,15 @@ int main(int argc, char **argv)
 	terminal_init();
 
 	if (!strcmp(cmd, "tokencode")) {
-		int days_left = securid_check_exp(t, adjusted_time());
+		int days_left;
 
+		unlock_token(t, 1, NULL);
+
+		days_left = securid_check_exp(t, adjusted_time(t));
 		if (days_left < 0 && !opt_force)
 			die("error: token has expired; use --force to override\n");
 
-		unlock_token(t, 1, NULL);
-		securid_compute_tokencode(t, adjusted_time(), buf);
+		securid_compute_tokencode(t, adjusted_time(t), buf);
 		puts(buf);
 
 		if (days_left < 14 && !opt_force)
