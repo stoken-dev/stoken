@@ -171,7 +171,8 @@ static void request_devid(struct securid_token *t, char *devid)
 	prompt("This token is bound to a specific device.\n");
 	for (i = 0; ; i++) {
 		prompt("Enter device ID from the RSA 'About' screen: ");
-		read_user_input(devid, BUFLEN, 0);
+		if (read_user_input(devid, BUFLEN, 0) == 0)
+			continue;
 
 		if (securid_check_devid(t, devid) == ERR_NONE)
 			return;
@@ -198,7 +199,8 @@ static void request_pass(const char *prompt_msg, struct securid_token *t,
 
 	for (i = 0; ; i++) {
 		prompt(prompt_msg);
-		read_user_input(pass, BUFLEN, 1);
+		if (read_user_input(pass, BUFLEN, 1) == 0)
+			continue;
 
 		rc = securid_decrypt_seed(t, pass, devid);
 		if (rc == ERR_DECRYPT_FAILED) {
