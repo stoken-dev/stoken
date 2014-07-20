@@ -6,11 +6,12 @@
 .SH NAME
 stoken \- software token for cryptographic authentication
 .SH SYNOPSIS
-\fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP] [\fIopts\fP]
+\fBstoken\fP [\fBtokencode\fP] [\fB\-\-stdin\fP] [\fB\-\-force\fP]
+[\fB\-\-next\fP] [\fIopts\fP]
 .PP
 \fBstoken\fP \fBimport\fP
-{\fB\-\-file=\fIfile\fP | \fB\-\-token=\fItoken_string\fP} [\fB\-\-force\fP]
-[\fIopts\fB]
+{\fB\-\-file=\fP\fIfile\fP | \fB\-\-token=\fP\fItoken_string\fP}
+[\fB\-\-force\fP] [\fIopts\fP]
 .PP
 \fBstoken\fP \fBsetpin\fP [\fIopts\fP]
 .PP
@@ -20,7 +21,8 @@ stoken \- software token for cryptographic authentication
 .PP
 \fBstoken\fP \fBexport\fP
 [{\fB\-\-blocks\fP | \fB\-\-iphone\fP | \fB\-\-android\fP | \fB\-\-v3\fP |
-\fB\-\-sdtid\fP | \fB\-\-qr=\fIfile.png\fP | \fB\-\-show\-qr\fP}] [\fIopts\fP]
+\fB\-\-sdtid\fP | \fB\-\-qr=\fP\fIfile.png\fP | \fB\-\-show\-qr\fP}]
+[\fIopts\fP]
 .PP
 \fBstoken\fP \fBissue\fP [\-\-\fBtemplate\fP=\fIfile\fP]
 .PP
@@ -208,6 +210,10 @@ Instead of generating a tokencode based on the current time of day,
 force a specific time, or adjust the current time based on a positive
 or negative offset (specified in seconds).  This is only used for testing
 purposes.
+.TP
+\fB\-\-next\fP
+Generate the next tokencode instead of the current tokencode.  For a 60-second
+token, this is equivalent to \fB\-\-use\-time=+60\fP.
 .TP
 \fB\-\-stdin\fP, \fB\-s\fP
 When generating a tokencode that requires \fIeither\fP a password or PIN,
