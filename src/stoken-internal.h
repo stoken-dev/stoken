@@ -62,4 +62,9 @@ int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,
 	warn_fn_t warn_fn);
 void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
 
+#ifdef __ANDROID__
+/* Sigh.  This exists but it isn't in the Bionic headers. */
+int mkstemps(char *path, int slen);
+#endif
+
 #endif /* !__STOKEN_INTERNAL_H__ */
