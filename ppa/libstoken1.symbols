@@ -2,6 +2,7 @@ libstoken.so.1 libstoken1 #MINVER#
  STOKEN_1.0@STOKEN_1.0 0.1
  STOKEN_1.1@STOKEN_1.1 0.5
  STOKEN_1.2@STOKEN_1.2 0.6
+ STOKEN_1.3@STOKEN_1.3 0.8
  STOKEN_PRIVATE@STOKEN_PRIVATE 0.1
  __stoken_parse_and_decode_token@STOKEN_PRIVATE 0.1
  __stoken_read_rcfile@STOKEN_PRIVATE 0.1
@@ -12,6 +13,7 @@ libstoken.so.1 libstoken1 #MINVER#
  sdtid_export@STOKEN_PRIVATE 0.5
  sdtid_free@STOKEN_PRIVATE 0.5
  sdtid_issue@STOKEN_PRIVATE 0.5
+ securid_check_devid@STOKEN_PRIVATE 0.8
  securid_check_exp@STOKEN_PRIVATE 0.1
  securid_compute_tokencode@STOKEN_PRIVATE 0.1
  securid_decode_token@STOKEN_PRIVATE 0.1
@@ -26,6 +28,7 @@ libstoken.so.1 libstoken1 #MINVER#
  securid_random_token@STOKEN_PRIVATE 0.1
  securid_token_info@STOKEN_PRIVATE 0.1
  securid_token_interval@STOKEN_PRIVATE 0.6
+ securid_unix_exp_date@STOKEN_PRIVATE 0.8
  stoken_get_info@STOKEN_1.2 0.6
  stoken_check_devid@STOKEN_1.1 0.5
  stoken_check_pin@STOKEN_1.0 0.1
@@ -34,6 +37,8 @@ libstoken.so.1 libstoken1 #MINVER#
  stoken_destroy@STOKEN_1.0 0.1
  stoken_devid_required@STOKEN_1.0 0.1
  stoken_encrypt_seed@STOKEN_1.1 0.5
+ stoken_format_tokencode@STOKEN_1.3 0.8
+ stoken_get_guid_list@STOKEN_1.3 0.8
  stoken_import_rcfile@STOKEN_1.0 0.1
  stoken_import_string@STOKEN_1.0 0.1
  stoken_new@STOKEN_1.0 0.1
