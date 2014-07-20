@@ -30,6 +30,8 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "common.h"
 #include "stoken.h"
@@ -311,6 +313,96 @@ static void print_formatted(const char *buf)
 	free(formatted);
 }
 
+static int fork_and_wait(void)
+{
+	pid_t child = fork();
+
+	if (child < 0)
+		die("can't fork\n");
+	else if (child == 0)
+		return 0;
+	else if (child > 0) {
+		int rv;
+		wait(&rv);
+		if (!WIFEXITED(rv) || WEXITSTATUS(rv))
+			exit(1);
+	}
+	return 1;
+}
+
+static void display_qr(const char *filename)
+{
+	const char *programs[] = {
+		/*
+		 * I'd like to include xdg-open here, but it insists on
+		 * opening the file in the background, which races with the
+		 * temporary file cleanup.
+		 */
+		"display",	/* ImageMagick */
+		"eog",		/* Eye of GNOME */
+		"gwenview",	/* KDE viewer */
+		"ristretto",	/* Xfce */
+		NULL,
+	};
+	const char **p, *user;
+
+	if (fork_and_wait() != 0)
+		return;
+
+	user = getenv("QR_VIEWER");
+	if (user) {
+		execlp(user, user, filename, NULL);
+		die("unable to execute '%s'\n", user);
+	}
+
+	for (p = programs; *p; p++)
+		execlp(*p, *p, filename, NULL);
+
+	die("can't find a suitable image viewer; try setting $QR_VIEWER\n");
+}
+
+static void __export_qr(const char *filename, const char *token)
+{
+	if (fork_and_wait() != 0)
+		return;
+	execlp("qrencode", "qrencode", "-l", "H", "-o", filename,
+	       token, NULL);
+	die("can't exec qrencode (is it in your PATH?)\n");
+}
+
+static void export_qr(const char *filename, const char *token)
+{
+	char *formatted;
+
+	if (opt_blocks) {
+		warn("warning: --blocks is invalid in QR mode; using --android\n");
+		opt_android = 1;
+		opt_blocks = 0;
+	}
+
+	if (!(opt_android || opt_iphone || opt_v3))
+		opt_android = 1;
+
+	formatted = format_token(token);
+
+	if (filename)
+		__export_qr(filename, formatted);
+	else {
+		char fname[64];
+		int fd;
+
+		snprintf(fname, sizeof(fname), "%s/XXXXXX.png",
+			 getenv("TMPDIR") ? : "/tmp");
+		fd = mkstemps(fname, 4);
+		if (fd < 0)
+			die("can't create temp file '%s'\n", fname);
+		__export_qr(fname, formatted);
+		display_qr(fname);
+		unlink(fname);
+	}
+	free(formatted);
+}
+
 int main(int argc, char **argv)
 {
 	char *cmd = parse_cmdline(argc, argv, NOT_GUI);
@@ -374,10 +466,15 @@ int main(int argc, char **argv)
 			pass = NULL;
 
 		if (!opt_sdtid) {
-			t->is_smartphone = opt_iphone || opt_android || opt_v3;
+			t->is_smartphone = opt_iphone || opt_android ||
+					   opt_v3 || opt_show_qr || opt_qr;
 			securid_encode_token(t, pass, opt_new_devid,
 					     opt_v3 ? 3 : 2, buf);
-			print_formatted(buf);
+
+			if (opt_show_qr || opt_qr)
+				export_qr(opt_show_qr ? NULL : opt_qr, buf);
+			else
+				print_formatted(buf);
 		} else {
 			rc = sdtid_export(opt_template, t, pass, opt_new_devid);
 			if (rc != ERR_NONE)

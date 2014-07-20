@@ -64,7 +64,7 @@ char *format_token(const char *raw_token_str);
 
 /* binary flags, long options */
 extern int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_v3, opt_seed, opt_sdtid, opt_small;
+	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small;
 
 /* binary flags, short/long options */
 extern int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
@@ -72,7 +72,7 @@ extern int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 /* string arguments */
 extern char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
 	    *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
-	    *opt_new_pin, *opt_template;
+	    *opt_new_pin, *opt_template, *opt_qr;
 
 /* token read from .stokenrc, if available */
 struct securid_token;

@@ -38,11 +38,11 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_v3, opt_seed, opt_sdtid, opt_small;
+	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
-     *opt_new_pin, *opt_template;
+     *opt_new_pin, *opt_template, *opt_qr;
 struct securid_token *current_token;
 
 static int debug_level;
@@ -133,6 +133,7 @@ enum {
 	OPT_NEW_DEVID,
 	OPT_NEW_PIN,
 	OPT_TEMPLATE,
+	OPT_QR,
 };
 
 static const struct option long_opts[] = {
@@ -174,6 +175,8 @@ static const struct option long_opts[] = {
 	{ "v3",             0, &opt_v3,                 1                 },
 	{ "sdtid",          0, &opt_sdtid,              1                 },
 	{ "xml",            0, &opt_sdtid,              1                 },
+	{ "qr",             1, NULL,                    OPT_QR            },
+	{ "show-qr",        0, &opt_show_qr,            1                 },
 	{ "seed",           0, &opt_seed,               1                 },
 	{ "stdin",          0, NULL,                    's'               },
 	{ NULL,             0, NULL,                    0                 },
@@ -213,7 +216,8 @@ static void usage_cli(void)
 	puts("Other commands:");
 	puts("");
 	puts("  stoken show [ --seed ]");
-	puts("  stoken export [ { --blocks | --iphone | --android | --v3 | --sdtid } ]");
+	puts("  stoken export [ { --blocks | --iphone | --android | --v3 | --sdtid |");
+	puts("                    --qr=<file> | --show-qr } ]");
 	puts("  stoken issue [ --template=<sdtid_skeleton> ]");
 	puts("");
 	usage_common();
@@ -267,6 +271,7 @@ char *parse_cmdline(int argc, char **argv, int is_gui)
 		case OPT_NEW_DEVID: opt_new_devid = optarg; break;
 		case OPT_NEW_PIN: opt_new_pin = optarg; break;
 		case OPT_TEMPLATE: opt_template = optarg; break;
+		case OPT_QR: opt_qr = optarg; break;
 		case 0: break;
 		default: opt_help = 1;
 		}
