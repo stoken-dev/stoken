@@ -837,6 +837,15 @@ int securid_decrypt_seed(struct securid_token *t, const char *pass,
 		return v2_decrypt_seed(t, pass, devid);
 }
 
+int securid_check_devid(struct securid_token *t, const char *devid)
+{
+	int ret = securid_decrypt_seed(t, ".", devid);
+	if (ret == ERR_BAD_DEVID || ret == ERR_MISSING_PASSWORD)
+		return ERR_BAD_DEVID;
+	else
+		return ERR_NONE;
+}
+
 void securid_compute_tokencode(struct securid_token *t, time_t now,
 			       char *code_out)
 {

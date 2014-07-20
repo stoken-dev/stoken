@@ -418,9 +418,9 @@ const struct stoken_guid *stoken_get_guid_list(void)
 
 int stoken_check_devid(struct stoken_ctx *ctx, const char *devid)
 {
-	if (securid_decrypt_seed(ctx->t, "", devid) == ERR_BAD_DEVID)
-		return -EINVAL;
-	return 0;
+	if (securid_check_devid(ctx->t, devid) == ERR_NONE)
+		return 0;
+	return -EINVAL;
 }
 
 int stoken_decrypt_seed(struct stoken_ctx *ctx, const char *pass,

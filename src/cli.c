@@ -148,11 +148,10 @@ static time_t adjusted_time(void)
 
 static void request_devid(struct securid_token *t, char *devid)
 {
-	int i, rc;
+	int i;
 
 	if (opt_devid) {
-		rc = securid_decrypt_seed(t, "", opt_devid);
-		if (rc != ERR_BAD_DEVID) {
+		if (securid_check_devid(t, opt_devid) == ERR_NONE) {
 			xstrncpy(devid, opt_devid, BUFLEN);
 			return;
 		}
@@ -160,8 +159,7 @@ static void request_devid(struct securid_token *t, char *devid)
 	} else {
 		const struct stoken_guid *glist = stoken_get_guid_list();
 		for (i = 0; glist[i].tag != NULL; i++) {
-			rc = securid_decrypt_seed(t, "", glist[i].guid);
-			if (rc != ERR_BAD_DEVID) {
+			if (securid_check_devid(t, glist[i].guid) == ERR_NONE) {
 				prompt("Using class GUID for %s; use --devid to override\n",
 				       glist[i].long_name);
 				strncpy(devid, glist[i].guid, BUFLEN);
@@ -175,8 +173,7 @@ static void request_devid(struct securid_token *t, char *devid)
 		prompt("Enter device ID from the RSA 'About' screen: ");
 		read_user_input(devid, BUFLEN, 0);
 
-		rc = securid_decrypt_seed(t, "", devid);
-		if (rc != ERR_BAD_DEVID)
+		if (securid_check_devid(t, devid) == ERR_NONE)
 			return;
 		if (i == 2)
 			die("error: invalid device ID\n");

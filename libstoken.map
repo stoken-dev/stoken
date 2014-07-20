@@ -32,6 +32,7 @@ global:
 
 STOKEN_PRIVATE {
 global:
+	securid_check_devid;
 	securid_check_exp;
 	securid_compute_tokencode;
 	securid_decode_token;
