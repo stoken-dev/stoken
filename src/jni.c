@@ -228,12 +228,9 @@ JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getInfo(
 	JNIEnv *jenv, jobject jobj)
 {
 	struct libctx *ctx = getctx(jenv, jobj);
-	struct stoken_info *info = stoken_get_info(ctx->instance);
+	struct stoken_info *info;
 	jmethodID mid;
 	jclass jcls;
-
-	if (!info)
-		return NULL;
 
 	jcls = (*ctx->jenv)->FindClass(ctx->jenv,
 				       "org/stoken/LibStoken$StokenInfo");
@@ -247,13 +244,18 @@ JNIEXPORT jobject JNICALL Java_org_stoken_LibStoken_getInfo(
 	if (!jobj)
 		return NULL;
 
+	info = stoken_get_info(ctx->instance);
+	if (!info)
+		return NULL;
+
 	if (set_string(ctx, jobj, "serial", info->serial) ||
 	    set_long(ctx, jobj, "unixExpDate", info->exp_date) ||
 	    set_int(ctx, jobj, "interval", info->interval) ||
 	    set_int(ctx, jobj, "tokenVersion", info->token_version) ||
 	    set_bool(ctx, jobj, "usesPin", info->uses_pin))
-		return NULL;
+		jobj = NULL;
 
+	free(info);
 	return jobj;
 }
 
