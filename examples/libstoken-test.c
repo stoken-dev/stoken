@@ -130,7 +130,7 @@ static void prompt(const char *msg, char *out, int max_len)
 int main(int argc, char **argv)
 {
 	struct stoken_ctx *ctx = stoken_new();
-	char devid[BUFLEN], pass[BUFLEN], pin[BUFLEN];
+	char devid[BUFLEN] = { 0 }, pass[BUFLEN] = { 0 }, pin[BUFLEN] = { 0 };
 	char out[STOKEN_MAX_TOKENCODE + 1];
 	int rc;
 
