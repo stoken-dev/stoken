@@ -458,10 +458,14 @@ char *stoken_encrypt_seed(struct stoken_ctx *ctx, const char *pass,
 int stoken_compute_tokencode(struct stoken_ctx *ctx, time_t when,
 	const char *pin, char *out)
 {
-	if (securid_pin_required(ctx->t) && pin) {
-		if (securid_pin_format_ok(pin) != ERR_NONE)
+	if (securid_pin_required(ctx->t)) {
+		if (pin && strlen(pin)) {
+			if (securid_pin_format_ok(pin) != ERR_NONE)
+				return -EINVAL;
+			strncpy(ctx->t->pin, pin, MAX_PIN + 1);
+		} else if (stoken_pin_required(ctx)) {
 			return -EINVAL;
-		strncpy(ctx->t->pin, pin, MAX_PIN + 1);
+		}
 	}
 	securid_compute_tokencode(ctx->t, when, out);
 	return 0;
