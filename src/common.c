@@ -330,7 +330,7 @@ static int read_token_from_file(char *filename, struct securid_token *t)
 		if (rc != ERR_GENERAL)
 			break;
 
-		p = index(p, '\n');
+		p = strchr(p, '\n');
 		if (!p)
 			break;
 		p++;

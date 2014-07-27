@@ -71,7 +71,7 @@ static int raw_read_user_input(char *out, int max_len)
 		*out = 0;
 		return 0;
 	}
-	p = index(out, '\n');
+	p = strchr(out, '\n');
 	if (p)
 		*p = 0;
 	return strlen(out);
