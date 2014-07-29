@@ -100,6 +100,10 @@ int stoken_import_string(struct stoken_ctx *ctx, const char *token_string);
  * Retrieve metadata for the currently imported token.  This returns a
  * callee-allocated, caller-freed struct, which may grow larger in the future.
  *
+ * In general this should be called after stoken_decrypt_seed(), as
+ * most of the token metadata is encrypted with the devid and/or password on
+ * v3 tokens.
+ *
  * Return values:
  *
  *   ptr:     success
