@@ -9,7 +9,9 @@ lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c src/sdtid.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
+if HAVE_LD_VERSION_SCRIPT
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
+endif
 libstoken_la_LIBADD	= $(TOMCRYPT_LIBS) $(LIBXML2_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
