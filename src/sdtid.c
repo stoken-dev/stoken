@@ -1053,29 +1053,41 @@ static xmlNode *fill_section(xmlNode *parent, const char *name,
 
 	section = xmlNewNode(NULL, XCAST(name));
 	if (!section)
-		return NULL;
+		goto err;
 	if (!xmlAddChild(parent, section))
-		return NULL;
+		goto err;
 
 	for (; pairs->name; pairs++) {
-		const char *value = pairs->value;
-
 		if (tpl) {
 			char *str;
 			str = __lookup_common(tpl,
 					      xmlDocGetRootElement(tpl->doc),
 					      pairs->name);
-			if (str)
-				value = str;
+			if (str) {
+				if (xmlNewTextChild(section, NULL,
+						    XCAST(pairs->name),
+						    XCAST(str)) == NULL) {
+					free(str);
+					goto err;
+				} else {
+					free(str);
+					continue;
+				}
+			}
 		}
-
-		if (!value)
-			continue;
-		if (xmlNewTextChild(section, NULL, XCAST(pairs->name),
-				    XCAST(value)) == NULL)
-			return NULL;
+		if (pairs->value) {
+			if (xmlNewTextChild(section, NULL,
+					    XCAST(pairs->name),
+					    XCAST(pairs->value)) == NULL) {
+				goto err;
+			}
+		}
 	}
 	return section;
+
+err:
+	xmlFreeNode(section);
+	return NULL;
 }
 
 static struct sdtid *new_sdtid(struct sdtid *tpl)
