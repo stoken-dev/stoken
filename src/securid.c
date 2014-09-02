@@ -27,11 +27,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <tomcrypt.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifndef HAVE_NETTLE
+#include <tomcrypt.h>
+#else
+#include <nettle/cbc.h>
+#include <nettle/aes.h>
+#include <nettle/sha2.h>
+#include <nettle/hmac.h>
+#include <nettle/pbkdf2.h>
+#include "common.h"
+#endif
 
 #include "securid.h"
 #include "sdtid.h"
@@ -52,7 +62,7 @@ struct v3_token {
 
 struct v3_payload {
 	char			serial[16];
-	uint8_t			dec_seed[AES_KEY_SIZE];
+	uint8_t			dec_seed[SID_AES_KEY_SIZE];
 	uint8_t			unk0[2];
 	uint8_t			mode;
 	uint8_t			digits;
@@ -83,35 +93,47 @@ static uint8_t hex2byte(const char *in)
 
 void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
-	symmetric_key skey;
+#ifndef HAVE_NETTLE
 	uint8_t tmp[AES_BLOCK_SIZE];
-
+	symmetric_key skey;
 	/* these shouldn't allocate memory or fail */
-	if (rijndael_setup(key, AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
+	if (rijndael_setup(key, SID_AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
 	    rijndael_ecb_encrypt(in, tmp, &skey) != CRYPT_OK)
 		abort();
 	rijndael_done(&skey);
 
 	/* in case "in" and "out" point to the same buffer */
 	memcpy(out, tmp, AES_BLOCK_SIZE);
+#else
+	struct aes_ctx ctx;
+	aes_set_encrypt_key(&ctx, SID_AES_KEY_SIZE, key);
+	aes_encrypt(&ctx, AES_BLOCK_SIZE, out, in);
+#endif
 }
 
 void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
+#ifndef HAVE_NETTLE
 	symmetric_key skey;
 	uint8_t tmp[AES_BLOCK_SIZE];
 
-	if (rijndael_setup(key, AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
+	if (rijndael_setup(key, SID_AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
 	    rijndael_ecb_decrypt(in, tmp, &skey) != CRYPT_OK)
 		abort();
 	rijndael_done(&skey);
 
 	memcpy(out, tmp, AES_BLOCK_SIZE);
+#else
+	struct aes_ctx ctx;
+	aes_set_decrypt_key(&ctx, SID_AES_KEY_SIZE, key);
+	aes_decrypt(&ctx, AES_BLOCK_SIZE, out, in);
+#endif
 }
 
 static void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out)
 {
+#ifndef HAVE_NETTLE
 	symmetric_key skey;
 	int i, j;
 	uint8_t local_iv[AES_BLOCK_SIZE];
@@ -128,11 +150,18 @@ static void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len
 		out += AES_BLOCK_SIZE;
 	}
 	rijndael_done(&skey);
+#else
+	struct CBC_CTX(struct aes_ctx, AES_BLOCK_SIZE) ctx;
+	aes_set_decrypt_key(&ctx.ctx, AES256_KEY_SIZE, key);
+	CBC_SET_IV(&ctx, iv);
+	CBC_DECRYPT(&ctx, aes_decrypt, in_len, out, in);
+#endif
 }
 
 static void aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out)
 {
+#ifndef HAVE_NETTLE
 	symmetric_key skey;
 	int i, j;
 	uint8_t xored_in[AES_BLOCK_SIZE];
@@ -149,6 +178,12 @@ static void aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len
 		out += AES_BLOCK_SIZE;
 	}
 	rijndael_done(&skey);
+#else
+	struct CBC_CTX(struct aes_ctx, AES_BLOCK_SIZE) ctx;
+	aes_set_encrypt_key(&ctx.ctx, AES256_KEY_SIZE, key);
+	CBC_SET_IV(&ctx, iv);
+	CBC_ENCRYPT(&ctx, aes_encrypt, in_len, out, in);
+#endif
 }
 
 int securid_rand(void *out, int len, int paranoid)
@@ -177,8 +212,28 @@ int securid_rand(void *out, int len, int paranoid)
 		}
 		close(fd);
 	} else {
+#ifndef HAVE_NETTLE
 		if (rng_get_bytes(out, len, NULL) != len)
 			return ERR_GENERAL;
+#else
+		int fd;
+		char *p = out;
+
+		fd = open("/dev/urandom", O_RDONLY);
+		if (fd < 0)
+			return ERR_GENERAL;
+
+		while (len) {
+			ssize_t ret = read(fd, p, len);
+			if (ret < 0) {
+				close(fd);
+				return ERR_GENERAL;
+			}
+			p += ret;
+			len -= ret;
+		}
+		close(fd);
+#endif
 	}
 	return ERR_NONE;
 }
@@ -195,7 +250,7 @@ static void encrypt_then_xor(const uint8_t *key, uint8_t *work, uint8_t *enc)
 static void securid_mac(const uint8_t *in, int in_len, uint8_t *out)
 {
 	int i, odd = 0;
-	const int incr = AES_KEY_SIZE;
+	const int incr = SID_AES_KEY_SIZE;
 	uint8_t work[incr], enc[incr], pad[incr], zero[incr], lastblk[incr], *p;
 
 	memset(zero, 0, incr);
@@ -238,15 +293,23 @@ static uint16_t securid_shortmac(const uint8_t *in, int in_len)
 
 static void sha256_hash(const uint8_t *in, int in_len, uint8_t *out)
 {
+#ifndef HAVE_NETTLE
 	hash_state md;
 	sha256_init(&md);
 	sha256_process(&md, in, in_len);
 	sha256_done(&md, out);
+#else
+	struct sha256_ctx ctx;
+	sha256_init(&ctx);
+	sha256_update(&ctx, in_len, in);
+	sha256_digest(&ctx, SHA256_HASH_SIZE, out);
+#endif
 }
 
 static void sha256_hmac(const uint8_t *key, int key_len,
 			const uint8_t *msg, int msg_len, uint8_t *out)
 {
+#ifndef HAVE_NETTLE
 	hash_state md;
 	uint8_t tmp_key[SHA256_HASH_SIZE], o_key_pad[SHA256_BLOCK_SIZE],
 		i_key_pad[SHA256_BLOCK_SIZE], inner_hash[SHA256_BLOCK_SIZE];
@@ -274,12 +337,19 @@ static void sha256_hmac(const uint8_t *key, int key_len,
 	sha256_process(&md, o_key_pad, SHA256_BLOCK_SIZE);
 	sha256_process(&md, inner_hash, SHA256_HASH_SIZE);
 	sha256_done(&md, out);
+#else
+	struct hmac_sha256_ctx ctx;
+	hmac_sha256_set_key(&ctx, key_len, key);
+	hmac_sha256_update(&ctx, msg_len, msg);
+	hmac_sha256_digest(&ctx, SHA256_HASH_SIZE, out);
+#endif
 }
 
 static void sha256_pbkdf2(const uint8_t *pass, int pass_len,
 			  const uint8_t *salt, int salt_len,
 			  int n_rounds, uint8_t *key_out)
 {
+#ifndef HAVE_NETTLE
 	uint8_t *ext_salt;
 	uint8_t hash[SHA256_HASH_SIZE];
 	int i, round;
@@ -302,6 +372,9 @@ static void sha256_pbkdf2(const uint8_t *pass, int pass_len,
 		for (i = 0; i < SHA256_HASH_SIZE; i++)
 			key_out[i] ^= hash[i];
 	}
+#else
+	pbkdf2_hmac_sha256(pass_len, pass, n_rounds, salt_len, salt, SHA256_HASH_SIZE, key_out);
+#endif
 }
 
 /********************************************************************
@@ -406,7 +479,7 @@ static int v2_decode_token(const char *in, struct securid_token *t)
 	t->serial[SERIAL_CHARS] = 0;
 
 	numinput_to_bits(&in[BINENC_OFS], d, BINENC_BITS);
-	memcpy(t->enc_seed, d, AES_KEY_SIZE);
+	memcpy(t->enc_seed, d, SID_AES_KEY_SIZE);
 	t->has_enc_seed = 1;
 
 	t->flags = get_bits(d, 128, 16);
@@ -481,7 +554,7 @@ static int v2_decrypt_seed(struct securid_token *t, const char *pass,
 		return ERR_BAD_DEVID;
 
 	aes128_ecb_decrypt(key_hash, t->enc_seed, t->dec_seed);
-	securid_mac(t->dec_seed, AES_KEY_SIZE, dec_seed_hash);
+	securid_mac(t->dec_seed, SID_AES_KEY_SIZE, dec_seed_hash);
 	computed_mac = (dec_seed_hash[0] << 7) | (dec_seed_hash[1] >> 1);
 
 	if (computed_mac != t->dec_seed_hash)
@@ -531,11 +604,11 @@ static int v2_encode_token(struct securid_token *t, const char *pass,
 
 	memset(d, 0, sizeof(d));
 	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
-	memcpy(d, t->enc_seed, AES_KEY_SIZE);
+	memcpy(d, t->enc_seed, SID_AES_KEY_SIZE);
 
 	set_bits(d, 128, 16, t->flags);
 	set_bits(d, 144, 14, t->exp_date);
-	set_bits(d, 159, 15, securid_shortmac(t->dec_seed, AES_KEY_SIZE));
+	set_bits(d, 159, 15, securid_shortmac(t->dec_seed, SID_AES_KEY_SIZE));
 	set_bits(d, 174, 15, t->device_id_hash);
 
 	sprintf(out, "2%s", t->serial);
@@ -587,7 +660,6 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 	char decoded[V3_BASE64_SIZE];
 	int i, j;
 	unsigned long actual;
-
 	/* remove URL-encoding */
 	for (i = 0, j = 0; in[i]; ) {
 		if (j == V3_BASE64_SIZE - 1)
@@ -603,7 +675,7 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 	}
 	decoded[j] = 0;
 
-	actual = sizeof(struct v3_token);
+	actual = V3_SIZE(strlen(decoded));
 	t->v3 = malloc(actual);
 	if (!t->v3)
 		return ERR_NO_MEMORY;
@@ -719,7 +791,7 @@ static int v3_decrypt_seed(struct securid_token *t,
 	strncpy(t->serial, payload.serial, SERIAL_CHARS);
 	t->serial[SERIAL_CHARS] = 0;
 
-	memcpy(t->dec_seed, &payload.dec_seed, AES_KEY_SIZE);
+	memcpy(t->dec_seed, &payload.dec_seed, SID_AES_KEY_SIZE);
 	t->has_dec_seed = 1;
 
 	t->flags |= FL_TIMESEEDS | FL_128BIT;
@@ -747,7 +819,7 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 
 	memset(&payload, 0, sizeof(payload));
 	strncpy(payload.serial, t->serial, sizeof(payload.serial));
-	memcpy(payload.dec_seed, t->dec_seed, AES_KEY_SIZE);
+	memcpy(payload.dec_seed, t->dec_seed, SID_AES_KEY_SIZE);
 	payload.unk0[0] = payload.unk0[1] = 1;
 	payload.mode = !!(t->flags & FL_FEAT4);
 	payload.digits = ((t->flags & FLD_DIGIT_MASK) >> FLD_DIGIT_SHIFT) + 1;
@@ -850,7 +922,7 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 			       char *code_out)
 {
 	uint8_t bcd_time[8];
-	uint8_t key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
+	uint8_t key0[SID_AES_KEY_SIZE], key1[SID_AES_KEY_SIZE];
 	int i, j;
 	uint32_t tokencode;
 	struct tm gmt;
@@ -930,11 +1002,11 @@ int securid_random_token(struct securid_token *t)
 
 	memset(t, 0, sizeof(*t));
 
-	if (securid_rand(t->dec_seed, AES_KEY_SIZE, 0) ||
+	if (securid_rand(t->dec_seed, SID_AES_KEY_SIZE, 0) ||
 	    securid_rand(randbytes, sizeof(randbytes), 0))
 		return ERR_GENERAL;
 
-	t->dec_seed_hash = securid_shortmac(t->dec_seed, AES_KEY_SIZE);
+	t->dec_seed_hash = securid_shortmac(t->dec_seed, SID_AES_KEY_SIZE);
 
 	generate_key_hash(key_hash, NULL, NULL, &t->device_id_hash, t);
 	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
@@ -986,13 +1058,13 @@ void securid_token_info(const struct securid_token *t,
 	callback("Serial number", t->serial);
 
 	if (t->has_dec_seed) {
-		for (i = 0; i < AES_KEY_SIZE; i++)
+		for (i = 0; i < SID_AES_KEY_SIZE; i++)
 			sprintf(&str[i * 3], "%02x ", t->dec_seed[i]);
 		callback("Decrypted seed", str);
 	}
 
 	if (t->has_enc_seed) {
-		for (i = 0; i < AES_KEY_SIZE; i++)
+		for (i = 0; i < SID_AES_KEY_SIZE; i++)
 			sprintf(&str[i * 3], "%02x ", t->enc_seed[i]);
 		callback("Encrypted seed", str);
 

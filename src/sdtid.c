@@ -27,10 +27,18 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#ifndef HAVE_NETTLE
 #include <tomcrypt.h>
+#else
+#include <nettle/rsa.h>
+#include <nettle/bignum.h>
+#include <nettle/sha1.h>
+#include "common.h"
+#endif
 
 #include "securid.h"
 #include "sdtid.h"
@@ -47,9 +55,9 @@ struct sdtid {
 	int			interactive;
 
 	char			*sn;
-	uint8_t			batch_mac_key[AES_KEY_SIZE];
-	uint8_t			token_mac_key[AES_KEY_SIZE];
-	uint8_t			token_enc_key[AES_KEY_SIZE];
+	uint8_t			batch_mac_key[SID_AES_KEY_SIZE];
+	uint8_t			token_mac_key[SID_AES_KEY_SIZE];
+	uint8_t			token_enc_key[SID_AES_KEY_SIZE];
 };
 
 static const uint8_t batch_mac_iv[] =
@@ -635,6 +643,7 @@ static int hash_section(struct sdtid *s, xmlNode *node, uint8_t *mac,
 
 static int sign_contents(struct sdtid *s, uint8_t *sig)
 {
+#ifndef HAVE_NETTLE
 	struct hash_status hs;
 	hash_state md;
 	uint8_t hash[HASH_SIZE];
@@ -671,12 +680,54 @@ static int sign_contents(struct sdtid *s, uint8_t *sig)
 
 	rsa_free(&key);
 	return rc;
+#else
+	struct hash_status hs;
+	struct rsa_private_key key;
+	struct rsa_public_key pub;
+	struct sha1_ctx ctx;
+	mpz_t msig;
+	int ret;
+
+	rsa_private_key_init(&key);
+	rsa_public_key_init(&pub);
+	mpz_init(msig);
+
+	memset(&hs, 0, sizeof(hs));
+	if (__hash_section(&hs, s->header_node, 1) < 0)
+		return ERR_NO_MEMORY;
+	if (__hash_section(&hs, s->tkn_node, 1) < 0)
+		return ERR_NO_MEMORY;
+
+	sha1_init(&ctx);
+	sha1_update(&ctx, hs.pos, hs.data);
+
+	ret = rsa_keypair_from_der(&pub, &key, 1025, sizeof(batch_privkey)-1, batch_privkey);
+	if (ret == 0) {
+		ret = ERR_GENERAL;
+		goto cleanup;
+	}
+
+	ret = rsa_sha1_sign(&key, &ctx, msig);
+	if (ret == 0) {
+		ret = ERR_GENERAL;
+		goto cleanup;
+	}
+
+	nettle_mpz_get_str_256(nettle_mpz_sizeinbase_256_u(msig), sig, msig);
+
+	ret = 0;
+ cleanup:
+	rsa_private_key_clear(&key);
+	rsa_public_key_clear(&pub);
+	mpz_clear(msig);
+	return ret;
+#endif
 }
 
 static void hash_password(uint8_t *result, const char *pass, const char *salt0,
 			  const char *salt1)
 {
-	uint8_t key[AES_KEY_SIZE], iv[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
+	uint8_t key[SID_AES_KEY_SIZE], iv[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
 	uint8_t data[0x50];
 	unsigned int i;
 
@@ -765,7 +816,7 @@ static int b64_or_warn(struct sdtid *s, const char *name, uint8_t *out,
 
 static int generate_all_keys(struct sdtid *s, const char *pass)
 {
-	uint8_t secret[AES_BLOCK_SIZE], key0[AES_KEY_SIZE], key1[AES_KEY_SIZE];
+	uint8_t secret[SID_AES_KEY_SIZE], key0[SID_AES_KEY_SIZE], key1[SID_AES_KEY_SIZE];
 
 	char *origin = NULL, *dest = NULL, *name = NULL;
 	int ret = ERR_GENERAL;
@@ -775,7 +826,7 @@ static int generate_all_keys(struct sdtid *s, const char *pass)
 	    str_or_warn(s, "Origin", &origin) ||
 	    str_or_warn(s, "Dest", &dest) ||
 	    str_or_warn(s, "Name", &name) ||
-	    b64_or_warn(s, "Secret", secret, AES_KEY_SIZE))
+	    b64_or_warn(s, "Secret", secret, sizeof(secret)))
 		goto err;
 
 	hash_password(key0, pass ? pass : origin, dest, name);
@@ -1222,7 +1273,7 @@ int sdtid_issue(const char *filename, const char *pass,
 {
 	struct sdtid *s = NULL, *tpl = NULL;
 	int ret = ERR_GENERAL;
-	uint8_t dec_seed[AES_KEY_SIZE], enc_seed[AES_KEY_SIZE];
+	uint8_t dec_seed[SID_AES_KEY_SIZE], enc_seed[SID_AES_KEY_SIZE];
 	char str[32];
 
 	if (clone_from_template(filename, &tpl, &s) ||
@@ -1277,11 +1328,12 @@ int sdtid_export(const char *filename, struct securid_token *t,
 {
 	struct sdtid *s = NULL, *tpl = NULL;
 	int ret, tmp;
-	uint8_t dec_seed[AES_KEY_SIZE], enc_seed[AES_KEY_SIZE];
+	uint8_t dec_seed[SID_AES_KEY_SIZE], enc_seed[SID_AES_KEY_SIZE];
 
 	ret = clone_from_template(filename, &tpl, &s);
-	if (ret != ERR_NONE)
+	if (ret != ERR_NONE) {
 		return ret;
+	}
 
 	if (!node_present(tpl, "Secret"))
 		overwrite_secret(s, s->header_node, "Secret", 0);
@@ -1316,17 +1368,18 @@ int sdtid_export(const char *filename, struct securid_token *t,
 		replace_string(s, s->tkn_node, "DeviceSerialNumber", devid);
 
 	ret = generate_all_keys(s, pass);
-	if (ret != ERR_NONE || s->error != ERR_NONE)
+	if (ret != ERR_NONE || s->error != ERR_NONE) {
 		goto out;
+	}
 
 	/* special case: this is an unencrypted seed in base64 format */
 	if (node_present(tpl, "Seed")) {
-		if (b64_or_warn(tpl, "Seed", dec_seed, AES_KEY_SIZE)) {
+		if (b64_or_warn(tpl, "Seed", dec_seed, SID_AES_KEY_SIZE)) {
 			ret = ERR_GENERAL;
 			goto out;
 		}
 	} else {
-		memcpy(dec_seed, t->dec_seed, AES_KEY_SIZE);
+		memcpy(dec_seed, t->dec_seed, SID_AES_KEY_SIZE);
 	}
 
 	decrypt_seed(enc_seed, dec_seed, s->sn, s->token_enc_key);
@@ -1334,8 +1387,9 @@ int sdtid_export(const char *filename, struct securid_token *t,
 
 	recompute_macs(s);
 
-	if (s->error != ERR_NONE)
+	if (s->error != ERR_NONE) {
 		goto out;
+	}
 
 	xmlDocFormatDump(stdout, s->doc, 1);
 	ret = ERR_NONE;

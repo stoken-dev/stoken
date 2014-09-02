@@ -78,4 +78,13 @@ extern char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
 struct securid_token;
 extern struct securid_token *current_token;
 
+#ifdef HAVE_NETTLE
+int base64_encode(const unsigned char *in,  unsigned long len, 
+                        unsigned char *out, unsigned long *outlen);
+
+int base64_decode(const unsigned char *in,  unsigned long len, 
+                        unsigned char *out, unsigned long *outlen);
+#define CRYPT_OK 0
+#endif
+
 #endif /* !__STOKEN_COMMON_H__ */
