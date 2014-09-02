@@ -398,7 +398,7 @@ static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
 		       const uint8_t *data, int len)
 {
 	unsigned long enclen = BASE64_INPUT_LEN(len);
-	char *out = malloc(enclen);
+	char *out = malloc(enclen + 1);
 	int ret;
 
 	if (!out)
