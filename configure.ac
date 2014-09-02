@@ -113,38 +113,54 @@ AM_CONDITIONAL([ENABLE_GUI], [test $enable_gui = yes])
 
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
 
-# libtomcrypt
-# Some distributions add a libtomcrypt.pc file, but it isn't in the upstream
-# libtomcrypt distribution so we can't count on it.
+AC_ARG_WITH([nettle], [AS_HELP_STRING([--with-nettle],
+	[build stoken-gui with nettle])],
+	[with_nettle=$withval],
+	[with_nettle=no])
 
-tomcrypt_pkg=no
+if test $with_nettle != no;then
+	PKG_CHECK_MODULES(NETTLE, [nettle >= 2.7], [], [
+		AC_MSG_ERROR([[Libnettle 2.7 was not found.]])])
 
-if test "x$PKG_CONFIG" != x; then
-	PKG_CHECK_EXISTS([libtomcrypt], [tomcrypt_pkg=yes], [])
-fi
+	PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.7], [], [
+		AC_MSG_ERROR([[Libhogweed 2.7 (nettle's companion) was not found.]])])
 
-if test $tomcrypt_pkg = no; then
-	AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
-	AC_SUBST(LIBTOMCRYPT_PC, [])
-	EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
+	AC_DEFINE([HAVE_NETTLE], 1, [Use nettle as backend])
+	AC_SUBST([HAVE_NETTLE])
 else
-	AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
-	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
+	# libtomcrypt
+	# Some distributions add a libtomcrypt.pc file, but it isn't in the upstream
+	# libtomcrypt distribution so we can't count on it.
+
+	tomcrypt_pkg=no
+
+	if test "x$PKG_CONFIG" != x; then
+		PKG_CHECK_EXISTS([libtomcrypt], [tomcrypt_pkg=yes], [])
+	fi
+
+	if test $tomcrypt_pkg = no; then
+		AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
+		AC_SUBST(LIBTOMCRYPT_PC, [])
+		EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
+	else
+		AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
+		PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
+	fi
+
+	saved_LIBS="$LIBS"
+	saved_CFLAGS="$CFLAGS"
+	LIBS="$LIBS $TOMCRYPT_LIBS"
+	CFLAGS="$CFLAGS $TOMCRYPT_CFLAGS"
+
+	AC_MSG_CHECKING([if libtomcrypt is usable])
+	AC_TRY_LINK([#include <tomcrypt.h>],
+		[rijndael_ecb_encrypt(NULL,NULL,NULL);],
+		[AC_MSG_RESULT([yes])],
+		[AC_MSG_FAILURE([unable to link libtomcrypt test program])])
+
+	LIBS="$saved_LIBS"
+	CFLAGS="$saved_CFLAGS"
 fi
-
-saved_LIBS="$LIBS"
-saved_CFLAGS="$CFLAGS"
-LIBS="$LIBS $TOMCRYPT_LIBS"
-CFLAGS="$CFLAGS $TOMCRYPT_CFLAGS"
-
-AC_MSG_CHECKING([if libtomcrypt is usable])
-AC_TRY_LINK([#include <tomcrypt.h>],
-	[rijndael_ecb_encrypt(NULL,NULL,NULL);],
-	[AC_MSG_RESULT([yes])],
-	[AC_MSG_FAILURE([unable to link libtomcrypt test program])])
-
-LIBS="$saved_LIBS"
-CFLAGS="$saved_CFLAGS"
 
 AC_SUBST(EXTRA_PC_LIBS, [$EXTRA_PC_LIBS])
 
