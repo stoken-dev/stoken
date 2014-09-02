@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <tomcrypt.h>
+
 #include "common.h"
 #include "securid.h"
 #include "stoken.h"
@@ -374,6 +376,11 @@ int common_init(char *cmd)
 #ifdef HAVE_MLOCKALL
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 #endif
+
+	/* libtomcrypt init for sdtid BatchSignature generation */
+	ltc_mp = ltm_desc;
+	if (register_hash(&sha1_desc) == -1)
+		return ERR_GENERAL;
 
 	cfg = xzalloc(sizeof(*cfg));
 	if (__stoken_read_rcfile(opt_rcfile, cfg,
