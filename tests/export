@@ -1,0 +1,53 @@
+#!/bin/sh
+
+TMPFILE=out.tmp
+TOKEN="--token=279396402074015764735041244773131252103253001721722151344173126350250236671677634"
+STOKEN="${STOKEN:-../stoken}"
+if ! test -z "${VALGRIND}";then
+VALGRIND="${LIBTOOL:-libtool} --mode=execute ${VALGRIND}"
+fi
+
+rm -f $TMPFILE
+
+$VALGRIND $STOKEN export $TOKEN --android >$TMPFILE
+if test $? != 0;then
+	echo "cmd 1 failed"
+	exit 1
+fi
+
+grep "http://127.0.0.1/securid/ctf?ctfData=279396402074015764735041244773131252103253001721722151344173126350250236671677634$" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "test 1 failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN export $TOKEN --v3 >$TMPFILE
+if test $? != 0;then
+	echo "cmd 2 failed"
+	exit 1
+fi
+
+grep "http://127.0.0.1/securid/ctf?ctfData=Aw" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "test 2 failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN export $TOKEN --iphone --new-password asdf >$TMPFILE
+if test $? != 0;then
+	echo "cmd 3 failed"
+	exit 1
+fi
+
+grep "com.rsa.securid.iphone://ctf?ctfData=279396402074014034342410542127366277612253543712524336266173126350250236671647665$" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "test 3 failed"
+	cat $TMPFILE
+	exit 1
+fi
+
+
+rm -f $TMPFILE
+
+exit 0
+

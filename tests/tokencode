@@ -1,0 +1,22 @@
+#!/bin/sh
+
+TMPFILE=out.tmp
+TMPFILE2=out2.tmp
+STOKEN="${STOKEN:-../stoken}"
+if ! test -z "${VALGRIND}";then
+VALGRIND="${LIBTOOL:-libtool} --mode=execute ${VALGRIND}"
+fi
+
+rm -f $TMPFILE
+
+$VALGRIND $STOKEN tokencode --token 'http://127.0.0.1/securid/ctf?ctfData=279396402074015764735041244773131252103253001721722151344173126350250236671677634' --use-time 1409757465 --pin 9999 >$TMPFILE
+grep "09816090$" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "cmd 0 failed"
+	exit 1
+fi
+
+rm -f $TMPFILE
+
+exit 0
+
