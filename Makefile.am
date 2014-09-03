@@ -63,8 +63,14 @@ dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA)
+EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA) \
+			  tests/template.xml tests/sign.cmp
+
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
 			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
+
+TESTS			= tests/export tests/sign tests/tokencode
+TESTS_ENVIRONMENT =	STOKEN=./stoken \
+			TESTDIR="$(srcdir)/tests"
 
 DISTCLEANFILES		= *~
