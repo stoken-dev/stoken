@@ -113,6 +113,13 @@ AM_CONDITIONAL([ENABLE_GUI], [test $enable_gui = yes])
 
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
 
+AC_ARG_WITH([valgrind], [AS_HELP_STRING([--with-valgrind],
+	[use valgrind to test stoken])],
+	[with_valgrind=$withval],
+	[with_valgrind=no])
+
+AM_CONDITIONAL([ENABLE_VALGRIND], [test $with_valgrind != no])
+
 AC_ARG_WITH([nettle], [AS_HELP_STRING([--with-nettle],
 	[build stoken-gui with nettle])],
 	[with_nettle=$withval],
