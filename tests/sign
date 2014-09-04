@@ -1,0 +1,48 @@
+#!/bin/sh
+
+TESTDIR="${TESTDIR:-.}"
+TMPFILE=out.tmp
+TMPFILE2=out2.tmp
+TOKEN="--token=279396402074015764735041244773131252103253001721722151344173126350250236671677634"
+STOKEN="${STOKEN:-../stoken}"
+if ! test -z "${VALGRIND}";then
+VALGRIND="${LIBTOOL:-libtool} --mode=execute ${VALGRIND}"
+fi
+
+rm -f $TMPFILE
+
+$VALGRIND $STOKEN export $TOKEN --sdtid >$TMPFILE
+if test $? != 0;then
+	echo "cmd 1 failed"
+	exit 1
+fi
+
+cat $TMPFILE|grep -v TokenMAC|grep -v Seed|grep -v HeaderMAC|grep -v Secret|grep -v Batch >$TMPFILE2
+cat $TESTDIR/template.xml|grep -v TokenMAC|grep -v Seed|grep -v HeaderMAC|grep -v Secret|grep -v Batch >$TMPFILE
+
+cmp $TMPFILE2 $TMPFILE
+if test $? != 0;then
+	echo "cmp 1 failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN export --random --template $TESTDIR/template.xml --sdtid >$TMPFILE2
+if test $? != 0;then
+	echo "cmd 2 failed"
+	exit 1
+fi
+
+cat $TMPFILE2|grep -v Batch >$TMPFILE
+cat $TESTDIR/sign.cmp|grep -v Batch >$TMPFILE2
+
+cmp $TMPFILE2 $TMPFILE
+if test $? != 0;then
+	echo "cmp 2 failed"
+	exit 1
+fi
+
+rm -f $TMPFILE
+rm -f $TMPFILE2
+
+exit 0
+
