@@ -37,6 +37,15 @@ if test "x$enable_debug" = xyes; then
 	CFLAGS="$CFLAGS -O0 -ggdb"
 fi
 
+# --enable-valgrind
+
+AC_ARG_ENABLE([valgrind], [AS_HELP_STRING([--enable-valgrind],
+	[use valgrind when running 'make check' [default=no]])],
+	[enable_valgrind=$enableval],
+	[enable_valgrind=no])
+
+AM_CONDITIONAL([ENABLE_VALGRIND], [test $enable_valgrind != no])
+
 EXTRA_PC_LIBS=""
 
 AS_COMPILER_FLAGS(WFLAGS,

@@ -77,4 +77,8 @@ TESTS			= $(scripts)
 TESTS_ENVIRONMENT 	= STOKEN=./stoken \
 			TESTDIR="$(srcdir)/tests"
 
+if ENABLE_VALGRIND
+TESTS_ENVIRONMENT +=	VALGRIND="valgrind --error-exitcode=1"
+endif
+
 DISTCLEANFILES		= *~
