@@ -37,8 +37,10 @@ static GtkWidget *tokencode_text, *next_tokencode_text, *progress_bar;
 
 static char tokencode_str[16];
 static char next_tokencode_str[16];
+
 static int last_sec = -1;
 static int token_sec;
+static long time_adjustment;
 
 static int token_days_left;
 static int token_interval;
@@ -100,9 +102,28 @@ static gboolean draw_progress_bar_callback(GtkWidget *widget, cairo_t *cr,
 	return FALSE;
 }
 
+static time_t adjusted_time(void)
+{
+	return time(NULL) + time_adjustment;
+}
+
+static void parse_opt_use_time(void)
+{
+	long new_time;
+
+	if (!opt_use_time)
+		return;
+	else if (sscanf(opt_use_time, "+%ld", &new_time) == 1)
+		time_adjustment = new_time;
+	else if (sscanf(opt_use_time, "-%ld", &new_time) == 1)
+		time_adjustment = -new_time;
+	else
+		die("error: 'stoken-gui --use-time' must specify a +/- offset\n");
+}
+
 static gint update_tokencode(gpointer data)
 {
-	time_t now = time(NULL);
+	time_t now = adjusted_time();
 	struct tm *tm;
 	char str[128], *formatted;
 
@@ -400,7 +421,9 @@ int main(int argc, char **argv)
 			"Please use 'stoken' to handle tokens encrypted with a device ID.");
 
 	/* check for token expiration */
-	token_days_left = securid_check_exp(current_token, time(NULL));
+	parse_opt_use_time();
+	token_days_left = securid_check_exp(current_token, adjusted_time());
+
 	if (!opt_force && !opt_small) {
 		if (token_days_left < 0)
 			error_dialog("Token expired",

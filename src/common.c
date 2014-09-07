@@ -157,6 +157,7 @@ static const struct option long_opts[] = {
 	{ "debug",          0, NULL,                    'd'               },
 	{ "version",        0, NULL,                    'v'               },
 	{ "force",          0, NULL,                    'f'               },
+	{ "use-time",       1, NULL,                    OPT_USE_TIME      },
 	{ "help",           0, NULL,                    'h'               },
 
 	/* all remaining options are for CLI only */
@@ -165,7 +166,6 @@ static const struct option long_opts[] = {
 	{ "batch",          0, NULL,                    'b'               },
 
 	/* used for tokencode generation */
-	{ "use-time",       1, NULL,                    OPT_USE_TIME      },
 	{ "next",           0, &opt_next,               1                 },
 
 	/* these are mostly for exporting/issuing tokens */
