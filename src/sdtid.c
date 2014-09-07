@@ -882,12 +882,17 @@ static int decode_fields(struct securid_token *t)
 	t->version = 2;
 
 	tmps = lookup_string(s, "SN", NULL);
-	if (!tmps || strlen(tmps) > SERIAL_CHARS) {
+	tmpi = tmps ? strlen(tmps) : 0;
+	if (!tmpi || tmpi > SERIAL_CHARS) {
 		missing_node(s, "SN");
 		free(tmps);
 		goto err;
 	}
-	strncpy(t->serial, tmps, SERIAL_CHARS);
+
+	/* hard token sdtid files are missing the leading zeroes */
+	memset(t->serial, '0', SERIAL_CHARS);
+	strncpy(&t->serial[SERIAL_CHARS - tmpi], tmps, SERIAL_CHARS);
+	t->serial[SERIAL_CHARS] = 0;
 	free(tmps);
 
 	t->flags |= lookup_int(s, "TimeDerivedSeeds", 0) ? FL_TIMESEEDS : 0;
