@@ -716,6 +716,8 @@ static int v3_decrypt_seed(struct securid_token *t,
 			   t->v3->enc_payload, sizeof(struct v3_payload),
 			   t->v3->nonce, (void *)&payload);
 
+	if (strlen(payload.serial) != SERIAL_CHARS)
+		return ERR_GENERAL;
 	strncpy(t->serial, payload.serial, SERIAL_CHARS);
 	t->serial[SERIAL_CHARS] = 0;
 
