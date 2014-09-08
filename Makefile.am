@@ -2,7 +2,8 @@ AUTOMAKE_OPTIONS	= foreign subdir-objects
 
 AM_CPPFLAGS		= -DDATA_DIR=\"$(datadir)\"
 AM_CFLAGS		= $(TOMCRYPT_CFLAGS) -DLTM_DESC \
-			  $(LIBXML2_CFLAGS) $(WFLAGS)
+			  $(LIBXML2_CFLAGS) $(NETTLE_CFLAGS) \
+			  $(WFLAGS)
 
 dist_man_MANS		= stoken.1
 
@@ -11,7 +12,7 @@ libstoken_la_SOURCES	= src/library.c src/securid.c src/sdtid.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
-libstoken_la_LIBADD	= $(TOMCRYPT_LIBS) $(LIBXML2_LIBS)
+libstoken_la_LIBADD	= $(TOMCRYPT_LIBS) $(LIBXML2_LIBS) $(NETTLE_LIBS) $(HOGWEED_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
 noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h \
@@ -32,14 +33,14 @@ endif
 
 bin_PROGRAMS		= stoken
 stoken_SOURCES		= src/cli.c src/common.c
-stoken_LDADD		= $(LDADD) $(TOMCRYPT_LIBS) libstoken.la
+stoken_LDADD		= $(LDADD) $(TOMCRYPT_LIBS) $(NETTLE_LIBS) $(HOGWEED_LIBS) libstoken.la
 
 if ENABLE_GUI
 bin_PROGRAMS		+= stoken-gui
 stoken_gui_SOURCES	= src/gui.c src/common.c
 stoken_gui_CFLAGS	= $(AM_CFLAGS) $(GTK_CFLAGS)
 stoken_gui_CPPFLAGS	= $(AM_CPPFLAGS) -DUIDIR=\"$(uidir)\"
-stoken_gui_LDADD	= $(LDADD) $(TOMCRYPT_LIBS) libstoken.la $(GTK_LIBS)
+stoken_gui_LDADD	= $(LDADD) $(TOMCRYPT_LIBS) $(NETTLE_LIBS) $(HOGWEED_LIBS) libstoken.la $(GTK_LIBS)
 
 dist_man_MANS		+= stoken-gui.1
 
@@ -63,8 +64,20 @@ dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA)
+EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA) \
+			  tests/template.xml tests/sign.cmp
+
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
 			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
+
+scripts			= tests/export tests/sign tests/tokencode
+dist_check_SCRIPTS	= $(scripts)
+TESTS			= $(scripts)
+TESTS_ENVIRONMENT 	= STOKEN=./stoken \
+			TESTDIR="$(srcdir)/tests"
+
+if ENABLE_VALGRIND
+TESTS_ENVIRONMENT +=	VALGRIND="valgrind --error-exitcode=1"
+endif
 
 DISTCLEANFILES		= *~

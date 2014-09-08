@@ -28,8 +28,12 @@
 
 #include "stoken-internal.h"
 
+#ifdef HAVE_NETTLE
+#include <nettle/base64.h>
+#endif
+
 #define AES_BLOCK_SIZE		16
-#define AES_KEY_SIZE		16
+#define SID_AES_KEY_SIZE	16
 #define AES256_KEY_SIZE		32
 
 #define SHA256_BLOCK_SIZE	64
@@ -71,7 +75,13 @@
  * up to 3 input bytes (each carrying 8 bits of data).  Plus one terminating
  * NUL at the end.
  */
+#ifndef HAVE_NETTLE
 #define BASE64_INPUT_LEN(x)	((4 * ((x) + 2) / 3) + 1)
+#define V3_SIZE(x)		sizeof(struct v3_token)
+#else
+#define BASE64_INPUT_LEN(x) (BASE64_ENCODE_LENGTH(x)+BASE64_ENCODE_FINAL_LENGTH+1)
+#define V3_SIZE(x)		(BASE64_DECODE_LENGTH(x))
+#endif
 
 /* decoded size (binary) */
 #define V3_BASE64_BYTES		0x123
@@ -81,6 +91,7 @@
 #define V3_BASE64_URL_SIZE	(3*BASE64_INPUT_LEN(V3_BASE64_BYTES))
 /* strlen() of smallest possible encoded size */
 #define V3_BASE64_MIN_CHARS	(V3_BASE64_BYTES * 4 / 3)
+
 
 #define BIT(x)			(1 << (x))
 
@@ -116,13 +127,13 @@ struct securid_token {
 	int			is_smartphone;
 
 	int			has_enc_seed;
-	uint8_t			enc_seed[AES_KEY_SIZE];
+	uint8_t			enc_seed[SID_AES_KEY_SIZE];
 
 	uint16_t		dec_seed_hash;
 	uint16_t		device_id_hash;
 
 	int			has_dec_seed;
-	uint8_t			dec_seed[AES_KEY_SIZE];
+	uint8_t			dec_seed[SID_AES_KEY_SIZE];
 
 	int			pinmode;
 	char			pin[MAX_PIN + 1];

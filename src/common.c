@@ -30,7 +30,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifndef HAVE_NETTLE
 #include <tomcrypt.h>
+#else
+#include <nettle/base64.h>
+#endif
 
 #include "common.h"
 #include "securid.h"
@@ -377,11 +381,12 @@ int common_init(char *cmd)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 #endif
 
+#ifndef HAVE_NETTLE
 	/* libtomcrypt init for sdtid BatchSignature generation */
 	ltc_mp = ltm_desc;
 	if (register_hash(&sha1_desc) == -1)
 		return ERR_GENERAL;
-
+#endif
 	cfg = xzalloc(sizeof(*cfg));
 	if (__stoken_read_rcfile(opt_rcfile, cfg,
 				 is_import ? &dbg : &warn) != ERR_NONE)
@@ -486,3 +491,44 @@ char *format_token(const char *token_str)
 
 	return out;
 }
+
+#ifdef HAVE_NETTLE
+int base64_encode(const unsigned char *in,  unsigned long len, 
+                        unsigned char *out, unsigned long *outlen)
+{
+	struct base64_encode_ctx ctx;
+	unsigned size = 0;
+	base64_encode_init(&ctx);
+
+	size = base64_encode_update(&ctx, out, len, in);
+	size += base64_encode_final(&ctx, out+size);
+	out[size] = 0;
+	*outlen = size;
+	return 0;
+}
+
+int base64_decode(const unsigned char *in,  unsigned long len, 
+                        unsigned char *out, unsigned long *outlen)
+{
+	struct base64_decode_ctx ctx;
+	char tmp[BASE64_DECODE_LENGTH(len)];
+	unsigned dst_length;
+	int ret;
+
+	dst_length = BASE64_DECODE_LENGTH(len);
+	base64_decode_init(&ctx);
+	ret = base64_decode_update(&ctx, &dst_length, tmp, len, in);
+	if (ret == 0) {
+		return -1;
+	}
+
+	if (*outlen >= dst_length) {
+		memcpy(out, tmp, dst_length);
+	} else {
+		return -1;
+	}
+	*outlen = dst_length;
+
+	return 0;
+}
+#endif
