@@ -189,6 +189,19 @@ AC_ARG_ENABLE([jni-standalone],
 	[jni_standalone=no])
 AM_CONDITIONAL(JNI_STANDALONE, [test $jni_standalone = yes])
 
+# Check for symbol versioning support
+
+AC_MSG_CHECKING([if libraries can be versioned])
+GLD=`$LD --help < /dev/null 2>/dev/null | grep version-script`
+if test "$GLD"; then
+    have_ld_version_script=yes
+    AC_MSG_RESULT(yes)
+else
+    have_ld_version_script=no
+    AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL(HAVE_LD_VERSION_SCRIPT, test "$have_ld_version_script" = "yes")
+
 # library version
 
 libhdr=${srcdir}/src/stoken.h
