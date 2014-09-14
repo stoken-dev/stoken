@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,7 +31,6 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <tomcrypt.h>
 
 #include "securid.h"
 #include "sdtid.h"
@@ -638,8 +638,6 @@ static int sign_contents(struct sdtid *s, uint8_t *sig)
 	struct hash_status hs;
 	uint8_t hash[HASH_SIZE];
 	unsigned long outlen = RSA_MODULUS_SIZE;
-	rsa_key key;
-	int hash_idx, rc = 0;
 
 	memset(&hs, 0, sizeof(hs));
 	if (__hash_section(&hs, s->header_node, 1) < 0)
@@ -648,25 +646,8 @@ static int sign_contents(struct sdtid *s, uint8_t *sig)
 		return ERR_NO_MEMORY;
 	stc_sha1_hash(hash, hs.data, hs.pos, NULL);
 
-	/*
-	 * NOTE: This is set up in common.c.  If we ever decide to let library
-	 * callers generate sdtid files, we will have to figure out how to
-	 * call register_sha1() and set ltc_mp without disturbing other
-	 * libtomcrypt users who might coexist in the same process.
-	 */
-	hash_idx = find_hash("sha1");
-	if (hash_idx < 0)
-		return ERR_GENERAL;
-
-	if (rsa_import(batch_privkey, sizeof(batch_privkey), &key) != CRYPT_OK)
-		return ERR_GENERAL;
-	if (rsa_sign_hash_ex(hash, HASH_SIZE, sig, &outlen,
-			     LTC_LTC_PKCS_1_V1_5, NULL, 0,
-			     hash_idx, 0, &key) != CRYPT_OK)
-		rc = ERR_GENERAL;
-
-	rsa_free(&key);
-	return rc;
+	return stc_rsa_sha1_sign_digest(batch_privkey, sizeof(batch_privkey),
+					hash, sig, &outlen);
 }
 
 static void hash_password(uint8_t *result, const char *pass, const char *salt0,

@@ -169,3 +169,31 @@ int stc_b64_decode(const uint8_t *in,  unsigned long len,
 	return base64_decode(in, len, out, outlen) == CRYPT_OK ?
 		ERR_NONE : ERR_GENERAL;
 }
+
+int stc_rsa_sha1_sign_digest(const uint8_t *privkey_der, size_t privkey_len,
+			     const uint8_t *digest,
+			     uint8_t *out, unsigned long *outlen)
+{
+	int hash_idx, rc = ERR_NONE;
+	rsa_key key;
+
+	/*
+	 * NOTE: This is set up in common.c.  If we ever decide to let library
+	 * callers generate sdtid files, we will have to figure out how to
+	 * call register_sha1() and set ltc_mp without disturbing other
+	 * libtomcrypt users who might coexist in the same process.
+	 */
+	hash_idx = find_hash("sha1");
+	if (hash_idx < 0)
+		return ERR_GENERAL;
+
+	if (rsa_import(privkey_der, privkey_len, &key) != CRYPT_OK)
+		return ERR_GENERAL;
+	if (rsa_sign_hash_ex(digest, (160 / 8), out, outlen,
+			     LTC_LTC_PKCS_1_V1_5, NULL, 0,
+			     hash_idx, 0, &key) != CRYPT_OK)
+		rc = ERR_GENERAL;
+
+	rsa_free(&key);
+	return rc;
+}

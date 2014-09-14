@@ -82,5 +82,8 @@ int stc_b64_encode(const uint8_t *in,  unsigned long len,
 		   uint8_t *out, unsigned long *outlen);
 int stc_b64_decode(const uint8_t *in,  unsigned long len,
 		   uint8_t *out, unsigned long *outlen);
+int stc_rsa_sha1_sign_digest(const uint8_t *privkey_der, size_t privkey_len,
+			     const uint8_t *digest,
+			     uint8_t *out, unsigned long *outlen);
 
 #endif /* !__STOKEN_INTERNAL_H__ */
