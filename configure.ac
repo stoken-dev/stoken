@@ -28,13 +28,13 @@ AC_CONFIG_FILES([Makefile])
 
 AC_ARG_ENABLE(
 	[debug],
-	[AS_HELP_STRING([--enable-debug],[enable debugging code and output])],
-	[],
+	[AS_HELP_STRING([--enable-debug],[enable debugging code and output [default=no]])],
+	[enable_debug=$enableval],
 	[enable_debug="no"]
 )
 
 if test "x$enable_debug" = xyes; then
-	CFLAGS="$CFLAGS -O0 -ggdb"
+	CFLAGS="$CFLAGS -O0 -ggdb -fno-inline"
 fi
 
 # --enable-valgrind
