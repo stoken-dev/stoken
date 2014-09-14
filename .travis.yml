@@ -10,13 +10,20 @@ notifications:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind
+  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind nettle-dev
 
 script:
   - ./autogen.sh &&
+    mkdir build.nettle &&
+    pushd build.nettle &&
+    ../configure --enable-valgrind --without-tomcrypt --with-nettle &&
+    make &&
+    make check &&
+    make dist &&
+    popd &&
     mkdir build &&
     pushd build &&
-    ../configure --enable-valgrind &&
+    ../configure --enable-valgrind --with-tomcrypt --without-nettle &&
     make &&
     make check &&
     make dist &&
