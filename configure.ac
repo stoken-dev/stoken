@@ -122,47 +122,76 @@ AM_CONDITIONAL([ENABLE_GUI], [test $enable_gui = yes])
 
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
 
-# libtomcrypt
-# Some distributions add a libtomcrypt.pc file, but it isn't in the upstream
-# libtomcrypt distribution so we can't count on it.
+# crypto library (prefer tomcrypt if unspecified)
 
-tomcrypt_pkg=no
+AC_ARG_WITH([tomcrypt], [AS_HELP_STRING([--with-tomcrypt],
+	[use libtomcrypt for crypto @<:@default=check@:>@])],
+	[with_tomcrypt=$withval],
+	[with_tomcrypt=check])
 
-if test "x$PKG_CONFIG" != x; then
-	PKG_CHECK_EXISTS([libtomcrypt], [tomcrypt_pkg=yes], [])
+AC_ARG_WITH([nettle], [AS_HELP_STRING([--with-nettle],
+	[use nettle for crypto @<:@default=check@:>@])],
+	[with_nettle=$withval],
+	[with_nettle=check])
+
+CRYPTO_BACKEND=""
+if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
+	# libtomcrypt
+	# Some distributions add a libtomcrypt.pc file, but it isn't in the
+	# upstream libtomcrypt distribution so we can't count on it.
+	tomcrypt_pkg=no
+
+	if test "x$PKG_CONFIG" != x; then
+		PKG_CHECK_EXISTS([libtomcrypt], [tomcrypt_pkg=yes], [])
+	fi
+
+	if test $tomcrypt_pkg = no; then
+		AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
+		AC_SUBST(LIBTOMCRYPT_PC, [])
+		EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
+	else
+		AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
+		PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
+	fi
+
+	CRYPTO_CFLAGS="$TOMCRYPT_LIBS -DLTM_DESC"
+
+	saved_LIBS="$LIBS"
+	saved_CFLAGS="$CFLAGS"
+	LIBS="$LIBS $TOMCRYPT_LIBS"
+	CFLAGS="$CFLAGS $CRYPTO_CFLAGS"
+
+	AC_MSG_CHECKING([if libtomcrypt is usable])
+	AC_TRY_LINK([#include <tomcrypt.h>],
+		[rijndael_ecb_encrypt(NULL,NULL,NULL);
+		 ltc_mp = ltm_desc;
+		 register_hash(&sha1_desc);],
+		[AC_MSG_RESULT([yes])
+		 CRYPTO_LIBS="$TOMCRYPT_LIBS"
+		 CRYPTO_BACKEND="tomcrypt"],
+		[AC_MSG_RESULT([no])])
+
+	LIBS="$saved_LIBS"
+	CFLAGS="$saved_CFLAGS"
 fi
 
-if test $tomcrypt_pkg = no; then
-	AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
-	AC_SUBST(LIBTOMCRYPT_PC, [])
-	EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
-else
-	AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
-	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
+if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes; then
+	PKG_CHECK_MODULES(NETTLE, [nettle >= 2.4])
+	PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.4])
+
+	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
+	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS"
+	CRYPTO_BACKEND="nettle"
 fi
 
-CRYPTO_CFLAGS="$TOMCRYPT_LIBS -DLTM_DESC"
-
-saved_LIBS="$LIBS"
-saved_CFLAGS="$CFLAGS"
-LIBS="$LIBS $TOMCRYPT_LIBS"
-CFLAGS="$CFLAGS $CRYPTO_CFLAGS"
-
-AC_MSG_CHECKING([if libtomcrypt is usable])
-AC_TRY_LINK([#include <tomcrypt.h>],
-	[rijndael_ecb_encrypt(NULL,NULL,NULL);
-	 ltc_mp = ltm_desc;
-	 register_hash(&sha1_desc);],
-	[AC_MSG_RESULT([yes])],
-	[AC_MSG_FAILURE([unable to link libtomcrypt test program])])
-AC_SUBST(CRYPTO_LIBS, [$TOMCRYPT_LIBS])
-AC_SUBST(CRYPTO_BACKEND, [tomcrypt])
-
-LIBS="$saved_LIBS"
-CFLAGS="$saved_CFLAGS"
+if test -z "$CRYPTO_BACKEND"; then
+	AC_MSG_ERROR([Cannot find a suitable crypto library])
+fi
 
 AC_SUBST(EXTRA_PC_LIBS, [$EXTRA_PC_LIBS])
 AC_SUBST(CRYPTO_CFLAGS, [$CRYPTO_CFLAGS])
+AC_SUBST(CRYPTO_LIBS, [$CRYPTO_LIBS])
+AC_SUBST(CRYPTO_BACKEND, [$CRYPTO_BACKEND])
 
 # JNI
 
