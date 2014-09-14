@@ -406,7 +406,7 @@ static int replace_b64(struct sdtid *s, xmlNode *node, const char *name,
 
 	/* the first character of <Seed> will be ignored by the reader */
 	*out = '=';
-	base64_encode(data, len, out + 1, &enclen);
+	stc_b64_encode(data, len, out + 1, &enclen);
 	ret = replace_string(s, node, name,
 			     !strcmp(name, "Seed") ? out : out + 1);
 
@@ -504,7 +504,7 @@ static int lookup_b64(struct sdtid *s, const char *name, uint8_t *out,
 	if (*p && !strcmp(name, "Seed"))
 		p++;
 
-	len = base64_decode(p, strlen(p), out, &actual) == CRYPT_OK ?
+	len = stc_b64_decode(p, strlen(p), out, &actual) == ERR_NONE ?
 	      actual : -1;
 
 	free(data);

@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <tomcrypt.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -524,8 +523,7 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 	if (!t->v3)
 		return ERR_NO_MEMORY;
 
-	if (base64_decode(decoded, strlen(decoded),
-			  (void *)t->v3, &actual) != CRYPT_OK ||
+	if (stc_b64_decode(decoded, strlen(decoded), (void *)t->v3, &actual) ||
 	    actual != sizeof(struct v3_token) ||
 	    t->v3->version != 0x03) {
 		free(t->v3);
@@ -697,7 +695,7 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 	v3_compute_hash(pass, devid, v3.nonce, v3.nonce_devid_pass_hash);
 	v3_compute_hmac(&v3, pass, devid, v3.mac);
 
-	base64_encode((void *)&v3, sizeof(v3), raw_b64, &enclen);
+	stc_b64_encode((void *)&v3, sizeof(v3), raw_b64, &enclen);
 
 	for (i = 0; i < enclen; i++) {
 		char c = raw_b64[i];

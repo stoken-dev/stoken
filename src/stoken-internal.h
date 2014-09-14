@@ -78,5 +78,9 @@ void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out);
 void stc_sha1_hash(uint8_t *out, ...);
 void stc_sha256_hash(uint8_t *out, ...);
+int stc_b64_encode(const uint8_t *in,  unsigned long len,
+		   uint8_t *out, unsigned long *outlen);
+int stc_b64_decode(const uint8_t *in,  unsigned long len,
+		   uint8_t *out, unsigned long *outlen);
 
 #endif /* !__STOKEN_INTERNAL_H__ */

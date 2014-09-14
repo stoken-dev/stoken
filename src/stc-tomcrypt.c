@@ -155,3 +155,17 @@ void stc_sha256_hash(uint8_t *out, ...)
 	va_end(ap);
 	sha256_done(&md, out);
 }
+
+int stc_b64_encode(const uint8_t *in,  unsigned long len,
+		   uint8_t *out, unsigned long *outlen)
+{
+	return base64_encode(in, len, out, outlen) == CRYPT_OK ?
+		ERR_NONE : ERR_GENERAL;
+}
+
+int stc_b64_decode(const uint8_t *in,  unsigned long len,
+		   uint8_t *out, unsigned long *outlen)
+{
+	return base64_decode(in, len, out, outlen) == CRYPT_OK ?
+		ERR_NONE : ERR_GENERAL;
+}
