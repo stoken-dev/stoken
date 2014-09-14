@@ -67,4 +67,7 @@ void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
 int mkstemps(char *path, int slen);
 #endif
 
+/* crypto wrappers */
+int stc_standalone_init(void);
+
 #endif /* !__STOKEN_INTERNAL_H__ */

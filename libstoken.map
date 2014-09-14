@@ -53,6 +53,7 @@ global:
 	sdtid_issue;
 	sdtid_export;
 	sdtid_free;
+	stc_standalone_init;
 	__stoken_parse_and_decode_token;
 	__stoken_read_rcfile;
 	__stoken_write_rcfile;
