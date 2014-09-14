@@ -21,6 +21,7 @@
 #ifndef __STOKEN_INTERNAL_H__
 #define __STOKEN_INTERNAL_H__
 
+#include <stdint.h>
 #include "stoken.h"
 
 #define BUFLEN			2048
@@ -69,5 +70,11 @@ int mkstemps(char *path, int slen);
 
 /* crypto wrappers */
 int stc_standalone_init(void);
+void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
+void stc_aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
+void stc_aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
+			       const uint8_t *iv, uint8_t *out);
+void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
+			       const uint8_t *iv, uint8_t *out);
 
 #endif /* !__STOKEN_INTERNAL_H__ */

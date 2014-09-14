@@ -30,7 +30,6 @@
 
 #define AES_BLOCK_SIZE		16
 #define AES_KEY_SIZE		16
-#define AES256_KEY_SIZE		32
 
 #define SHA256_BLOCK_SIZE	64
 #define SHA256_HASH_SIZE	32
@@ -155,9 +154,6 @@ int securid_pin_format_ok(const char *pin);
 int securid_pin_required(const struct securid_token *t);
 int securid_pass_required(const struct securid_token *t);
 int securid_devid_required(const struct securid_token *t);
-
-void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
-void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
 int securid_rand(void *out, int len, int paranoid);
 
 #endif /* !__STOKEN_SECURID_H__ */

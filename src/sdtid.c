@@ -535,7 +535,7 @@ static void cbc_hash(uint8_t *result, const uint8_t *key, const uint8_t *iv,
 			memcpy(tmp, data, len);
 			xor_block(result, tmp);
 		}
-		aes128_ecb_encrypt(key, result, result);
+		stc_aes128_ecb_encrypt(key, result, result);
 	}
 }
 
@@ -706,7 +706,7 @@ static void decrypt_secret(uint8_t *result, const uint8_t *enc_bin,
 	memset(result, 0, AES_BLOCK_SIZE);
 	strncpy(&result[0], "Secret", 8);
 	strncpy(&result[8], str0, 8);
-	aes128_ecb_encrypt(key, result, result);
+	stc_aes128_ecb_encrypt(key, result, result);
 	xor_block(result, enc_bin);
 }
 
@@ -716,7 +716,7 @@ static void decrypt_seed(uint8_t *result, const uint8_t *enc_bin,
 	memset(result, 0, AES_BLOCK_SIZE);
 	strncpy(&result[0], str0, 8);
 	strncpy(&result[8], "Seed", 8);
-	aes128_ecb_encrypt(key, result, result);
+	stc_aes128_ecb_encrypt(key, result, result);
 	xor_block(result, enc_bin);
 }
 

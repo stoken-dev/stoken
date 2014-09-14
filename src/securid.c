@@ -81,76 +81,6 @@ static uint8_t hex2byte(const char *in)
 	return (hex2nibble(in[0]) << 4) | hex2nibble(in[1]);
 }
 
-void aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
-{
-	symmetric_key skey;
-	uint8_t tmp[AES_BLOCK_SIZE];
-
-	/* these shouldn't allocate memory or fail */
-	if (rijndael_setup(key, AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
-	    rijndael_ecb_encrypt(in, tmp, &skey) != CRYPT_OK)
-		abort();
-	rijndael_done(&skey);
-
-	/* in case "in" and "out" point to the same buffer */
-	memcpy(out, tmp, AES_BLOCK_SIZE);
-}
-
-void aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
-{
-	symmetric_key skey;
-	uint8_t tmp[AES_BLOCK_SIZE];
-
-	if (rijndael_setup(key, AES_KEY_SIZE, 0, &skey) != CRYPT_OK ||
-	    rijndael_ecb_decrypt(in, tmp, &skey) != CRYPT_OK)
-		abort();
-	rijndael_done(&skey);
-
-	memcpy(out, tmp, AES_BLOCK_SIZE);
-}
-
-static void aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
-			       const uint8_t *iv, uint8_t *out)
-{
-	symmetric_key skey;
-	int i, j;
-	uint8_t local_iv[AES_BLOCK_SIZE];
-
-	rijndael_setup(key, AES256_KEY_SIZE, 0, &skey);
-
-	memcpy(local_iv, iv, AES_BLOCK_SIZE);
-	for (i = 0; i < in_len; i += AES_BLOCK_SIZE) {
-		rijndael_ecb_decrypt(in, out, &skey);
-		for (j = 0; j < AES_BLOCK_SIZE; j++)
-			out[j] ^= local_iv[j];
-		memcpy(local_iv, in, AES_BLOCK_SIZE);
-		in += AES_BLOCK_SIZE;
-		out += AES_BLOCK_SIZE;
-	}
-	rijndael_done(&skey);
-}
-
-static void aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
-			       const uint8_t *iv, uint8_t *out)
-{
-	symmetric_key skey;
-	int i, j;
-	uint8_t xored_in[AES_BLOCK_SIZE];
-
-	rijndael_setup(key, AES256_KEY_SIZE, 0, &skey);
-
-	for (i = 0; i < in_len; i += AES_BLOCK_SIZE) {
-		for (j = 0; j < AES_BLOCK_SIZE; j++) {
-			xored_in[j] = in[j] ^
-				      (i ? out[j - AES_BLOCK_SIZE] : iv[j]);
-		}
-		rijndael_ecb_encrypt(xored_in, out, &skey);
-		in += AES_BLOCK_SIZE;
-		out += AES_BLOCK_SIZE;
-	}
-	rijndael_done(&skey);
-}
-
 int securid_rand(void *out, int len, int paranoid)
 {
 	if (paranoid) {
@@ -187,7 +117,7 @@ static void encrypt_then_xor(const uint8_t *key, uint8_t *work, uint8_t *enc)
 {
 	int i;
 
-	aes128_ecb_encrypt(key, work, enc);
+	stc_aes128_ecb_encrypt(key, work, enc);
 	for (i = 0; i < AES_BLOCK_SIZE; i++)
 		work[i] ^= enc[i];
 }
@@ -480,7 +410,7 @@ static int v2_decrypt_seed(struct securid_token *t, const char *pass,
 	if (t->flags & FL_SNPROT && device_id_hash != t->device_id_hash)
 		return ERR_BAD_DEVID;
 
-	aes128_ecb_decrypt(key_hash, t->enc_seed, t->dec_seed);
+	stc_aes128_ecb_decrypt(key_hash, t->enc_seed, t->dec_seed);
 	securid_mac(t->dec_seed, AES_KEY_SIZE, dec_seed_hash);
 	computed_mac = (dec_seed_hash[0] << 7) | (dec_seed_hash[1] >> 1);
 
@@ -530,7 +460,7 @@ static int v2_encode_token(struct securid_token *t, const char *pass,
 		return rc;
 
 	memset(d, 0, sizeof(d));
-	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
+	stc_aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
 	memcpy(d, t->enc_seed, AES_KEY_SIZE);
 
 	set_bits(d, 128, 16, t->flags);
@@ -712,7 +642,7 @@ static int v3_decrypt_seed(struct securid_token *t,
 		return ERR_CHECKSUM_FAILED;
 
 	v3_derive_key(pass, devid, t->v3->nonce, 1, hash);
-	aes256_cbc_decrypt(hash,
+	stc_aes256_cbc_decrypt(hash,
 			   t->v3->enc_payload, sizeof(struct v3_payload),
 			   t->v3->nonce, (void *)&payload);
 
@@ -771,7 +701,8 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 
 	v3_scrub_devid(raw_devid, devid);
 	v3_derive_key(pass, devid, v3.nonce, 1, key);
-	aes256_cbc_encrypt(key, (void *)&payload, sizeof(struct v3_payload),
+	stc_aes256_cbc_encrypt(key,
+			   (void *)&payload, sizeof(struct v3_payload),
 			   v3.nonce, v3.enc_payload);
 
 	v3_compute_hash(NULL, devid, v3.nonce, v3.nonce_devid_hash);
@@ -868,15 +799,15 @@ void securid_compute_tokencode(struct securid_token *t, time_t now,
 	bcd_time[6] = bcd_time[7] = 0;
 
 	key_from_time(bcd_time, 2, t->serial, key0);
-	aes128_ecb_encrypt(t->dec_seed, key0, key0);
+	stc_aes128_ecb_encrypt(t->dec_seed, key0, key0);
 	key_from_time(bcd_time, 3, t->serial, key1);
-	aes128_ecb_encrypt(key0, key1, key1);
+	stc_aes128_ecb_encrypt(key0, key1, key1);
 	key_from_time(bcd_time, 4, t->serial, key0);
-	aes128_ecb_encrypt(key1, key0, key0);
+	stc_aes128_ecb_encrypt(key1, key0, key0);
 	key_from_time(bcd_time, 5, t->serial, key1);
-	aes128_ecb_encrypt(key0, key1, key1);
+	stc_aes128_ecb_encrypt(key0, key1, key1);
 	key_from_time(bcd_time, 8, t->serial, key0);
-	aes128_ecb_encrypt(key1, key0, key0);
+	stc_aes128_ecb_encrypt(key1, key0, key0);
 
 	/* key0 now contains 4 consecutive token codes */
 	if (is_30)
@@ -939,7 +870,7 @@ int securid_random_token(struct securid_token *t)
 	t->dec_seed_hash = securid_shortmac(t->dec_seed, AES_KEY_SIZE);
 
 	generate_key_hash(key_hash, NULL, NULL, &t->device_id_hash, t);
-	aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
+	stc_aes128_ecb_encrypt(key_hash, t->dec_seed, t->enc_seed);
 	t->has_enc_seed = 1;
 
 	t->version = 2;
@@ -1099,7 +1030,7 @@ char *securid_encrypt_pin(const char *pin, const char *password)
 
 	for (i = 0; i < AES_BLOCK_SIZE; i++)
 		buf[i] ^= iv[i];
-	aes128_ecb_encrypt(passhash, buf, buf);
+	stc_aes128_ecb_encrypt(passhash, buf, buf);
 
 	ret = malloc(AES_BLOCK_SIZE * 2 * 2 + 1);
 	if (!ret)
@@ -1128,7 +1059,7 @@ int securid_decrypt_pin(const char *enc_pin, const char *password, char *pin)
 	}
 
 	securid_mac(password, strlen(password), passhash);
-	aes128_ecb_decrypt(passhash, buf, buf);
+	stc_aes128_ecb_decrypt(passhash, buf, buf);
 
 	for (i = 0; i < AES_BLOCK_SIZE; i++)
 		buf[i] ^= iv[i];
