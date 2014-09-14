@@ -155,6 +155,8 @@ AC_TRY_LINK([#include <tomcrypt.h>],
 	 register_hash(&sha1_desc);],
 	[AC_MSG_RESULT([yes])],
 	[AC_MSG_FAILURE([unable to link libtomcrypt test program])])
+AC_SUBST(CRYPTO_LIBS, [$TOMCRYPT_LIBS])
+AC_SUBST(CRYPTO_BACKEND, [tomcrypt])
 
 LIBS="$saved_LIBS"
 CFLAGS="$saved_CFLAGS"
