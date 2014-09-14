@@ -1,6 +1,8 @@
 #!/bin/sh
 
+TESTDIR="${TESTDIR:-.}"
 TMPFILE=out.tmp
+TMPFILE2=out2.tmp
 TOKEN="--token=279396402074015764735041244773131252103253001721722151344173126350250236671677634"
 STOKEN="${STOKEN:-../stoken}"
 if ! test -z "${VALGRIND}";then
@@ -46,8 +48,43 @@ if test $? != 0;then
 	exit 1
 fi
 
+$VALGRIND $STOKEN export $TOKEN --sdtid \
+	--template $TESTDIR/fixed-secret.xml \
+	--new-devid 'a01c4380-fc01-4df0-b113-7fb98ec74694' \
+	--new-password 'Correct_horse!battery&staple' >$TMPFILE
+if test $? != 0;then
+	echo "cmd 4 failed"
+	exit 1
+fi
 
-rm -f $TMPFILE
+cmp $TMPFILE $TESTDIR/devid-passwd.sdtid
+if test $? != 0;then
+	echo "test 4 failed"
+	cat $TMPFILE
+	exit 1
+fi
+
+$VALGRIND $STOKEN export --v3 --file $TESTDIR/pinmode-2.sdtid >$TMPFILE
+if test $? != 0;then
+	echo "cmd 5(a) failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN export --file $TMPFILE --sdtid \
+	--template $TESTDIR/fixed-secret.xml >$TMPFILE2
+if test $? != 0;then
+	echo "cmd 5(b) failed"
+	exit 1
+fi
+
+cmp $TMPFILE2 $TESTDIR/pinmode-2.sdtid
+if test $? != 0;then
+	echo "test 5 failed"
+	cat $TMPFILE2
+	exit 1
+fi
+
+rm -f $TMPFILE $TMPFILE2
 
 exit 0
 

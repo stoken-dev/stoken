@@ -1,5 +1,6 @@
 #!/bin/sh
 
+TESTDIR="${TESTDIR:-.}"
 TMPFILE=out.tmp
 TMPFILE2=out2.tmp
 STOKEN="${STOKEN:-../stoken}"
@@ -13,6 +14,25 @@ $VALGRIND $STOKEN tokencode --token 'http://127.0.0.1/securid/ctf?ctfData=279396
 grep "09816090$" $TMPFILE >/dev/null 2>&1
 if test $? != 0;then
 	echo "cmd 0 failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN tokencode --file $TESTDIR/devid-passwd.sdtid \
+	--use-time 1410710132 --pin 1234 \
+	--password 'Correct_horse!battery&staple' >$TMPFILE
+grep "67567106$" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "cmd 1 failed"
+	exit 1
+fi
+
+$VALGRIND $STOKEN tokencode --token 'http://127.0.0.1/securid/ctf?ctfData=AwEByZLN5XVbh5OtVsfRb04CveKhPm6yki4MrshAIQb64DWw%2BDLXUhVT2NLyvMIljNdAqUCa7zyTpXeRdcT703jKW2Wqw6C2PfBsAoTgoXeTnCewG1P9U0WUnsclkurZlzj%2BjfEqmyjPXkBfYpVBTg9NzfG6g9WdDZren8LQ2GMSfhb%2FrFbMbV65YIkX%2BEJKTnQXSL7wqAY1zP1CD79VRlPpS%2F1bzOwBJmSuOhoNwdJTB%2BD%2BapTsYJSTVR2k0Hs8icCgHj0%2B%2FPnl3O%2FgLi8XXqyehAbhouF9UQYI2UlRCSZYVlz0yeVWu8NkhvOjEm66D8zVu48gFy6NaHJ%2BjR1xFveQCFJJRuA3vAU8rty6ES%2FIeHE7tvYcEEVY2klEjjqd4SAJ' \
+	--use-time 1410710132 --pin 1234 \
+	--password 'Correct_horse!battery&staple' \
+	--devid 'a01c4380-fc01-4df0-b113-7fb98ec74694' >$TMPFILE
+grep "72210624$" $TMPFILE >/dev/null 2>&1
+if test $? != 0;then
+	echo "cmd 2 failed"
 	exit 1
 fi
 
