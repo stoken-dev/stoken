@@ -636,7 +636,6 @@ static int hash_section(struct sdtid *s, xmlNode *node, uint8_t *mac,
 static int sign_contents(struct sdtid *s, uint8_t *sig)
 {
 	struct hash_status hs;
-	hash_state md;
 	uint8_t hash[HASH_SIZE];
 	unsigned long outlen = RSA_MODULUS_SIZE;
 	rsa_key key;
@@ -647,10 +646,7 @@ static int sign_contents(struct sdtid *s, uint8_t *sig)
 		return ERR_NO_MEMORY;
 	if (__hash_section(&hs, s->tkn_node, 1) < 0)
 		return ERR_NO_MEMORY;
-
-	sha1_init(&md);
-	sha1_process(&md, hs.data, hs.pos);
-	sha1_done(&md, hash);
+	stc_sha1_hash(hash, hs.data, hs.pos, NULL);
 
 	/*
 	 * NOTE: This is set up in common.c.  If we ever decide to let library

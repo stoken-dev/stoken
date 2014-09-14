@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tomcrypt.h>
@@ -113,4 +114,44 @@ void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 		out += AES_BLOCK_SIZE;
 	}
 	rijndael_done(&skey);
+}
+
+void stc_sha1_hash(uint8_t *out, ...)
+{
+	va_list ap;
+	hash_state md;
+
+	sha1_init(&md);
+	va_start(ap, out);
+	while (1) {
+		const uint8_t *in = va_arg(ap, const uint8_t *);
+		int in_len;
+
+		if (!in)
+			break;
+		in_len = va_arg(ap, int);
+		sha1_process(&md, in, in_len);
+	}
+	va_end(ap);
+	sha1_done(&md, out);
+}
+
+void stc_sha256_hash(uint8_t *out, ...)
+{
+	va_list ap;
+	hash_state md;
+
+	sha256_init(&md);
+	va_start(ap, out);
+	while (1) {
+		const uint8_t *in = va_arg(ap, const uint8_t *);
+		int in_len;
+
+		if (!in)
+			break;
+		in_len = va_arg(ap, int);
+		sha256_process(&md, in, in_len);
+	}
+	va_end(ap);
+	sha256_done(&md, out);
 }

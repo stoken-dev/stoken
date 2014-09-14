@@ -161,24 +161,15 @@ static uint16_t securid_shortmac(const uint8_t *in, int in_len)
 	return (hash[0] << 7) | (hash[1] >> 1);
 }
 
-static void sha256_hash(const uint8_t *in, int in_len, uint8_t *out)
-{
-	hash_state md;
-	sha256_init(&md);
-	sha256_process(&md, in, in_len);
-	sha256_done(&md, out);
-}
-
 static void sha256_hmac(const uint8_t *key, int key_len,
 			const uint8_t *msg, int msg_len, uint8_t *out)
 {
-	hash_state md;
 	uint8_t tmp_key[SHA256_HASH_SIZE], o_key_pad[SHA256_BLOCK_SIZE],
 		i_key_pad[SHA256_BLOCK_SIZE], inner_hash[SHA256_BLOCK_SIZE];
 	int i;
 
 	if (key_len > SHA256_BLOCK_SIZE) {
-		sha256_hash(key, key_len, tmp_key);
+		stc_sha256_hash(tmp_key, key, key_len, NULL);
 		key = tmp_key;
 		key_len = SHA256_HASH_SIZE;
 	}
@@ -190,15 +181,15 @@ static void sha256_hmac(const uint8_t *key, int key_len,
 		i_key_pad[i] ^= key[i];
 	}
 
-	sha256_init(&md);
-	sha256_process(&md, i_key_pad, SHA256_BLOCK_SIZE);
-	sha256_process(&md, msg, msg_len);
-	sha256_done(&md, inner_hash);
+	stc_sha256_hash(inner_hash,
+			i_key_pad, SHA256_BLOCK_SIZE,
+			msg, msg_len,
+			NULL);
 
-	sha256_init(&md);
-	sha256_process(&md, o_key_pad, SHA256_BLOCK_SIZE);
-	sha256_process(&md, inner_hash, SHA256_HASH_SIZE);
-	sha256_done(&md, out);
+	stc_sha256_hash(out,
+			o_key_pad, SHA256_BLOCK_SIZE,
+			inner_hash, SHA256_HASH_SIZE,
+			NULL);
 }
 
 static void sha256_pbkdf2(const uint8_t *pass, int pass_len,
@@ -592,7 +583,9 @@ static void v3_compute_hash(const char *pass, const char *devid,
 		pass_len = strlen(pass);
 		strncpy(&hash_buf[V3_NONCE_BYTES + V3_DEVID_CHARS], pass, MAX_PASS);
 	}
-	sha256_hash(hash_buf, V3_NONCE_BYTES + V3_DEVID_CHARS + pass_len, hash);
+	stc_sha256_hash(hash,
+			hash_buf, V3_NONCE_BYTES + V3_DEVID_CHARS + pass_len,
+			NULL);
 }
 
 static void v3_compute_hmac(struct v3_token *v3, const char *pass,
