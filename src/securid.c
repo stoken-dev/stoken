@@ -83,33 +83,28 @@ static uint8_t hex2byte(const char *in)
 
 int securid_rand(void *out, int len, int paranoid)
 {
-	if (paranoid) {
-		/*
-		 * Use /dev/random for long lived key material but not for
-		 * test purposes.  This can block for a long time if entropy
-		 * is limited.
-		 */
-		int fd;
-		char *p = out;
+	int fd;
+	char *p = out;
 
-		fd = open("/dev/random", O_RDONLY);
-		if (fd < 0)
+	/*
+	 * Use /dev/random for long lived key material but not for
+	 * test purposes.  This can block for a long time if entropy
+	 * is limited.
+	 */
+	fd = open(paranoid ? "/dev/random" : "/dev/urandom", O_RDONLY);
+	if (fd < 0)
+		return ERR_GENERAL;
+
+	while (len) {
+		ssize_t ret = read(fd, p, len);
+		if (ret < 0) {
+			close(fd);
 			return ERR_GENERAL;
-
-		while (len) {
-			ssize_t ret = read(fd, p, len);
-			if (ret < 0) {
-				close(fd);
-				return ERR_GENERAL;
-			}
-			p += ret;
-			len -= ret;
 		}
-		close(fd);
-	} else {
-		if (rng_get_bytes(out, len, NULL) != len)
-			return ERR_GENERAL;
+		p += ret;
+		len -= ret;
 	}
+	close(fd);
 	return ERR_NONE;
 }
 
