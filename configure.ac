@@ -141,14 +141,18 @@ else
 	PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
 fi
 
+CRYPTO_CFLAGS="$TOMCRYPT_LIBS -DLTM_DESC"
+
 saved_LIBS="$LIBS"
 saved_CFLAGS="$CFLAGS"
 LIBS="$LIBS $TOMCRYPT_LIBS"
-CFLAGS="$CFLAGS $TOMCRYPT_CFLAGS"
+CFLAGS="$CFLAGS $CRYPTO_CFLAGS"
 
 AC_MSG_CHECKING([if libtomcrypt is usable])
 AC_TRY_LINK([#include <tomcrypt.h>],
-	[rijndael_ecb_encrypt(NULL,NULL,NULL);],
+	[rijndael_ecb_encrypt(NULL,NULL,NULL);
+	 ltc_mp = ltm_desc;
+	 register_hash(&sha1_desc);],
 	[AC_MSG_RESULT([yes])],
 	[AC_MSG_FAILURE([unable to link libtomcrypt test program])])
 
@@ -156,6 +160,7 @@ LIBS="$saved_LIBS"
 CFLAGS="$saved_CFLAGS"
 
 AC_SUBST(EXTRA_PC_LIBS, [$EXTRA_PC_LIBS])
+AC_SUBST(CRYPTO_CFLAGS, [$CRYPTO_CFLAGS])
 
 # JNI
 
