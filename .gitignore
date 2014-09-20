@@ -2,15 +2,12 @@
 Makefile
 Makefile.in
 aclocal.m4
-compile
 config.h
 config.h.in
 config.log
 config.status
 configure
-depcomp
 install-sh
-missing
 src/.deps/
 src/.dirstamp
 src/*.lo
@@ -18,11 +15,9 @@ src/.libs/
 stamp-h1
 autom4te.cache/
 .libs/
-config.guess
-config.sub
 *.la
 m4/
-ltmain.sh
+build-aux/
 libtool
 
 # objects
