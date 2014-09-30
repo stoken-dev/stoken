@@ -1,0 +1,1 @@
+$STOKEN tokencode --file $TESTDIR/devid-passwd.sdtid --use-time 1410710132 --pin 1234 --password 'Correct_horse!battery&staple'

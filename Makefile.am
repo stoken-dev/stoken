@@ -64,17 +64,25 @@ dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
 
 dist_noinst_SCRIPTS	= autogen.sh
 
-EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA) \
-			  tests/template.xml tests/sign.cmp \
-			  tests/fixed-secret.xml tests/pinmode-2.sdtid \
-			  tests/devid-passwd.sdtid
+EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA)
 
+GIT_EXTRA_DIST		= examples/ java/ tests/
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
-			     git ls-tree HEAD -r --name-only -- examples/ java/ 2>/dev/null)
+			     git ls-tree HEAD -r --name-only -- $(GIT_EXTRA_DIST) 2>/dev/null)
 
-scripts			= tests/export tests/sign tests/tokencode
-dist_check_SCRIPTS	= $(scripts)
-TESTS			= $(scripts)
+TEST_EXTENSIONS		= .pipe
+TESTS			= tests/export-android-v2.pipe \
+			  tests/export-iphone-password.pipe \
+			  tests/export-read-v3.pipe \
+			  tests/export-sdtid-devid-password.pipe \
+			  tests/export-v3-sdtid.pipe \
+			  tests/tokencode-v2.pipe \
+			  tests/tokencode-v3.pipe \
+			  tests/tokencode-sdtid.pipe
+
+PIPE_LOG_COMPILER	= $(srcdir)/tests/pipe-wrapper.sh
+dist_check_SCRIPTS	= $(TESTS) $(PIPE_LOG_COMPILER)
+
 TESTS_ENVIRONMENT 	= STOKEN=./stoken \
 			TESTDIR="$(srcdir)/tests"
 

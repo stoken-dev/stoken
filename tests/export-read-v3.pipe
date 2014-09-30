@@ -1,0 +1,2 @@
+$STOKEN export --v3 $tok0
+$STOKEN export --blocks --token $out

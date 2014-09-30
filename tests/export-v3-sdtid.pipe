@@ -1,0 +1,2 @@
+$STOKEN export --v3 --file $TESTDIR/pinmode-2.sdtid
+$STOKEN export --token $out --sdtid --template $TESTDIR/fixed-secret.xml

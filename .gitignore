@@ -19,6 +19,7 @@ autom4te.cache/
 m4/
 build-aux/
 libtool
+test-suite.log
 
 # objects
 /src/*.o
