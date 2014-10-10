@@ -147,10 +147,10 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 
 	if test $tomcrypt_pkg = no; then
 		AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
-		AC_SUBST(LIBTOMCRYPT_PC, [])
+		AC_SUBST(DEPS_PC, [])
 		EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
 	else
-		AC_SUBST(LIBTOMCRYPT_PC, [libtomcrypt])
+		AC_SUBST(DEPS_PC, [libtomcrypt])
 		PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
 	fi
 
@@ -178,6 +178,8 @@ fi
 if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes; then
 	PKG_CHECK_MODULES(NETTLE, [nettle >= 2.4])
 	PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.4])
+	deps="nettle, hogweed"
+	AC_SUBST(DEPS_PC, [$deps])
 
 	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
 	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS"
