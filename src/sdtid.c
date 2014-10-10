@@ -35,6 +35,7 @@
 #include "securid.h"
 #include "sdtid.h"
 #include "stoken-internal.h"
+#include "common.h"
 
 struct sdtid {
 	xmlDoc			*doc;

@@ -30,6 +30,7 @@
 #include "securid.h"
 #include "sdtid.h"
 #include "stoken-internal.h"
+#include "common.h"
 
 struct stoken_ctx {
 	struct securid_token	*t;

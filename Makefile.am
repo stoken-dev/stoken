@@ -7,15 +7,16 @@ dist_man_MANS		= stoken.1
 
 lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c src/sdtid.c \
-			  src/stc-@CRYPTO_BACKEND@.c
+			  src/stc-@CRYPTO_BACKEND@.c src/strcasestr.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
-libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
+libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@ -no-undefined
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
 libstoken_la_LIBADD	= $(CRYPTO_LIBS) $(LIBXML2_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h
 noinst_HEADERS		= src/common.h src/securid.h src/stoken-internal.h \
-			  src/sdtid.h
+			  src/sdtid.h src/str-two-way.h
+
 pkgconfig_DATA		= stoken.pc
 
 if USE_JNI

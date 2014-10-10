@@ -46,6 +46,18 @@ static const char stoken_errstr[][32] = {
 #define NOT_GUI			0
 #define IS_GUI			1
 
+#ifdef _WIN32
+char *
+strcasestr (const char *haystack_start, const char *needle_start);
+
+inline static
+struct tm *gmtime_r(const time_t *timep, struct tm *result)
+{
+	memcpy(result, gmtime(timep), sizeof(struct tm));
+	return result;
+}
+#endif
+
 void prompt(const char *fmt, ...);
 void warn(const char *fmt, ...);
 void dbg(const char *fmt, ...);

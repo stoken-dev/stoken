@@ -8,6 +8,8 @@ AC_PROG_LIBTOOL
 AC_GNU_SOURCE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+LT_INIT([win32-dll])
+
 # Upstream's pkg.m4 (since 0.27) offers this now, but define our own
 # compatible version in case the local version of pkgconfig isn't new enough.
 # https://bugs.freedesktop.org/show_bug.cgi?id=48743
@@ -180,7 +182,8 @@ if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes;
 	PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.4])
 
 	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
-	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS"
+	#gmp is added since we directly use GMP functions
+	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS -lgmp"
 	CRYPTO_BACKEND="nettle"
 fi
 
