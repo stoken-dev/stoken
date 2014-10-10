@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: stoken
 Description: Software token
 Version: @VERSION@
-Requires.private: @LIBTOMCRYPT_PC@
+Requires.private: @DEPS_PC@
 Libs: -L${libdir} -lstoken @EXTRA_PC_LIBS@
 Cflags: -I${includedir}
