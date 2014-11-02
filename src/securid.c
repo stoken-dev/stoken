@@ -34,6 +34,7 @@
 
 #include "securid.h"
 #include "sdtid.h"
+#include "common.h"
 
 struct v3_token {
 	uint8_t			version;
