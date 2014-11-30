@@ -104,6 +104,11 @@
 /* V3 tokens use 1970/01/01 as the epoch, but each day has 337500 ticks */
 #define SECURID_V3_DAY		337500
 
+/* Avoid 32-bit time_t overflows (January 2038) */
+#define MAX_TIME_T		0x7fffffff
+#define SECURID_MAX_SECS	(MAX_TIME_T - SECURID_EPOCH)
+#define SECURID_MAX_DATE	(SECURID_MAX_SECS / (24*60*60) - 1)
+
 struct sdtid;
 struct v3_token;
 

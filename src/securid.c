@@ -550,7 +550,8 @@ static uint16_t v3_parse_date(uint8_t *in)
 		   ((uint64_t)in[3] <<  8) |
 		   ((uint64_t)in[4] <<  0);
 	longdate /= SECURID_V3_DAY;
-	return longdate - SECURID_EPOCH_DAYS;
+	longdate -= SECURID_EPOCH_DAYS;
+	return longdate <= SECURID_MAX_DATE ? longdate : SECURID_MAX_DATE;
 }
 
 static void v3_encode_date(uint8_t *out, uint16_t in)
@@ -882,7 +883,10 @@ time_t securid_unix_exp_date(const struct securid_token *t)
 	 * expiration checks.
 	 */
 	if (t->version == 3 && !t->exp_date)
-		return 0x7fffffff;
+		return MAX_TIME_T;
+	if (t->exp_date > SECURID_MAX_DATE)
+		return MAX_TIME_T;
+
 	return SECURID_EPOCH + (t->exp_date + 1) * 60 * 60 * 24;
 }
 
