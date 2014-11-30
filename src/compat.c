@@ -134,13 +134,13 @@ _gettemp(char *path, int *doopen, int domkdir, int slen)
 				return (1);
 			if (errno != EEXIST)
 				return (0);
-		} else if (domkdir) {
+		} /* else if (domkdir) {
 			if (mkdir(path, 0700) == 0)
 				return (1);
 			if (errno != EEXIST)
 				return (0);
 		} else if (lstat(path, &sbuf))
-			return (errno == ENOENT);
+			return (errno == ENOENT); */
 
 		/* If we have a collision, cycle through the space of filenames */
 		for (trv = start, carryp = carrybuf;;) {
