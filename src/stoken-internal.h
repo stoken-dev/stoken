@@ -68,6 +68,11 @@ void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
 int mkstemps(char *path, int slen);
 #endif
 
+#ifndef HAVE_STRCASESTR
+#define strcasestr stoken__strcasestr
+char *stoken__strcasestr(const char *haystack, const char *needle);
+#endif
+
 /* crypto wrappers */
 int stc_standalone_init(void);
 void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);

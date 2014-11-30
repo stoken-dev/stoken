@@ -8,7 +8,7 @@ dist_man_MANS		= stoken.1
 
 lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c src/sdtid.c \
-			  src/stc-@CRYPTO_BACKEND@.c
+			  src/compat.c src/stc-@CRYPTO_BACKEND@.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
 libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
 libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
