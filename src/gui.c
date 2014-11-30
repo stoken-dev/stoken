@@ -33,6 +33,11 @@
 
 #define EXP_WARN_DAYS		14
 
+#ifdef _WIN32
+#undef UIDIR
+#define UIDIR			"."
+#endif
+
 static GtkWidget *tokencode_text, *next_tokencode_text, *progress_bar;
 
 static char tokencode_str[16];
