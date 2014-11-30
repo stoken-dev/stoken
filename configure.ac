@@ -188,7 +188,9 @@ if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes;
 	AC_SUBST(DEPS_PC, [$deps])
 
 	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
-	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS"
+	# gmp is added since we directly use GMP functions
+	# unfortunately it doesn't show up in pkg-config
+	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS -lgmp"
 	CRYPTO_BACKEND="nettle"
 fi
 
