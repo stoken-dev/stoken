@@ -29,7 +29,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 
 #include "common.h"
 #include "stoken.h"
@@ -55,9 +54,17 @@ static void terminal_init(void)
 {
 }
 
+static int fork_and_wait(void)
+{
+	/* TODO */
+	die("Subprocess support is not yet implemented on Windows.\n");
+	return -EINVAL;
+}
+
 #else /* _WIN32 */
 
 #include <termios.h>
+#include <sys/wait.h>
 
 static struct termios oldtio;
 
@@ -119,6 +126,23 @@ static void terminal_init(void)
 	sigaction(SIGHUP, &sa, NULL);
 
 	tcgetattr(fd, &oldtio);
+}
+
+static int fork_and_wait(void)
+{
+	pid_t child = fork();
+
+	if (child < 0)
+		die("can't fork\n");
+	else if (child == 0)
+		return 0;
+	else if (child > 0) {
+		int rv;
+		wait(&rv);
+		if (!WIFEXITED(rv) || WEXITSTATUS(rv))
+			exit(1);
+	}
+	return 1;
 }
 
 #endif /* _WIN32 */
@@ -338,23 +362,6 @@ static void print_formatted(const char *buf)
 	formatted = format_token(buf);
 	puts(formatted);
 	free(formatted);
-}
-
-static int fork_and_wait(void)
-{
-	pid_t child = fork();
-
-	if (child < 0)
-		die("can't fork\n");
-	else if (child == 0)
-		return 0;
-	else if (child > 0) {
-		int rv;
-		wait(&rv);
-		if (!WIFEXITED(rv) || WEXITSTATUS(rv))
-			exit(1);
-	}
-	return 1;
 }
 
 static void display_qr(const char *filename)
