@@ -10,8 +10,9 @@ lib_LTLIBRARIES		= libstoken.la
 libstoken_la_SOURCES	= src/library.c src/securid.c src/sdtid.c \
 			  src/compat.c src/stc-@CRYPTO_BACKEND@.c
 libstoken_la_CFLAGS	= $(AM_CFLAGS)
-libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@
-libstoken_la_LDFLAGS	+= -Wl,--version-script,@srcdir@/libstoken.map
+libstoken_la_LDFLAGS	= -version-number @APIMAJOR@:@APIMINOR@ \
+			  -Wl,--version-script,@srcdir@/libstoken.map \
+			  -no-undefined
 libstoken_la_LIBADD	= $(CRYPTO_LIBS) $(LIBXML2_LIBS)
 libstoken_la_DEPENDENCIES = libstoken.map
 include_HEADERS		= src/stoken.h

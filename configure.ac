@@ -9,6 +9,8 @@ AC_PROG_LIBTOOL
 AC_GNU_SOURCE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+LT_INIT([win32-dll])
+
 # Upstream's pkg.m4 (since 0.27) offers this now, but define our own
 # compatible version in case the local version of pkgconfig isn't new enough.
 # https://bugs.freedesktop.org/show_bug.cgi?id=48743
