@@ -61,9 +61,16 @@ See the man pages for additional details: stoken(1), stoken-gui(1)
 See examples/ and src/stoken.h for information on using the shared library
 interface (libstoken) to generate tokencodes from other applications.
 
-## Screenshot
+## Screenshots
 
-![screenshot-0](misc/screenshot-0.png)
+<table border=1 cellpadding=15>
+<tr align="center">
+  <td><code>stoken-gui</code>
+  <td><code>stoken-gui --small</code>
+<tr valign="top">
+  <td><img src="misc/screenshot-0.png">
+  <td><img src="misc/screenshot-1.png">
+</table>
 
 ## Building on other platforms
 
