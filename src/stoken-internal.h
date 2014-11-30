@@ -66,6 +66,9 @@ void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
 #ifdef __ANDROID__
 /* Sigh.  This exists but it isn't in the Bionic headers. */
 int mkstemps(char *path, int slen);
+#elif !defined(HAVE_MKSTEMPS)
+#define mkstemps stoken__mkstemps
+int stoken__mkstemps(char *path, int slen);
 #endif
 
 #ifndef HAVE_STRCASESTR

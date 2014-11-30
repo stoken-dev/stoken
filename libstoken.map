@@ -59,6 +59,7 @@ global:
 	__stoken_write_rcfile;
 	__stoken_zap_rcfile_data;
 	stoken__strcasestr;
+	stoken__mkstemps;
 	/* NOTE: this can break non-GNU toolchains */
 	Java_*;
 local:
