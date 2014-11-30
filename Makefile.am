@@ -62,7 +62,7 @@ ui_DATA			= gui/tokencode-small.ui \
 endif
 
 dist_doc_DATA		= examples/libstoken-test.c examples/sdtid-test.pl \
-			  README
+			  README.md
 
 dist_noinst_SCRIPTS	= autogen.sh
 
