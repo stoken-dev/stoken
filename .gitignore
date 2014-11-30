@@ -35,3 +35,8 @@ test-suite.log
 # Debian
 ppa/changelog
 tmp.debian
+
+# Windows
+winpkg/
+winpkg.zip
+*.exe

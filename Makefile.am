@@ -1,5 +1,6 @@
 AUTOMAKE_OPTIONS	= foreign subdir-objects
 ACLOCAL_AMFLAGS		= -I m4
+SHELL			= /bin/bash
 
 AM_CPPFLAGS		= -DDATA_DIR=\"$(datadir)\"
 AM_CFLAGS		= $(CRYPTO_CFLAGS) $(LIBXML2_CFLAGS) $(WFLAGS)
@@ -92,3 +93,19 @@ TESTS_ENVIRONMENT +=	VALGRIND="valgrind --error-exitcode=1"
 endif
 
 DISTCLEANFILES		= *~
+
+.PHONY: winpkg
+winpkg: $(bin_PROGRAMS)
+	rm -rf winpkg
+	mkdir winpkg
+	cp .libs/stoken.exe winpkg/
+if ENABLE_GUI
+	cp .libs/stoken-gui.exe winpkg/
+	cp `./win32deps.pl .libs/stoken-gui.exe` winpkg/
+	cp gui/*.{ui,png} winpkg/
+else
+	cp .libs/stoken.exe winpkg/
+	cp `./win32deps.pl .libs/stoken.exe` winpkg/
+endif
+	rm -f winpkg.zip
+	zip -r winpkg.zip winpkg/
