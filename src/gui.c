@@ -36,6 +36,9 @@
 #ifdef _WIN32
 #undef UIDIR
 #define UIDIR			"."
+#define PIXMAP_DIR		"."
+#else
+#define PIXMAP_DIR		DATA_DIR "/pixmaps"
 #endif
 
 static GtkWidget *tokencode_text, *next_tokencode_text, *progress_bar;
@@ -407,7 +410,7 @@ int main(int argc, char **argv)
 
 	gtk_init(&argc, &argv);
 	gtk_window_set_default_icon_from_file(
-		DATA_DIR "/pixmaps/stoken-gui.png", NULL);
+		PIXMAP_DIR "/stoken-gui.png", NULL);
 
 	cmd = parse_cmdline(argc, argv, IS_GUI);
 
