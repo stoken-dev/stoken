@@ -83,6 +83,11 @@ STOKEN_EXPORT char *stoken__strcasestr(const char *haystack,
 				       const char *needle);
 #endif
 
+#ifndef HAVE_GMTIME_R
+#define gmtime_r stoken__gmtime_r
+struct tm *stoken__gmtime_r(const time_t *timep, struct tm *result);
+#endif
+
 /* crypto wrappers */
 STOKEN_EXPORT int stc_standalone_init(void);
 void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);

@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -176,3 +177,17 @@ int stoken__mkstemps(char *path, int slen)
 }
 
 #endif /* HAVE_MKSTEMPS */
+
+#if !defined(HAVE_GMTIME_R) && defined(_WIN32)
+struct tm *stoken__gmtime_r(const time_t *timep, struct tm *result)
+{
+	/*
+	 * This trick only works on Windows, because Windows gmtime()
+	 * provides a dedicated buffer per-thread:
+	 *
+	 * http://msdn.microsoft.com/en-us/library/0z9czt0w.aspx
+	 */
+	memcpy(result, gmtime(timep), sizeof(struct tm));
+	return result;
+}
+#endif /* !defined(HAVE_GMTIME_R) && defined(_WIN32) */

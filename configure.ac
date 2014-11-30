@@ -80,6 +80,9 @@ AC_CHECK_FUNCS(mkstemps)
 # TODO: see if compatibility functions are needed to build on Darwin
 AC_CHECK_FUNCS(strcasestr asprintf)
 
+# gmtime_r is missing on Windows
+AC_CHECK_FUNCS(gmtime_r)
+
 # gtk / stoken-gui
 
 AC_ARG_WITH([gtk], [AS_HELP_STRING([--with-gtk],
