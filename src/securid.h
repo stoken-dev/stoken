@@ -132,28 +132,44 @@ struct securid_token {
 	struct v3_token		*v3;
 };
 
-int securid_decode_token(const char *in, struct securid_token *t);
-int securid_decrypt_seed(struct securid_token *t, const char *pass,
-	const char *devid);
-int securid_check_devid(struct securid_token *t, const char *devid);
-void securid_compute_tokencode(struct securid_token *t, time_t now,
-	char *code_out);
-void securid_token_info(const struct securid_token *t,
+STOKEN_EXPORT int securid_decode_token(const char *in,
+				       struct securid_token *t);
+
+STOKEN_EXPORT int securid_decrypt_seed(struct securid_token *t,
+				       const char *pass,
+				       const char *devid);
+
+STOKEN_EXPORT int securid_check_devid(struct securid_token *t,
+				      const char *devid);
+
+STOKEN_EXPORT void securid_compute_tokencode(struct securid_token *t,
+					     time_t now,
+					     char *code_out);
+
+STOKEN_EXPORT void securid_token_info(const struct securid_token *t,
 	void (*callback)(const char *key, const char *value));
-int securid_encode_token(const struct securid_token *t, const char *pass,
-	const char *devid, int version, char *out);
-int securid_random_token(struct securid_token *t);
-int securid_check_exp(struct securid_token *t, time_t now);
-time_t securid_unix_exp_date(const struct securid_token *t);
-int securid_token_interval(const struct securid_token *t);
 
-char *securid_encrypt_pin(const char *pin, const char *password);
-int securid_decrypt_pin(const char *enc_pin, const char *password, char *pin);
+STOKEN_EXPORT int securid_encode_token(const struct securid_token *t,
+				       const char *pass,
+				       const char *devid,
+				       int version,
+				       char *out);
 
-int securid_pin_format_ok(const char *pin);
-int securid_pin_required(const struct securid_token *t);
-int securid_pass_required(const struct securid_token *t);
-int securid_devid_required(const struct securid_token *t);
-int securid_rand(void *out, int len, int paranoid);
+STOKEN_EXPORT int securid_random_token(struct securid_token *t);
+STOKEN_EXPORT int securid_check_exp(struct securid_token *t, time_t now);
+STOKEN_EXPORT time_t securid_unix_exp_date(const struct securid_token *t);
+STOKEN_EXPORT int securid_token_interval(const struct securid_token *t);
+
+STOKEN_EXPORT char *securid_encrypt_pin(const char *pin, const char *password);
+
+STOKEN_EXPORT int securid_decrypt_pin(const char *enc_pin,
+				      const char *password,
+				      char *pin);
+
+STOKEN_EXPORT int securid_pin_format_ok(const char *pin);
+STOKEN_EXPORT int securid_pin_required(const struct securid_token *t);
+STOKEN_EXPORT int securid_pass_required(const struct securid_token *t);
+STOKEN_EXPORT int securid_devid_required(const struct securid_token *t);
+STOKEN_EXPORT int securid_rand(void *out, int len, int paranoid);
 
 #endif /* !__STOKEN_SECURID_H__ */

@@ -55,29 +55,36 @@ enum {
 typedef void (warn_fn_t)(const char *, ...);
 static inline void __stoken_warn_empty(const char *fmt, ...) { }
 
-int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
-				    int interactive);
-int __stoken_read_rcfile(const char *override, struct stoken_cfg *cfg,
-	warn_fn_t warn_fn);
-int __stoken_write_rcfile(const char *override, const struct stoken_cfg *cfg,
-	warn_fn_t warn_fn);
-void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
+STOKEN_EXPORT int __stoken_parse_and_decode_token(const char *str,
+						  struct securid_token *t,
+						  int interactive);
+
+STOKEN_EXPORT int __stoken_read_rcfile(const char *override,
+				       struct stoken_cfg *cfg,
+				       warn_fn_t warn_fn);
+
+STOKEN_EXPORT int __stoken_write_rcfile(const char *override,
+					const struct stoken_cfg *cfg,
+					warn_fn_t warn_fn);
+
+STOKEN_EXPORT void __stoken_zap_rcfile_data(struct stoken_cfg *cfg);
 
 #ifdef __ANDROID__
 /* Sigh.  This exists but it isn't in the Bionic headers. */
 int mkstemps(char *path, int slen);
 #elif !defined(HAVE_MKSTEMPS)
 #define mkstemps stoken__mkstemps
-int stoken__mkstemps(char *path, int slen);
+STOKEN_EXPORT int stoken__mkstemps(char *path, int slen);
 #endif
 
 #ifndef HAVE_STRCASESTR
 #define strcasestr stoken__strcasestr
-char *stoken__strcasestr(const char *haystack, const char *needle);
+STOKEN_EXPORT char *stoken__strcasestr(const char *haystack,
+				       const char *needle);
 #endif
 
 /* crypto wrappers */
-int stc_standalone_init(void);
+STOKEN_EXPORT int stc_standalone_init(void);
 void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
 void stc_aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
 void stc_aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,

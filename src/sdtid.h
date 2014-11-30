@@ -21,15 +21,17 @@
 #ifndef __STOKEN_SDTID_H__
 #define __STOKEN_SDTID_H__
 
+#include "stoken-internal.h"
+
 struct securid_token;
 struct sdtid;
 
-int sdtid_decode(const char *in, struct securid_token *t);
-int sdtid_decrypt(struct securid_token *t, const char *pass);
-int sdtid_issue(const char *filename, const char *pass,
-		const char *devid);
-int sdtid_export(const char *filename, struct securid_token *t,
-		 const char *pass, const char *devid);
-void sdtid_free(struct sdtid *s);
+STOKEN_EXPORT int sdtid_decode(const char *in, struct securid_token *t);
+STOKEN_EXPORT int sdtid_decrypt(struct securid_token *t, const char *pass);
+STOKEN_EXPORT int sdtid_issue(const char *filename, const char *pass,
+			      const char *devid);
+STOKEN_EXPORT int sdtid_export(const char *filename, struct securid_token *t,
+			       const char *pass, const char *devid);
+STOKEN_EXPORT void sdtid_free(struct sdtid *s);
 
 #endif /* __STOKEN_SDTID_H__ */
