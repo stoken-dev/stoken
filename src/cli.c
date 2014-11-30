@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -38,32 +37,67 @@
 #include "sdtid.h"
 #include "stoken-internal.h"
 
-static void print_token_info_line(const char *key, const char *value)
-{
-	/* require --seed to show anything sensitive */
-	if (strcasestr(key, "seed") && !opt_seed)
-		return;
-	printf("%-24s: %s\n", key, value);
-}
+#ifdef _WIN32
 
-static int raw_read_user_input(char *out, int max_len)
+static int plat_read_user_input(char *out, int max_len, int hide_chars)
 {
+	/* TODO: Hide passwords */
 	char *p;
 
+	fgets(out, max_len, stdin);
+	p = strchr(out, '\n');
+	if (p)
+		*p = 0;
+	return 0;
+}
+
+static void terminal_init(void)
+{
+}
+
+#else /* _WIN32 */
+
+#include <termios.h>
+
+static struct termios oldtio;
+
+static void stdin_echo(int enable_echo)
+{
+	struct termios tio = oldtio;
+	const int fd = 0;
+
+	if (!enable_echo) {
+		/* ripped from busybox bb_ask() */
+		tcflush(fd, TCIFLUSH);
+		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL);
+		tcsetattr(fd, TCSANOW, &tio);
+	} else
+		tcsetattr(fd, TCSANOW, &oldtio);
+}
+
+static int plat_read_user_input(char *out, int max_len, int hide_chars)
+{
+	char *p;
+	int ret = 0;
+
+	stdin_echo(!hide_chars);
 	fflush(stdout);
 	fflush(stderr);
 	if (fgets(out, max_len, stdin) == NULL) {
 		*out = 0;
-		return 0;
+		goto done;
 	}
 	p = strchr(out, '\n');
 	if (p)
 		*p = 0;
-	return strlen(out);
-}
+	ret = strlen(out);
 
-static struct termios oldtio;
-static void stdin_echo(int enable_echo);
+done:
+	stdin_echo(1);
+	if (hide_chars)
+		puts("");
+	return ret;
+}
 
 static void restore_tio(int sig)
 {
@@ -87,24 +121,11 @@ static void terminal_init(void)
 	tcgetattr(fd, &oldtio);
 }
 
-static void stdin_echo(int enable_echo)
-{
-	struct termios tio = oldtio;
-	const int fd = 0;
-
-	if (!enable_echo) {
-		/* ripped from busybox bb_ask() */
-		tcflush(fd, TCIFLUSH);
-		tio.c_lflag &= ~(ECHO|ECHOE|ECHOK|ECHONL);
-		tcsetattr(fd, TCSANOW, &tio);
-	} else
-		tcsetattr(fd, TCSANOW, &oldtio);
-}
+#endif /* _WIN32 */
 
 static int read_user_input(char *out, int max_len, int hide_chars)
 {
 	static int first = 1;
-	int rc;
 
 	if (opt_stdin) {
 		if (!first) {
@@ -112,7 +133,7 @@ static int read_user_input(char *out, int max_len, int hide_chars)
 			die("error: --stdin only allows one prompt\n");
 		}
 		first = 0;
-		return raw_read_user_input(out, max_len);
+		return plat_read_user_input(out, max_len, hide_chars);
 	}
 
 	if (opt_batch) {
@@ -120,13 +141,15 @@ static int read_user_input(char *out, int max_len, int hide_chars)
 		die("error: --batch mode specified but command-line input is requested\n");
 	}
 
-	stdin_echo(!hide_chars);
-	rc = raw_read_user_input(out, max_len);
-	stdin_echo(1);
+	return plat_read_user_input(out, max_len, hide_chars);
+}
 
-	if (hide_chars)
-		puts("");
-	return rc;
+static void print_token_info_line(const char *key, const char *value)
+{
+	/* require --seed to show anything sensitive */
+	if (strcasestr(key, "seed") && !opt_seed)
+		return;
+	printf("%-24s: %s\n", key, value);
 }
 
 static time_t adjusted_time(struct securid_token *t)
