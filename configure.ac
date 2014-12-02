@@ -249,6 +249,8 @@ AM_CONDITIONAL(JNI_STANDALONE, [test $jni_standalone = yes])
 
 # library version
 
+AX_CHECK_VSCRIPT
+
 libhdr=${srcdir}/src/stoken.h
 APIMAJOR="`awk '/#define STOKEN_API_VER_MAJOR/ {print $3}' ${libhdr}`"
 APIMINOR="`awk '/#define STOKEN_API_VER_MINOR/ {print $3}' ${libhdr}`"
