@@ -12,9 +12,9 @@
 #   programs using the JNI interface.
 #
 #   JNI include directories are usually in the Java distribution. This is
-#   deduced from the value of $JAVA_HOME, $JAVAC, or the path to "javac",
-#   in that order. When this macro completes, a list of directories is left
-#   in the variable JNI_INCLUDE_DIRS.
+#   deduced from the value of $JAVA_HOME, $JAVAC, or the path to "javac", in
+#   that order. When this macro completes, a list of directories is left in
+#   the variable JNI_INCLUDE_DIRS.
 #
 #   Example usage follows:
 #
@@ -44,6 +44,8 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
+#serial 11
+
 AU_ALIAS([AC_JNI_INCLUDE_DIR], [AX_JNI_INCLUDE_DIR])
 AC_DEFUN([AX_JNI_INCLUDE_DIR],[
 
@@ -64,8 +66,13 @@ else
 fi
 
 case "$host_os" in
-        darwin*)        _JTOPDIR=`echo "$_JTOPDIR" | sed -e 's:/[[^/]]*$::'`
-                        _JINC="$_JTOPDIR/Headers";;
+        darwin*)        # Apple JDK is at /System location and has headers symlinked elsewhere
+                        case "$_JTOPDIR" in
+                        /System/Library/Frameworks/JavaVM.framework/*)
+				_JTOPDIR=`echo "$_JTOPDIR" | sed -e 's:/[[^/]]*$::'`
+				_JINC="$_JTOPDIR/Headers";;
+			*)      _JINC="$_JTOPDIR/include";;
+                        esac;;
         *)              _JINC="$_JTOPDIR/include";;
 esac
 _AS_ECHO_LOG([_JTOPDIR=$_JTOPDIR])
@@ -86,6 +93,7 @@ AC_CHECK_FILE([$_JINC/jni.h],
 case "$host_os" in
 bsdi*)          _JNI_INC_SUBDIRS="bsdos";;
 freebsd*)       _JNI_INC_SUBDIRS="freebsd";;
+darwin*)        _JNI_INC_SUBDIRS="darwin";;
 linux*)         _JNI_INC_SUBDIRS="linux genunix";;
 osf*)           _JNI_INC_SUBDIRS="alpha";;
 solaris*)       _JNI_INC_SUBDIRS="solaris";;
@@ -122,66 +130,3 @@ while ls -ld "$_cur" 2>/dev/null | grep " -> " >/dev/null; do
 done
 _ACJNI_FOLLOWED="$_cur"
 ])# _ACJNI
-dnl
-dnl http://cgit.freedesktop.org/swfdec/swfdec/plain/m4/as-compiler-flag.m4
-dnl as-compiler-flag.m4 0.1.0
-
-dnl autostars m4 macro for detection of compiler flags
-
-dnl David Schleef <ds@schleef.org>
-
-dnl $Id: as-compiler-flag.m4,v 1.1 2005/12/15 23:35:19 ds Exp $
-
-dnl AS_COMPILER_FLAG(CFLAGS, ACTION-IF-ACCEPTED, [ACTION-IF-NOT-ACCEPTED])
-dnl Tries to compile with the given CFLAGS.
-dnl Runs ACTION-IF-ACCEPTED if the compiler can compile with the flags,
-dnl and ACTION-IF-NOT-ACCEPTED otherwise.
-
-AC_DEFUN([AS_COMPILER_FLAG],
-[
-  AC_MSG_CHECKING([to see if compiler understands $1])
-
-  save_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $1"
-
-  AC_TRY_COMPILE([ ], [], [flag_ok=yes], [flag_ok=no])
-  CFLAGS="$save_CFLAGS"
-
-  if test "X$flag_ok" = Xyes ; then
-    m4_ifvaln([$2],[$2])
-    true
-  else
-    m4_ifvaln([$3],[$3])
-    true
-  fi
-  AC_MSG_RESULT([$flag_ok])
-])
-
-dnl AS_COMPILER_FLAGS(VAR, FLAGS)
-dnl Tries to compile with the given CFLAGS.
-
-AC_DEFUN([AS_COMPILER_FLAGS],
-[
-  list=$2
-  flags_supported=""
-  flags_unsupported=""
-  AC_MSG_CHECKING([for supported compiler flags])
-  for each in $list
-  do
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $each"
-    AC_TRY_COMPILE([ ], [], [flag_ok=yes], [flag_ok=no])
-    CFLAGS="$save_CFLAGS"
-
-    if test "X$flag_ok" = Xyes ; then
-      flags_supported="$flags_supported $each"
-    else
-      flags_unsupported="$flags_unsupported $each"
-    fi
-  done
-  AC_MSG_RESULT([$flags_supported])
-  if test "X$flags_unsupported" != X ; then
-    AC_MSG_WARN([unsupported compiler flags: $flags_unsupported])
-  fi
-  $1="$$1 $flags_supported"
-])
