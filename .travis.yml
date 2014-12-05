@@ -1,3 +1,7 @@
+os:
+ - linux
+ - osx
+
 language: c
 compiler:
   - gcc
@@ -9,27 +13,20 @@ notifications:
     on_failure: always
 
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind nettle-dev
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        brew install autoconf automake libtool nettle valgrind;
+    else
+        sudo apt-get update -qq &&
+        sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind nettle-dev;
+    fi
 
 script:
-  - ./autogen.sh &&
-    mkdir build.nettle &&
-    pushd build.nettle &&
-    ../configure --enable-valgrind --without-tomcrypt --with-nettle &&
-    make &&
-    make check &&
-    make dist &&
-    popd &&
-    mkdir build &&
-    pushd build &&
-    ../configure --enable-valgrind --with-tomcrypt --without-nettle &&
-    make &&
-    make check &&
-    make dist &&
-    mv stoken*.tar.gz ../ &&
-    popd &&
-    ./build-debian.sh &&
-    sudo dpkg -i *.deb &&
-    stoken import --random --new-password="" &&
-    stoken --pin=0000
+  - ./autogen.sh
+  - misc/build-one.sh nettle
+  - if [ "$TRAVIS_OS_NAME" != "osx"]; then
+        misc/build-one.sh tomcrypt &&
+        misc/build-debian.sh &&
+        sudo dpkg -i *.deb &&
+        stoken import --random --new-password="" &&
+        stoken --pin=0000;
+    fi

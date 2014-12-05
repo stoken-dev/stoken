@@ -33,6 +33,10 @@ function build_one
 # MAIN
 #
 
+if [ ! -d misc ]; then
+	cd ..
+fi
+
 release=0
 
 while [ -n "$1" ]; do
