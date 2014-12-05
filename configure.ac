@@ -58,10 +58,10 @@ AS_COMPILER_FLAGS(WFLAGS,
          -Wno-sign-compare
          -Wno-pointer-sign
          -Wno-unused-parameter
+         -Wno-unused-const-variable
          -Werror=pointer-to-int-cast
          -Wdeclaration-after-statement
          -Werror-implicit-function-declaration
-         -Wformat-nonliteral
          -Wformat-security
          -Winit-self
          -Wno-missing-declarations
