@@ -73,8 +73,9 @@ touch lintian.txt
 set -ex
 
 dist=$(lsb_release -si)
+
+rm -f ppa/changelog
 if [ "$dist" = "Ubuntu" ]; then
-	rm -f ppa/changelog
 	codename=$(lsb_release -sc)
 
 	if [ $release != 1 ]; then
@@ -87,6 +88,11 @@ if [ "$dist" = "Ubuntu" ]; then
 		--newversion "${uver}~${codename}" \
 		--distribution $codename \
 		"New PPA build."
+else
+	dch --create --changelog ppa/changelog --package $pkg \
+		--newversion "${ver}-1" \
+		--distribution unstable \
+		"New Debian test build. (Closes: #123456)"
 fi
 
 build_one ""
