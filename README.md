@@ -28,6 +28,7 @@ On Debian or Ubuntu, this should satisfy most/all dependencies:
 
     ./configure
     make
+    make check
     make install
 
 ## Usage
@@ -73,6 +74,35 @@ interface (libstoken) to generate tokencodes from other applications.
 </table>
 
 ## Building on other platforms
+
+### Mac OS X
+
+#### Initial setup
+
+The following configuration was tested under Mavericks 10.9.5; other
+variants may work too:
+
+ * Install gcc/make/headers: <code>xcode-select --install</code>
+ * Install [Homebrew](http://brew.sh/)
+ * Install [XQuartz](http://xquartz.macosforge.org/) to support GTK+3
+ * Use Homebrew to satisfy dependencies: <code>brew install git autoconf
+   automake libtool nettle pkg-config gtk+3 gnome-icon-theme
+   hicolor-icon-theme</code>
+ * Use OSX's builtin libxml2 (no action needed)
+
+#### Compiling
+
+Note that GNU libtool is called <code>glibtool</code> to avoid collisions
+with Apple's libtool program:
+
+    export LIBTOOL=glibtool
+    git clone git://github.com/cernekee/stoken
+    cd stoken
+    bash autogen.sh
+    ./configure
+    make
+    make check
+    make install
 
 ### Experimental Windows build
 
