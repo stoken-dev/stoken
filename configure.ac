@@ -157,10 +157,11 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 	if test $tomcrypt_pkg = no; then
 		AC_SUBST(TOMCRYPT_LIBS, [-ltomcrypt])
 		AC_SUBST(DEPS_PC, [])
-		EXTRA_PC_LIBS="$EXTRA_PC_LIBS -ltomcrypt"
+		TOMCRYPT_PC_LIBS="-ltomcrypt"
 	else
 		AC_SUBST(DEPS_PC, [libtomcrypt])
 		PKG_CHECK_MODULES([TOMCRYPT], libtomcrypt)
+		TOMCRYPT_PC_LIBS=
 	fi
 
 	CRYPTO_CFLAGS="$TOMCRYPT_LIBS -DLTM_DESC"
@@ -177,7 +178,8 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 		 register_hash(&sha1_desc);],
 		[AC_MSG_RESULT([yes])
 		 CRYPTO_LIBS="$TOMCRYPT_LIBS"
-		 CRYPTO_BACKEND="tomcrypt"],
+		 CRYPTO_BACKEND="tomcrypt"
+		 EXTRA_PC_LIBS="$EXTRA_PC_LIBS $TOMCRYPT_PC_LIBS"],
 		[AC_MSG_RESULT([no])])
 
 	LIBS="$saved_LIBS"
