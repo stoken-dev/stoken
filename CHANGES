@@ -1,3 +1,40 @@
+V0.8 - 2014/12/07
+
+ - Update GUI from GTK+2 to GTK+3; use glade to define the layouts
+
+ - Add next tokencode and other information to the full GUI (stoken-gui).
+   The "stoken-gui --small" layout is unchanged.
+
+ - Add a list of known GUIDs used to bind tokens to specific device classes
+   (i.e. tokens can be bound to "any BlackBerry 10").  stoken will now try
+   each one of these IDs when importing a new bound token.
+
+ - Add new --qr and --show-qr export options to make it easy to pass tokens
+   to a mobile device
+
+ - Add "stoken --next" option to show the next tokencode
+
+ - Support using nettle+gmp as an alternative to libtomcrypt
+
+ - Generate valid TKNTrailer BatchSignature sections in .sdtid output files,
+   allowing use with RSA's official TokenConverter utility
+
+ - Fix parsing of RSA-supplied hard token seed files
+
+ - Add "make check" and several test cases
+
+ - Fix build errors on Mac OSX, enable OSX Travis builds, and submit a
+   Homebrew formula
+
+ - Fix build errors when using uClibc instead of glibc
+
+ - Add experimental Windows build using MinGW (see README for instructions)
+
+ - Relicense the JNI wrapper (BSD-3-clause) so that it is easier to incorporate
+   into non-free Android apps
+
+ - Various fixes for minor bugs, memory leaks, etc.
+
 v0.6 - 2014/06/21
 
  - Add support for reading and writing v3 (base64-encoded) Android tokens
