@@ -72,6 +72,9 @@ dist_noinst_SCRIPTS	= autogen.sh
 
 EXTRA_DIST		= .gitignore libstoken.map CHANGES $(ui_DATA)
 
+# package both variants explicitly, because @CRYPTO_BACKEND@ only picks one
+EXTRA_DIST		+= src/stc-nettle.c src/stc-tomcrypt.c
+
 GIT_EXTRA_DIST		= examples/ java/ tests/
 EXTRA_DIST		+= $(shell cd "$(top_srcdir)" && \
 			     git ls-tree HEAD -r --name-only -- $(GIT_EXTRA_DIST) 2>/dev/null)
