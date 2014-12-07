@@ -29,6 +29,7 @@ libstoken.so.1 libstoken1 #MINVER#
  securid_token_info@STOKEN_PRIVATE 0.1
  securid_token_interval@STOKEN_PRIVATE 0.6
  securid_unix_exp_date@STOKEN_PRIVATE 0.8
+ stc_standalone_init@STOKEN_PRIVATE 0.8
  stoken_get_info@STOKEN_1.2 0.6
  stoken_check_devid@STOKEN_1.1 0.5
  stoken_check_pin@STOKEN_1.0 0.1
