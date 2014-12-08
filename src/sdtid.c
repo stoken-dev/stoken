@@ -832,7 +832,7 @@ static uint16_t parse_date(const char *in)
 	tm.tm_year -= 1900;
 	tm.tm_mon--;
 
-	return (mktime(&tm) - SECURID_EPOCH) / (24*60*60);
+	return (timegm(&tm) - SECURID_EPOCH) / (24*60*60);
 }
 
 static void format_date(long in, char *out, int max_len)
