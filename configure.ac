@@ -164,11 +164,12 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 		TOMCRYPT_PC_LIBS=
 	fi
 
-	CRYPTO_CFLAGS="$TOMCRYPT_LIBS -DLTM_DESC"
+	CRYPTO_LIBS="$TOMCRYPT_LIBS"
+	CRYPTO_CFLAGS="-DLTM_DESC"
 
 	saved_LIBS="$LIBS"
 	saved_CFLAGS="$CFLAGS"
-	LIBS="$LIBS $TOMCRYPT_LIBS"
+	LIBS="$LIBS $CRYPTO_LIBS"
 	CFLAGS="$CFLAGS $CRYPTO_CFLAGS"
 
 	AC_MSG_CHECKING([if libtomcrypt is usable])
@@ -177,7 +178,6 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 		 ltc_mp = ltm_desc;
 		 register_hash(&sha1_desc);],
 		[AC_MSG_RESULT([yes])
-		 CRYPTO_LIBS="$TOMCRYPT_LIBS"
 		 CRYPTO_BACKEND="tomcrypt"
 		 EXTRA_PC_LIBS="$EXTRA_PC_LIBS $TOMCRYPT_PC_LIBS"],
 		[AC_MSG_RESULT([no])])
