@@ -1,3 +1,7 @@
+V0.81 - 2014/12/08
+
+ - Fix "make check" failures in GMT+xx timezones (xx >= 1)
+
 V0.8 - 2014/12/07
 
  - Update GUI from GTK+2 to GTK+3; use glade to define the layouts
