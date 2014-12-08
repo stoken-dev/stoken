@@ -30,7 +30,13 @@ mkdir build.$lib
 pushd build.$lib
 ../configure --enable-valgrind $args
 make
-make check
+
+# try to ferret out any possible timezone dependencies
+for x in Pacific/Honolulu America/New_York Europe/Athens \
+	 Asia/Calcutta Australia/Sydney; do
+	TZ=$x make check
+done
+
 make dist
 popd
 
