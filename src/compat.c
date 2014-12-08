@@ -191,3 +191,70 @@ struct tm *stoken__gmtime_r(const time_t *timep, struct tm *result)
 	return result;
 }
 #endif /* !defined(HAVE_GMTIME_R) && defined(_WIN32) */
+
+#ifndef HAVE_TIMEGM
+
+/*
+ * Source: Android Bionic libc
+ * Copyright (c) 2007-2008  Michael G Schwern
+ * Originally derived from Paul Sheer's pivotal_gmtime_r.c
+ * License: MIT
+ */
+
+static const int julian_days_by_month[2][12] = {
+	{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334},
+	{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335},
+};
+
+static const int length_of_year[2] = { 365, 366 };
+static const int days_in_gregorian_cycle = ((365 * 400) + 100 - 4 + 1);
+
+#define IS_LEAP(n)      ((!(((n) + 1900) % 400) || \
+			   (!(((n) + 1900) % 4) && \
+			     (((n) + 1900) % 100))) != 0)
+
+time_t stoken__timegm(struct tm *date)
+{
+	time_t days = 0;
+	time_t seconds = 0;
+	int64_t year;
+	int64_t orig_year = (int64_t) date->tm_year;
+	int cycles = 0;
+
+	if (orig_year > 100) {
+		cycles = (orig_year - 100) / 400;
+		orig_year -= cycles * 400;
+		days += (time_t) cycles *days_in_gregorian_cycle;
+	} else if (orig_year < -300) {
+		cycles = (orig_year - 100) / 400;
+		orig_year -= cycles * 400;
+		days += (time_t) cycles *days_in_gregorian_cycle;
+	}
+
+	if (orig_year > 70) {
+		year = 70;
+		while (year < orig_year) {
+			days += length_of_year[IS_LEAP(year)];
+			year++;
+		}
+	} else if (orig_year < 70) {
+		year = 69;
+		do {
+			days -= length_of_year[IS_LEAP(year)];
+			year--;
+		} while (year >= orig_year);
+	}
+
+	days += julian_days_by_month[IS_LEAP(orig_year)][date->tm_mon];
+	days += date->tm_mday - 1;
+
+	seconds = days * 60 * 60 * 24;
+
+	seconds += date->tm_hour * 60 * 60;
+	seconds += date->tm_min * 60;
+	seconds += date->tm_sec;
+
+	return (seconds);
+}
+
+#endif /* HAVE_TIMEGM */

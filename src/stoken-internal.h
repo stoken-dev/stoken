@@ -88,6 +88,11 @@ STOKEN_EXPORT char *stoken__strcasestr(const char *haystack,
 struct tm *stoken__gmtime_r(const time_t *timep, struct tm *result);
 #endif
 
+#ifndef HAVE_TIMEGM
+#define timegm stoken__timegm
+time_t stoken__timegm(struct tm *tm);
+#endif
+
 /* crypto wrappers */
 STOKEN_EXPORT int stc_standalone_init(void);
 void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out);
