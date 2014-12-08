@@ -72,13 +72,13 @@ AS_COMPILER_FLAGS(WFLAGS,
 AC_SUBST(WFLAGS, [$WFLAGS])
 
 # mlockall() is missing on Bionic (Android)
-AC_CHECK_FUNCS(mlockall)
+AC_CHECK_FUNCS([mlockall])
 
 # mkstemps is missing on uClibc
-AC_CHECK_FUNCS(mkstemps)
+AC_CHECK_FUNCS([mkstemps])
 
 # TODO: see if compatibility functions are needed to build on Darwin
-AC_CHECK_FUNCS(strcasestr asprintf)
+AC_CHECK_FUNCS([strcasestr asprintf])
 
 # time functions are slightly different on Windows
 AC_CHECK_FUNCS([gmtime_r timegm])
