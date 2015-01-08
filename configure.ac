@@ -118,7 +118,9 @@ if test $enable_gui = yes; then
 	LIBS="$LIBS $GTK_LIBS"
 	CFLAGS="$CFLAGS $GTK_CFLAGS"
 
-	AC_TRY_LINK([#include <gtk/gtk.h>], [gtk_init(NULL,NULL);],
+	AC_TRY_LINK([#include <gtk/gtk.h>
+		     #include <stdlib.h>],
+		[gtk_init(NULL,NULL);],
 		[AC_MSG_RESULT([yes])],
 		[AC_MSG_FAILURE([unable to link gtk+ test program])])
 	LIBS="$saved_LIBS"
@@ -173,7 +175,8 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 	CFLAGS="$CFLAGS $CRYPTO_CFLAGS"
 
 	AC_MSG_CHECKING([if libtomcrypt is usable])
-	AC_TRY_LINK([#include <tomcrypt.h>],
+	AC_TRY_LINK([#include <tomcrypt.h>
+		     #include <stdlib.h>],
 		[rijndael_ecb_encrypt(NULL,NULL,NULL);
 		 ltc_mp = ltm_desc;
 		 register_hash(&sha1_desc);],
