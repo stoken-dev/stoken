@@ -197,6 +197,20 @@ if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes;
 	# unfortunately it doesn't show up in pkg-config
 	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS -lgmp"
 	CRYPTO_BACKEND="nettle"
+
+	# nettle 2.x accepts a bidirectional (unsigned *) argument
+	# nettle 3.x accepts a (size_t *) output-only argument
+	saved_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -Werror"
+	AC_MSG_CHECKING([nettle base64 API version])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <nettle/base64.h>
+					    #include <stdlib.h>],
+		[base64_decode_update(NULL, (size_t *)NULL, NULL, 0, NULL);])],
+		AC_MSG_RESULT([3.0+]),
+		[AC_MSG_RESULT([2.x])
+		 AC_DEFINE([NETTLE_OLD_BASE64_API], [1],
+			   [nettle uses the pre-3.x base64 API])])
+	CFLAGS="$saved_CFLAGS"
 fi
 
 if test -z "$CRYPTO_BACKEND"; then

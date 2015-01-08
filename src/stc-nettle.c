@@ -136,10 +136,13 @@ int stc_b64_decode(const uint8_t *in,  unsigned long len,
 {
 	struct base64_decode_ctx ctx;
 	char tmp[BASE64_DECODE_LENGTH(len)];
-	unsigned dst_length;
 	int ret;
+#ifdef NETTLE_OLD_BASE64_API
+	unsigned dst_length = sizeof(tmp);
+#else
+	size_t dst_length;
+#endif
 
-	dst_length = BASE64_DECODE_LENGTH(len);
 	base64_decode_init(&ctx);
 	ret = base64_decode_update(&ctx, &dst_length, tmp, len, in);
 	if (ret == 0) {
