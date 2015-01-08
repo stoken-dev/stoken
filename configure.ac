@@ -192,6 +192,10 @@ if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes;
 	deps="nettle, hogweed"
 	AC_SUBST(DEPS_PC, [$deps])
 
+	if $PKG_CONFIG --atleast-version=3.0 nettle;then
+		AC_DEFINE(HAVE_NETTLE3, 1, [nettle 3.0+ was detected])
+	fi
+
 	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
 	# gmp is added since we directly use GMP functions
 	# unfortunately it doesn't show up in pkg-config

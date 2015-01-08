@@ -39,6 +39,12 @@
 
 #include "stoken-internal.h"
 
+#ifdef HAVE_NETTLE3
+# define NETTLE_SIZE_T size_t
+#else
+# define NETTLE_SIZE_T unsigned
+#endif
+
 int stc_standalone_init(void)
 {
 	return ERR_NONE;
@@ -136,7 +142,7 @@ int stc_b64_decode(const uint8_t *in,  unsigned long len,
 {
 	struct base64_decode_ctx ctx;
 	char tmp[BASE64_DECODE_LENGTH(len)];
-	unsigned dst_length;
+	NETTLE_SIZE_T dst_length;
 	int ret;
 
 	dst_length = BASE64_DECODE_LENGTH(len);
