@@ -199,6 +199,9 @@ static int fopen_rcfile(const char *override, const char *mode,
 	if (!override) {
 		homedir = getenv("HOME");
 		if (!homedir) {
+			homedir = getenv("USERPROFILE");
+		}
+		if (!homedir) {
 			warn_fn("rcfile: HOME is not set so I can't read '%s'\n",
 				RC_NAME);
 			return ERR_GENERAL;
