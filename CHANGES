@@ -1,3 +1,11 @@
+V0.9 - 2015/07/25
+
+ - Fix corner case in SDTID reader (bug #21)
+
+ - Support Nettle 3.x (bug #20)
+
+ - Other minor fixes
+
 V0.81 - 2014/12/08
 
  - Fix "make check" failures in GMT+xx timezones (xx >= 1)
