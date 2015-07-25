@@ -591,6 +591,16 @@ static int recursive_hash(struct hash_status *hs, const char *pfx, xmlNode *node
 		} else {
 			bytes = snprintf(&hs->data[hs->pos], remain,
 					 "%s %s\n", longname, val);
+
+			/* Bug compatibility :-( */
+			len = bytes + hs->padding;
+			if (!hs->signing && len <= 16 && len < remain) {
+				hs->pos &= ~0xf;
+				snprintf(&hs->data[hs->pos], remain,
+					 "%s %s\n", longname, val);
+				memset(&hs->data[hs->pos + bytes], 0,
+				       hs->padding);
+			}
 		}
 		free(val);
 		if (bytes >= remain)

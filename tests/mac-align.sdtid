@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+
+<!--
+
+  This tests the "bug compatibility" code in recursive_hash(), which provides
+  special handling for hashing short strings.  Here is an example of a BAD
+  hash:
+
+00000000  54 4b 4e 2e 53 4e 20 39  39 37 39 32 32 34 34 37  |TKN.SN 997922447|
+00000010  30 39 36 0a 54 4b 4e 2e  53 65 65 64 20 3d 79 4f  |096.TKN.Seed =yO|
+00000020  45 4d 6e 6a 59 2f 62 4f  61 73 52 61 5a 6b 39 4c  |EMnjY/bOasRaZk9L|
+00000030  74 33 6b 51 3d 3d 0a 00  00 00 00 54 4b 4e 2e 55  |t3kQ==.....TKN.U|
+00000040  73 65 72 46 69 72 73 74  4e 61 6d 65 20 41 6c 69  |serFirstName Ali|
+00000050  67 6e 6d 65 6e 74 0a 00  00 00 00 00 00 00 00 00  |gnment..........|
+00000060  00 00 54 4b 4e 2e 55 73  65 72 4c 61 73 74 4e 61  |..TKN.UserLastNa|
+00000070  6d 65 20 54 65 73 74 20  43 73 0a 00 00 54 4b 4e  |me Test Cs...TKN|
+00000080  2e 55 73 65 72 4c 6f 67  69 6e 20 61 6c 69 67 6e  |.UserLogin align|
+00000090  74 65 73 74 0a 00 00 00  00 00 00 00 00 00 00 00  |test............|
+000000a0  00 00 54 4b 4e 2e 41 64  64 50 49 4e 20 31 0a 00  |..TKN.AddPIN 1..|
+000000b0  00 54 4b 4e 2e 4c 6f 63  61 6c 50 49 4e 20 31 0a  |.TKN.LocalPIN 1.|
+000000c0  00 54 4b 4e 2e 54 6f 6b  65 6e 41 74 74 72 69 62  |.TKN.TokenAttrib|
+000000d0  75 74 65 73 2e 44 65 76  69 63 65 53 65 72 69 61  |utes.DeviceSeria|
+000000e0  6c 4e 75 6d 62 65 72 20  20 0a 00 54 4b 4e 2e 54  |lNumber  ..TKN.T|
+000000f0  6f 6b 65 6e 41 74 74 72  69 62 75 74 65 73 2e 4e  |okenAttributes.N|
+00000100  69 63 6b 6e 61 6d 65 20  20 0a 00 00 00 00 00 00  |ickname  .......|
+00000110  00 00 00 00 00                                    |.....|
+
+  TKN.AddPin starts and ends within a single AES block, so it should be
+  aligned to the start of the block (offset 0xa0).  The correct version looks
+  like this:
+
+00000000  54 4b 4e 2e 53 4e 20 39  39 37 39 32 32 34 34 37  |TKN.SN 997922447|
+00000010  30 39 36 0a 54 4b 4e 2e  53 65 65 64 20 3d 79 4f  |096.TKN.Seed =yO|
+00000020  45 4d 6e 6a 59 2f 62 4f  61 73 52 61 5a 6b 39 4c  |EMnjY/bOasRaZk9L|
+00000030  74 33 6b 51 3d 3d 0a 00  00 00 00 54 4b 4e 2e 55  |t3kQ==.....TKN.U|
+00000040  73 65 72 46 69 72 73 74  4e 61 6d 65 20 41 6c 69  |serFirstName Ali|
+00000050  67 6e 6d 65 6e 74 0a 00  00 00 00 00 00 00 00 00  |gnment..........|
+00000060  00 00 54 4b 4e 2e 55 73  65 72 4c 61 73 74 4e 61  |..TKN.UserLastNa|
+00000070  6d 65 20 54 65 73 74 20  43 73 0a 00 00 54 4b 4e  |me Test Cs...TKN|
+00000080  2e 55 73 65 72 4c 6f 67  69 6e 20 61 6c 69 67 6e  |.UserLogin align|
+00000090  74 65 73 74 0a 00 00 00  00 00 00 00 00 00 00 00  |test............|
+000000a0  54 4b 4e 2e 41 64 64 50  49 4e 20 31 0a 00 00 54  |TKN.AddPIN 1...T|
+000000b0  4b 4e 2e 4c 6f 63 61 6c  50 49 4e 20 31 0a 00 00  |KN.LocalPIN 1...|
+000000c0  00 00 00 00 00 00 00 00  00 00 00 00 00 54 4b 4e  |.............TKN|
+000000d0  2e 54 6f 6b 65 6e 41 74  74 72 69 62 75 74 65 73  |.TokenAttributes|
+000000e0  2e 44 65 76 69 63 65 53  65 72 69 61 6c 4e 75 6d  |.DeviceSerialNum|
+000000f0  62 65 72 20 20 0a 00 00  00 00 00 00 00 00 00 00  |ber  ...........|
+00000100  00 00 00 54 4b 4e 2e 54  6f 6b 65 6e 41 74 74 72  |...TKN.TokenAttr|
+00000110  69 62 75 74 65 73 2e 4e  69 63 6b 6e 61 6d 65 20  |ibutes.Nickname |
+00000120  20 0a 00 00 00                                    | ....|
+
+-->
+
+<TKNBatch>
+  <TKNHeader>
+    <Version>0</Version>
+    <Origin>N/A</Origin>
+    <Dest>N/A</Dest>
+    <Name>N/A</Name>
+    <FirstToken>N/A</FirstToken>
+    <LastToken>N/A</LastToken>
+    <NumTokens>0</NumTokens>
+    <Secret>WTFNzycMvOXcvS7UKDpKWA==</Secret>
+    <DefBirth>2000/01/01</DefBirth>
+    <DefDeath>2038/01/18</DefDeath>
+    <DefDigits>8</DefDigits>
+    <DefInterval>60</DefInterval>
+    <DefAlg>1</DefAlg>
+    <DefMode>0</DefMode>
+    <DefPrecision>2400</DefPrecision>
+    <DefSmallWin>630</DefSmallWin>
+    <DefMediumWin>4320</DefMediumWin>
+    <DefLargeWin>4320</DefLargeWin>
+    <DefAddPIN>1</DefAddPIN>
+    <DefLocalPIN>0</DefLocalPIN>
+    <DefCopyProtection>1</DefCopyProtection>
+    <DefPinType>0</DefPinType>
+    <DefKeypad>1</DefKeypad>
+    <DefProtLevel>0</DefProtLevel>
+    <DefRevision>0</DefRevision>
+    <DefTimeDerivedSeeds>1</DefTimeDerivedSeeds>
+    <DefAppDerivedSeeds>0</DefAppDerivedSeeds>
+    <DefFormFactor>20000001</DefFormFactor>
+    <HeaderMAC>zOwik/DkqmPnv7ZlHejHNw==</HeaderMAC>
+  </TKNHeader>
+  <TKN>
+    <SN>997922447096</SN>
+    <Seed>=yOEMnjY/bOasRaZk9Lt3kQ==</Seed>
+    <UserFirstName>Alignment</UserFirstName>
+    <UserLastName>Test Cs</UserLastName>
+    <UserLogin>aligntest</UserLogin>
+    <AddPIN>1</AddPIN>
+    <LocalPIN>0</LocalPIN>
+    <TokenAttributes>
+      <DeviceSerialNumber> </DeviceSerialNumber>
+      <Nickname> </Nickname>
+    </TokenAttributes>
+    <TokenMAC>7rhsO4+hQZ1vKSDnule/4g==</TokenMAC>
+  </TKN>
+  <TKNTrailer>
+    <BatchSignature>qauF4qGbpAKrnKgzS7JoCZGQ1Srpk0digJ/usaf2pdfEISPhEXdqsBaDQ8c+gBb36QGL8LEOmNpbaQBZeTMnKz6fwVfHTgfYRU0uXDPLKQdwsMT7B3KCAMopEhMyM+tkkkeaxhQPl1ZuxBCt5CN9tsdpml2ywAC5QAGBN2ujUT4=</BatchSignature>
+    <BatchCertificate>MIICeTCCAWGgAwIBAgIQM0NFNTU4NTMzMDlGODEzMDANBgkqhkiG9w0BAQQFADBBMT8wPQYDVQQDEzZTZWN1cml0eSBEeW5hbWljcyBUZWNobm9sb2dpZXMsIEluYy4gUHJpbWFyeSBDQSBSb290IDEwHhcNMDIwNTE3MTkyMTU1WhcNMjIwNTEyMTkyMTU1WjA0MTIwMAYDVQQDEylTZWN1cml0eSBEeW5hbWljcyBUZWNobm9sb2dpZXMgQUNFL1NlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA1np1DIf3HOHAK2ahcRzZCJsqIC1QMEqtsdanKSEn5CGtLCdLv9LbLUYo6cQxKSJtwvigpeDgBAb/UYcUNXy/7dY7rA5WpYlsaA9h5C9qzPMBHxVGSIe5k61uUbAwdFhCMfLh776wR//VZ7cuypo5d3cCbvgHGwqw4ZuECbKvONMCAwEAATANBgkqhkiG9w0BAQQFAAOCAQEAq8MMJs1SczwpfcZqn9loM+2RhFmN1IZiXyevz1VvGD9GUrlLalm/Et989zR/dVhciGXmAAxYnV/MoZmshjXozmJgjRmfqqHLS46UJ9nLZ2BuEVcrHnn6f9meIjeMWm+Dvh+8Vi9KJOLozYbDoaUMm+5F7ywKsUuBPRSJ1ykGJG6dOCBZlJGmM3kbZ54lRAK2TYcu2JM21i7BKdeE9xItyabJzEk3QCsX0erY7h3V//okIfKWLh8LieoWbV4+VtrQEoiUwyqdYswwgMOyRiKuGTkk3DhHdoqhG8SqHSxkPto42hEnpOx9j2rqcsOWosvNyfm9nwkqJfhuJClLwOzw5Q==</BatchCertificate>
+  </TKNTrailer>
+</TKNBatch>

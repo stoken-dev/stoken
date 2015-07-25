@@ -1,0 +1,1 @@
+$STOKEN export --android --file $TESTDIR/mac-align.sdtid
