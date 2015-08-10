@@ -1,3 +1,7 @@
+V0.90 - 2015/08/09
+
+ - Change version number from v0.9 -> v0.90 to make life easier for packagers
+
 V0.9 - 2015/07/25
 
  - Fix corner case in SDTID reader (bug #21)
