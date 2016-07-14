@@ -101,7 +101,7 @@ static int plat_read_user_input(char *out, int max_len, int hide_chars)
 
 done:
 	stdin_echo(1);
-	if (hide_chars)
+	if (hide_chars && isatty(fileno(stdin)))
 		puts("");
 	return ret;
 }
