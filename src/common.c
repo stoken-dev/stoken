@@ -385,11 +385,6 @@ int common_init(char *cmd)
 				 is_import ? &dbg : &warn) != ERR_NONE)
 		__stoken_zap_rcfile_data(cfg);
 
-	if (cfg->rc_ver && atoi(cfg->rc_ver) != RC_VER) {
-		warn("rcfile: version mismatch, ignoring contents\n");
-		__stoken_zap_rcfile_data(cfg);
-	}
-
 	/* accept a token from the command line, or fall back to the rcfile */
 	do {
 		t = xzalloc(sizeof(struct securid_token));

@@ -253,6 +253,15 @@ int __stoken_read_rcfile(const char *override, struct stoken_cfg *cfg,
 	}
 	fclose(f);
 
+	if (ret == ERR_NONE) {
+		if (!cfg->rc_ver || !cfg->rc_token)
+			return ERR_GENERAL;
+		if (atoi(cfg->rc_ver) != RC_VER) {
+			warn_fn("rcfile: version mismatch, ignoring contents\n");
+			return ERR_TOKEN_VERSION;
+		}
+	}
+
 	return ret;
 }
 
