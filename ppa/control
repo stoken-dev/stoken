@@ -2,7 +2,7 @@ Source: stoken
 Maintainer: Kevin Cernekee <cernekee@gmail.com>
 Section: utils
 Priority: optional
-Standards-Version: 3.9.6
+Standards-Version: 3.9.8
 Build-Depends: debhelper (>= 9),
 	       libgtk-3-dev,
 	       libtomcrypt-dev (>= 1.17),
