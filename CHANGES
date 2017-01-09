@@ -1,3 +1,10 @@
+V0.91 - 2017/01/08
+
+ - Fix segfault if ~/.stokenrc is empty and another program invokes libstoken
+
+ - Squash extraneous newline from `stoken tokencode` if stdin isn't a
+   tty (bug #29)
+
 V0.90 - 2015/08/09
 
  - Change version number from v0.9 -> v0.90 to make life easier for packagers
