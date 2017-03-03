@@ -30,6 +30,9 @@ my %blacklist = (
 	"winmm.dll" => 1,
 	"winspool.drv" => 1,
 	"ws2_32.dll" => 1,
+	"dwmapi.dll" => 1,
+	"SETUPAPI.dll" => 1,
+	"setupapi.dll" => 1,
 );
 
 my $CC = "i686-w64-mingw32-gcc";
