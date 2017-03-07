@@ -77,6 +77,9 @@ AC_CHECK_FUNCS([mlockall])
 # mkstemps is missing on uClibc
 AC_CHECK_FUNCS([mkstemps])
 
+# mkstemps is missing on uClibc
+AC_CHECK_FUNCS(mkstemps)
+
 # TODO: see if compatibility functions are needed to build on Darwin
 AC_CHECK_FUNCS([strcasestr asprintf])
 
