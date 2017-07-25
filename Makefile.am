@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS	= foreign subdir-objects
 ACLOCAL_AMFLAGS		= -I m4
-SHELL			= /bin/bash
+SHELL			= /bin/sh
 
 AM_CPPFLAGS		= -DDATA_DIR=\"$(datadir)\"
 AM_CFLAGS		= $(CRYPTO_CFLAGS) $(LIBXML2_CFLAGS) $(WFLAGS)

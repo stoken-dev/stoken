@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 gpgkey="BC0B0D65"
 
