@@ -185,6 +185,14 @@ if test "$with_tomcrypt" != no -a "$with_nettle" != yes; then
 		 EXTRA_PC_LIBS="$EXTRA_PC_LIBS $TOMCRYPT_PC_LIBS"],
 		[AC_MSG_RESULT([no])])
 
+	AC_MSG_CHECKING([whether libtomcrypt uses newer LTC_PKCS_1_V1_5 naming convention])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <tomcrypt.h>],
+		[int padding = LTC_PKCS_1_V1_5;])],
+		[AC_MSG_RESULT([yes])],
+		[AC_MSG_RESULT([no])
+		 AC_DEFINE([LIBTOMCRYPT_OLD_PKCS_NAMES], [1],
+			   [libtomcrypt uses the pre-1.18 PKCS #1 constant naming convention])])
+
 	LIBS="$saved_LIBS"
 	CFLAGS="$saved_CFLAGS"
 fi

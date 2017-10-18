@@ -37,6 +37,11 @@
 #define AES_KEY_SIZE		16
 #define AES256_KEY_SIZE		32
 
+/* Backwards compatibility support for pre-1.18 versions of libtomcrypt */
+#ifdef LIBTOMCRYPT_OLD_PKCS_NAMES
+#define LTC_PKCS_1_V1_5 LTC_LTC_PKCS_1_V1_5
+#endif
+
 int stc_standalone_init(void)
 {
 	/* libtomcrypt init for sdtid BatchSignature generation */
@@ -190,7 +195,7 @@ int stc_rsa_sha1_sign_digest(const uint8_t *privkey_der, size_t privkey_len,
 	if (rsa_import(privkey_der, privkey_len, &key) != CRYPT_OK)
 		return ERR_GENERAL;
 	if (rsa_sign_hash_ex(digest, (160 / 8), out, outlen,
-			     LTC_LTC_PKCS_1_V1_5, NULL, 0,
+			     LTC_PKCS_1_V1_5, NULL, 0,
 			     hash_idx, 0, &key) != CRYPT_OK)
 		rc = ERR_GENERAL;
 
