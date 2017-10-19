@@ -27,6 +27,10 @@ script:
   - ./autogen.sh
   - misc/build-one.sh nettle
   - if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+        case "$CC" in
+            clang*) export CPPFLAGS=-DLTC_NO_ROLC ;;
+            *) ;;
+        esac;
         misc/build-one.sh tomcrypt &&
         ./release.sh &&
         misc/build-debian.sh &&
