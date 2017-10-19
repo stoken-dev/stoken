@@ -14,6 +14,7 @@ notifications:
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        brew update;
         brew install autoconf automake libtool nettle valgrind;
     else
         sudo apt-get update -qq &&
