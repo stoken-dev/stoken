@@ -94,6 +94,7 @@ PIPE_LOG_COMPILER	= $(srcdir)/tests/pipe-wrapper.sh
 dist_check_SCRIPTS	= $(TESTS) $(PIPE_LOG_COMPILER)
 
 TESTS_ENVIRONMENT 	= STOKEN=./stoken \
+			LIBTOOL="${LIBTOOL}" \
 			TESTDIR="$(srcdir)/tests"
 
 if ENABLE_VALGRIND

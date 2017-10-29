@@ -22,8 +22,9 @@ base="${base%.pipe}"
 
 TESTDIR="${TESTDIR:-.}"
 STOKEN="${STOKEN:-../stoken}"
+LIBTOOL="${LIBTOOL:-../libtool}"
 if ! test -z "${VALGRIND}"; then
-	STOKEN="${LIBTOOL:-libtool} --mode=execute ${VALGRIND} ${STOKEN}"
+	STOKEN="${LIBTOOL} --mode=execute ${VALGRIND} ${STOKEN}"
 fi
 
 tok0="--token=258491750817210752367175001073261277346642631755724762324173166222072472716737543"
