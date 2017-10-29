@@ -14,7 +14,8 @@ notifications:
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        brew install autoconf automake libtool nettle valgrind;
+        brew update;
+        brew install nettle valgrind;
     else
         sudo apt-get update -qq &&
         sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind nettle-dev;
@@ -27,6 +28,10 @@ script:
   - ./autogen.sh
   - misc/build-one.sh nettle
   - if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+        case "$CC" in
+            clang*) export CPPFLAGS=-DLTC_NO_ROLC ;;
+            *) ;;
+        esac;
         misc/build-one.sh tomcrypt &&
         ./release.sh &&
         misc/build-debian.sh &&
