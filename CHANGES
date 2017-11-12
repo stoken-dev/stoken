@@ -1,3 +1,14 @@
+V0.92 - 2017/11/12
+
+ - Update MinGW dependencies to work with Fedora 25 (bug #31)
+
+ - Fix compatibility with libtomcrypt 1.18 (bug #38)
+
+ - Invoke locally-generated libtool binary instead of assuming there is
+   one in the $PATH (bug #37)
+
+ - Use $USERPROFILE instead of $HOME on Windows 7 (bug #22)
+
 V0.91 - 2017/01/08
 
  - Fix segfault if ~/.stokenrc is empty and another program invokes libstoken
