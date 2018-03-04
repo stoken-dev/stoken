@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -ex
 
@@ -27,7 +27,7 @@ fi
 
 rm -rf build.$lib
 mkdir build.$lib
-pushd build.$lib
+cd build.$lib
 ../configure --enable-valgrind $args
 make
 
@@ -38,6 +38,6 @@ for x in Pacific/Honolulu America/New_York Europe/Athens \
 done
 
 make dist
-popd
+cd ..
 
 exit 0

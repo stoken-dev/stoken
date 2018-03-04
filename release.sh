@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
 gpgkey="BC0B0D65"
 
 set -ex
-set -o pipefail
 
 # autotools will search .:..:../.. for support files
 # let's make sure it can't search our repo, so we know it is getting all
@@ -16,16 +15,18 @@ rm -rf tmp.build stoken-*.tar.gz stoken-*.tar.gz.asc
 mkdir -p $reldir
 git clone . $reldir
 
-pushd $reldir
+(
+cd $reldir
 ./autogen.sh
 ./configure
 fakeroot make dist
-tarball=$(ls -1 stoken-*.tar.gz)
-mv $tarball $repodir
-popd
+)
+tarball=$(basename $(ls -1 $reldir/stoken-*.tar.gz))
+mv $reldir/$tarball $repodir
 
 mkdir -p $builddir
-pushd $builddir
+(
+cd $builddir
 tar -zxf $repodir/$tarball --strip 1
 ./configure --with-gtk
 make
@@ -34,11 +35,11 @@ make distclean
 make
 make install DESTDIR=`pwd`/pfx
 make clean
-popd
+)
 
 rm -rf tmp.build
 
-if gpg --list-secret-keys $gpgkey >& /dev/null; then
+if gpg --list-secret-keys $gpgkey > /dev/null 2>&1; then
 	gpg --yes --armor --detach-sign --default-key $gpgkey $tarball
 fi
 
