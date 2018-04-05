@@ -15,7 +15,8 @@ notifications:
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
         brew update;
-        brew install nettle valgrind;
+        brew install valgrind;
+        brew upgrade nettle;
     else
         sudo apt-get update -qq &&
         sudo apt-get install -qq autoconf automake libtool debhelper libgtk-3-dev libtomcrypt-dev libxml2-dev dh-autoreconf devscripts fakeroot git-core valgrind nettle-dev;
