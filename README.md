@@ -26,6 +26,7 @@ On Debian or Ubuntu, this should satisfy most/all dependencies:
 
 ### Compile instructions
 
+    ./autogen.sh  # from Git only; not necessary if building from tarball
     ./configure
     make
     make check
