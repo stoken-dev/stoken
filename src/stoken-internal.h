@@ -21,6 +21,7 @@
 #ifndef __STOKEN_INTERNAL_H__
 #define __STOKEN_INTERNAL_H__
 
+#include <stdarg.h>
 #include <stdint.h>
 #include "stoken.h"
 
@@ -101,6 +102,8 @@ void stc_aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out);
 void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out);
+void stc_omac1_aes(const void *key, size_t klen, void *result, size_t reslen,
+		   ...);
 void stc_sha1_hash(uint8_t *out, ...);
 void stc_sha256_hash(uint8_t *out, ...);
 int stc_b64_encode(const uint8_t *in,  unsigned long len,

@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdint.h>
@@ -31,6 +32,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <arpa/inet.h>
 
 #include "securid.h"
 #include "sdtid.h"
@@ -216,6 +219,40 @@ static void sha256_pbkdf2(const uint8_t *pass, int pass_len,
 
 		for (i = 0; i < SHA256_HASH_SIZE; i++)
 			key_out[i] ^= hash[i];
+	}
+}
+
+#ifndef howmany
+#define howmany(x, y)	(((x)+((y)-1))/(y))
+#endif
+/*
+ * RFC 4758 D.2.2
+ */
+static void ct_kip_prf_aes(const char *k, size_t klen, const char *s,
+			   size_t slen, char *dst, size_t dstlen)
+{
+	const unsigned blen = AES_BLOCK_SIZE;
+
+	size_t n, j, i;
+
+	/* "2. ... Derived data too long" */
+	assert(dstlen / blen <= UINT32_MAX);
+
+	n = howmany(dstlen, blen);
+	j = dstlen % blen;
+
+	for (i = 0; i < n; i++) {
+		size_t reslen;
+		uint32_t INT_i;
+
+		if (i == n - 1 && j != 0)
+			reslen = j;
+		else
+			reslen = blen;
+
+		INT_i = htonl(i + 1);
+		stc_omac1_aes(k, klen, &dst[i * blen], reslen,
+		    s, slen, &INT_i, 4, NULL);
 	}
 }
 

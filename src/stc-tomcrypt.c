@@ -121,6 +121,44 @@ void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 	rijndael_done(&skey);
 }
 
+void stc_omac1_aes(const void *key, size_t klen, void *result, size_t reslen,
+		   ...)
+{
+	unsigned long olen;
+	omac_state md;
+	int aes_idx;
+	va_list ap;
+	int rc;
+
+	aes_idx = find_cipher("aes");
+	if (aes_idx == -1)
+		aes_idx = find_cipher("rijndael");
+	if (aes_idx == -1)
+		abort();
+
+	rc = omac_init(&md, aes_idx, key, klen);
+	assert(rc == CRYPT_OK);
+
+	va_start(ap, reslen);
+	while (1) {
+		const void *nextin = va_arg(ap, const void *);
+		size_t inlen;
+
+		if (nextin == NULL)
+			break;
+		inlen = va_arg(ap, size_t);
+
+		rc = omac_process(&md, nextin, inlen);
+		assert(rc == CRYPT_OK);
+	}
+	va_end(ap);
+
+	olen = reslen;
+	rc = omac_done(&md, result, &olen);
+	assert(rc == CRYPT_OK);
+	assert(olen == reslen);
+}
+
 void stc_sha1_hash(uint8_t *out, ...)
 {
 	va_list ap;
