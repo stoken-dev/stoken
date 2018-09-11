@@ -28,7 +28,15 @@ fi
 rm -rf build.$lib
 mkdir build.$lib
 pushd build.$lib
-../configure --enable-valgrind $args
+
+# `brew install valgrind` fails:
+# https://github.com/Homebrew/homebrew-core/issues/23536
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	../configure $args
+else
+	../configure --enable-valgrind $args
+fi
+
 make
 
 # try to ferret out any possible timezone dependencies
