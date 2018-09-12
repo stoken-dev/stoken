@@ -1,3 +1,4 @@
 #!/bin/bash
 
-docker run -it  -v $HOME/.stokenrc:/root/.stokenrc stevemcquaid/stoken:latest
+docker run -it  -v $HOME:/root stevemcquaid/stoken:latest stoken $@
+
