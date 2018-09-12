@@ -22,7 +22,7 @@ a released source tarball.
 
 On Debian or Ubuntu, this should satisfy most/all dependencies:
 
-    sudo apt-get install libgtk-3-dev libtomcrypt-dev libxml2-dev libtomcrypt-dev autoconf automake libtool build-essential
+    sudo apt-get install libgtk-3-dev libtomcrypt-dev libxml2-dev autoconf automake libtool build-essential
 
 ### Compile instructions
 
