@@ -110,7 +110,7 @@ winpkg: $(bin_PROGRAMS)
 	cp .libs/stoken.exe winpkg/
 if ENABLE_GUI
 	cp .libs/stoken-gui.exe winpkg/
-	cp `./win32deps.pl .libs/stoken-gui.exe` winpkg/
+	cp `CC=$(CC) ./win32deps.pl .libs/stoken-gui.exe` winpkg/
 	cp gui/*.{ui,png} winpkg/
 else
 	cp .libs/stoken.exe winpkg/
