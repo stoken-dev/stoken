@@ -113,18 +113,17 @@ or maintained regularly.
 
 #### Initial setup
 
-On a Fedora 20 PC (other versions may work as well), install the build
+On a Fedora 28 PC (other versions may work as well), install the build
 dependencies:
 
-    yum groupinstall "Development Tools"
-    yum install git autoconf automake libtool mingw32-gnutls mingw32-libxml2 mingw32-gtk3
+    dnf install git autoconf automake libtool mingw64-gnutls mingw64-libxml2 mingw64-gtk3 mingw64-binutils
 
 #### Compiling
 
     git clone git://github.com/cernekee/stoken
     cd stoken
     bash autogen.sh
-    mingw32-configure
+    mingw64-configure GTK_LIBS="$(x86_64-w64-mingw32-pkg-config --libs "gtk+-3.0") -Wl,--subsystem,windows"
     make winpkg
 
 If all goes well, you should be able to copy <code>winpkg.zip</code> to
