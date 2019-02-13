@@ -35,8 +35,8 @@ my %blacklist = (
 	"setupapi.dll" => 1,
 );
 
-my $CC = "i686-w64-mingw32-gcc";
-my $OBJDUMP = "mingw-objdump";
+my $CC = $ENV{'CC'};
+my $OBJDUMP = $ENV{'OBJDUMP'} // $CC =~ s/-gcc$/-objdump/r;
 
 sub run($)
 {
