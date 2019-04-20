@@ -103,7 +103,7 @@ int __stoken_parse_and_decode_token(const char *str, struct securid_token *t,
 			else if (*p != '-')
 				break;
 		}
-	} else if (p[0] == 'A') {
+	} else if (p[0] == 'A' || p[0] == 'B') {
 		for (i = 0; *p; p++) {
 			if (i >= BUFLEN - 1)
 				return ERR_BAD_LEN;
