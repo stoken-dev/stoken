@@ -220,6 +220,13 @@ static void usage_cli(void)
 	puts("  stoken setpass");
 	puts("  stoken setpin");
 	puts("");
+	puts("Options for tokencode");
+	puts("");
+	puts("  --stdin            Read PIN from STDIN");
+	puts("  --next             Print next token");
+	puts("  --both             Print both current and next token");
+	puts("  --use-time=<time>  Use <time> to generate token");
+	puts("");
 	puts("Other commands:");
 	puts("");
 	puts("  stoken show [ --seed ]");
