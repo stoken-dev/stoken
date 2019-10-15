@@ -443,7 +443,7 @@ int main(int argc, char **argv)
 {
 	char *cmd = parse_cmdline(argc, argv, NOT_GUI);
 	int rc;
-	char buf[BUFLEN];
+	char buf[BUFLEN], buf_next[BUFLEN];
 	struct securid_token *t;
 
 	rc = common_init(cmd);
@@ -473,8 +473,16 @@ int main(int argc, char **argv)
 		if (days_left < 0 && !opt_force)
 			die("error: token has expired; use --force to override\n");
 
-		securid_compute_tokencode(t, adjusted_time(t), buf);
-		puts(buf);
+		if (opt_both) {
+			opt_next = 0;
+			securid_compute_tokencode(t, adjusted_time(t), buf);
+			opt_next = 1;
+			securid_compute_tokencode(t, adjusted_time(t), buf_next);
+			printf("\nCurrent: %s\nNext:    %s\n", buf, buf_next);
+		} else {
+			securid_compute_tokencode(t, adjusted_time(t), buf);
+			puts(buf);
+		}
 
 		if (days_left < 14 && !opt_force)
 			warn("warning: token expires in %d day%s\n", days_left,
