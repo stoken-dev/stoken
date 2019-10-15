@@ -181,6 +181,8 @@ static time_t adjusted_time(struct securid_token *t)
 	time_t now = time(NULL);
 	long new_time;
 
+	if (opt_both && opt_use_time)
+		die("error: --use-time and --both are mutually exclusive\n");
 	if (opt_next && opt_use_time)
 		die("error: --use-time and --next are mutually exclusive\n");
 	if (opt_next)
