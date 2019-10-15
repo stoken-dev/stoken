@@ -478,7 +478,7 @@ int main(int argc, char **argv)
 			securid_compute_tokencode(t, adjusted_time(t), buf);
 			opt_next = 1;
 			securid_compute_tokencode(t, adjusted_time(t), buf_next);
-			printf("\nCurrent: %s\nNext:    %s\n", buf, buf_next);
+			printf("Current tokencode: %s\n   Next tokencode: %s\n", buf, buf_next);
 		} else {
 			securid_compute_tokencode(t, adjusted_time(t), buf);
 			puts(buf);

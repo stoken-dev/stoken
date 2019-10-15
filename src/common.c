@@ -223,8 +223,8 @@ static void usage_cli(void)
 	puts("Options for tokencode");
 	puts("");
 	puts("  --stdin            Read PIN from STDIN");
-	puts("  --next             Print next token");
-	puts("  --both             Print both current and next token");
+	puts("  --next             Print next tokencode");
+	puts("  --both             Print both current and next tokencode");
 	puts("  --use-time=<time>  Use <time> to generate token");
 	puts("");
 	puts("Other commands:");
