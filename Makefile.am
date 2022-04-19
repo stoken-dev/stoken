@@ -87,6 +87,7 @@ TESTS			= tests/export-android-v2.pipe \
 			  tests/export-v3-sdtid.pipe \
 			  tests/tokencode-v2.pipe \
 			  tests/tokencode-v3.pipe \
+			  tests/tokencode-v4.pipe \
 			  tests/tokencode-sdtid.pipe \
 			  tests/mac-align.pipe
 
