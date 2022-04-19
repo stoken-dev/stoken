@@ -491,7 +491,7 @@ static void v3_derive_key(const char *pass, const char *devid, const uint8_t *sa
 	memcpy(&buf0[pass_len + V3_DEVID_CHARS + 16], salt, V3_NONCE_BYTES);
 
 	/* for v3 yup, the PBKDF2 password is really "every 2nd byte of the input"
-     * for v3 we need to use full buffer */
+     * for v4 we need to use full buffer */
 	if (version == 3) {
 		for (i = 1; i < buf_len; i += 2)
 			buf1[i >> 1] = buf0[i];
