@@ -536,6 +536,8 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 		return ERR_GENERAL;
 	}
 
+	t->version = t->v3->version;
+
 	/* more flags will get populated later when we decrypt the payload */
 	t->flags = t->v3->password_locked ? FL_PASSPROT : 0;
 	t->flags |= t->v3->devid_locked ? FL_SNPROT : 0;
