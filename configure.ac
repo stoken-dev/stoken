@@ -200,13 +200,14 @@ fi
 if test -z "$CRYPTO_BACKEND" -a "$with_nettle" != no -a "$with_tomcrypt" != yes; then
 	PKG_CHECK_MODULES(NETTLE, [nettle >= 2.4])
 	PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.4])
-	deps="nettle, hogweed"
+	PKG_CHECK_MODULES(GMP, [gmp >= 6.0])
+	deps="nettle, hogweed, gmp"
 	AC_SUBST(DEPS_PC, [$deps])
 
-	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS"
+	CRYPTO_CFLAGS="$NETTLE_CFLAGS $HOGWEED_CFLAGS $GMP_CFLAGS"
 	# gmp is added since we directly use GMP functions
 	# unfortunately it doesn't show up in pkg-config
-	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS -lgmp"
+	CRYPTO_LIBS="$NETTLE_LIBS $HOGWEED_LIBS $GMP_LIBS"
 	CRYPTO_BACKEND="nettle"
 
 	# nettle 2.x accepts a bidirectional (unsigned *) argument
