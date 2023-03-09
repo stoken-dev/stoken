@@ -26,3 +26,8 @@ jobs:
       run: make check
     - name: make distcheck
       run: make distcheck
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: tarball
+        path: ./*.tar.*
