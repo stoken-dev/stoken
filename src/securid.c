@@ -467,7 +467,7 @@ static int v2_encode_token(struct securid_token *t, const char *pass,
  ********************************************************************/
 
 static void v3_derive_key(const char *pass, const char *devid, const uint8_t *salt,
-			  int key_id, uint8_t *out)
+			  int key_id, int version, uint8_t *out)
 {
 	uint8_t *buf0, *buf1;
 	int pass_len = pass ? strlen(pass) : 0;
@@ -490,11 +490,16 @@ static void v3_derive_key(const char *pass, const char *devid, const uint8_t *sa
 	memcpy(&buf0[pass_len + V3_DEVID_CHARS], key_id ? key1 : key0, 16);
 	memcpy(&buf0[pass_len + V3_DEVID_CHARS + 16], salt, V3_NONCE_BYTES);
 
-	/* yup, the PBKDF2 password is really "every 2nd byte of the input" */
-	for (i = 1; i < buf_len; i += 2)
-		buf1[i >> 1] = buf0[i];
+	/* for v3 yup, the PBKDF2 password is really "every 2nd byte of the input"
+     * for v3 we need to use full buffer */
+	if (version == 3) {
+		for (i = 1; i < buf_len; i += 2)
+			buf1[i >> 1] = buf0[i];
+		buf_len >>= 1;
+		buf0 = buf1;
+	}
 
-	sha256_pbkdf2(buf1, buf_len >> 1, salt, V3_NONCE_BYTES, 1000, out);
+	sha256_pbkdf2(buf0, buf_len, salt, V3_NONCE_BYTES, 1000, out);
 }
 
 static int v3_decode_token(const char *in, struct securid_token *t)
@@ -525,13 +530,11 @@ static int v3_decode_token(const char *in, struct securid_token *t)
 
 	if (stc_b64_decode(decoded, strlen(decoded), (void *)t->v3, &actual) ||
 	    actual != sizeof(struct v3_token) ||
-	    t->v3->version != 0x03) {
+	    (t->v3->version != 0x03 && t->v3->version != 0x04)) {
 		free(t->v3);
 		t->v3 = NULL;
 		return ERR_GENERAL;
 	}
-
-	t->version = 3;
 
 	/* more flags will get populated later when we decrypt the payload */
 	t->flags = t->v3->password_locked ? FL_PASSPROT : 0;
@@ -592,7 +595,7 @@ static void v3_compute_hmac(struct v3_token *v3, const char *pass,
 {
 	uint8_t hash[SHA256_HASH_SIZE];
 
-	v3_derive_key(pass, devid, v3->nonce, 0, hash);
+	v3_derive_key(pass, devid, v3->nonce, 0, v3->version, hash);
 	sha256_hmac(hash, SHA256_HASH_SIZE,
 		    (void *)v3, sizeof(*v3) - SHA256_HASH_SIZE, out);
 }
@@ -628,7 +631,7 @@ static int v3_decrypt_seed(struct securid_token *t,
 	if (memcmp(hash, t->v3->mac, SHA256_HASH_SIZE) != 0)
 		return ERR_CHECKSUM_FAILED;
 
-	v3_derive_key(pass, devid, t->v3->nonce, 1, hash);
+	v3_derive_key(pass, devid, t->v3->nonce, 1, t->version, hash);
 	stc_aes256_cbc_decrypt(hash,
 			   t->v3->enc_payload, sizeof(struct v3_payload),
 			   t->v3->nonce, (void *)&payload);
@@ -687,7 +690,7 @@ static int v3_encode_token(struct securid_token *t, const char *pass,
 	v3.devid_locked = !!raw_devid;
 
 	v3_scrub_devid(raw_devid, devid);
-	v3_derive_key(pass, devid, v3.nonce, 1, key);
+	v3_derive_key(pass, devid, v3.nonce, 1, v3.version, key);
 	stc_aes256_cbc_encrypt(key,
 			   (void *)&payload, sizeof(struct v3_payload),
 			   v3.nonce, v3.enc_payload);
@@ -725,7 +728,7 @@ int securid_decode_token(const char *in, struct securid_token *t)
 	 */
 	if (in[0] == '1' || in[0] == '2')
 		return v2_decode_token(in, t);
-	else if (strlen(in) >= V3_BASE64_MIN_CHARS && (in[0] == 'A'))
+	else if (strlen(in) >= V3_BASE64_MIN_CHARS && ((in[0] == 'A') || in[0] == 'B'))
 		return v3_decode_token(in, t);
 	else
 		return ERR_TOKEN_VERSION;
@@ -882,7 +885,7 @@ time_t securid_unix_exp_date(const struct securid_token *t)
 	 * been prompted for a password yet, we'll need to bypass the
 	 * expiration checks.
 	 */
-	if (t->version == 3 && !t->exp_date)
+	if (t->version >= 3 && !t->exp_date)
 		return MAX_TIME_T;
 	if (t->exp_date > SECURID_MAX_DATE)
 		return MAX_TIME_T;
