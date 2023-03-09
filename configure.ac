@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([stoken], [0.92], [cernekee@gmail.com], [stoken], [http://stoken.sf.net/])
+AC_INIT([stoken], [0.93], [sorenisanerd@gmail.com], [stoken], [http://github.com/stoken-dev/stoken])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 parallel-tests])
 AC_CONFIG_HEADERS([config.h])
