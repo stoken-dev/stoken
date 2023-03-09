@@ -13,6 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install nettle
+      run: |
+        sudo apt-get -y install nettle-dev
     - name: autogen.sh
       run: ./autogen.sh
     - name: configure
