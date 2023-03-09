@@ -1,3 +1,5 @@
+Based on [original work by Kevin Cernekee](https://github.com/cernekee/stoken).
+
 stoken - Software Token for Linux/UNIX
 ======================================
 

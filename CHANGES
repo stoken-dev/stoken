@@ -1,3 +1,19 @@
+V0.93 - 2023/03/09
+
+ - Drop support for versions of nettle older than 2014 (Soren Hansen)
+ - Add automatic tests using Github Actions (Soren Hansen)
+ - Add automatic tests using Github Actions (Soren Hansen)
+ - Fix build on (at least) MacOS (Soren Hansen)
+ - Further v4 token work (David Southgate)
+ - Document --next option in README (@almostbeef)
+ - Add accessibility item in README (James Cordell)
+ - Add --both option to print current and next token (Paulo Diovani)
+ - Support for v4 token decode (Dmitry Ilyin)
+ - Delete duplicate libtomcrypt-dev in README (Kevin Cernekee)
+ - Fix OSX travis builds (Kevin Cernekee)
+ - Fix compile for Java 1.8 (Kevin Cernekee)
+ - Remove bashisms (Alon Bar-Lev)
+
 V0.92 - 2017/11/12
 
  - Update MinGW dependencies to work with Fedora 25 (bug #31)
