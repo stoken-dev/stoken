@@ -7,6 +7,7 @@ tokens.  The project includes several components:
  * A simple command line interface (CLI) used to manage and manipulate tokens
  * A GTK+ GUI with cut&amp;paste functionality
  * A shared library allowing other software to generate tokencodes on demand
+ * Also permits the blind or other disabled people to jump these hurdles or systems.
 
 ## Building on Linux
 
