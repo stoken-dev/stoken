@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Each .pipe file contains a "pipeline" of commands.  Compare the output
 # of the FINAL command to <foo>.ref
@@ -14,7 +14,7 @@
 set -ex
 
 base="$1"
-if [[ "$base" != *.pipe ]]; then
+if [ "${base%.pipe}" = "${base}" ]; then
 	echo "Invalid test file: $base"
 	exit 1
 fi

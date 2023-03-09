@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 gpgkey="BC0B0D65"
 ppaname="cernekee/ppa"
@@ -6,13 +6,13 @@ ppaname="cernekee/ppa"
 builddir=tmp.debian
 pkg=stoken
 
-function build_one
-{
+build_one() {
 	arg="$1"
 
 	rm -rf $builddir
+	mydir=$(pwd)
 	mkdir $builddir
-	pushd $builddir
+	cd $builddir
 
 	cp ../$tarball "${pkg}_${ver}.orig.tar.gz"
 	mkdir "$pkg-$ver"
@@ -26,7 +26,7 @@ function build_one
 	fi
 	cd ..
 	lintian -IE --pedantic *.changes | tee -a ../lintian.txt || true
-	popd
+	cd $mydir
 }
 
 #
@@ -61,7 +61,7 @@ fi
 ver=${tarball#*-}
 ver=${ver%%.tar.gz}
 
-if gpg --list-secret-keys $gpgkey >& /dev/null; then
+if gpg --list-secret-keys $gpgkey > /dev/null 2>&1; then
 	nosign=0
 else
 	nosign=1

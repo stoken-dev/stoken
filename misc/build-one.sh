@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -ex
 
@@ -37,8 +37,6 @@ else
 	../configure --enable-valgrind $args
 fi
 
-make
-
 # try to ferret out any possible timezone dependencies
 for x in Pacific/Honolulu America/New_York Europe/Athens \
 	 Asia/Calcutta Australia/Sydney; do
@@ -46,6 +44,6 @@ for x in Pacific/Honolulu America/New_York Europe/Athens \
 done
 
 make dist
-popd
+cd ..
 
 exit 0

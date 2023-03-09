@@ -99,7 +99,7 @@ with Apple's libtool program:
     export LIBTOOL=glibtool
     git clone git://github.com/cernekee/stoken
     cd stoken
-    bash autogen.sh
+    ./autogen.sh
     ./configure
     make
     make check
@@ -123,7 +123,7 @@ dependencies:
 
     git clone git://github.com/cernekee/stoken
     cd stoken
-    bash autogen.sh
+    ./autogen.sh
     mingw32-configure
     make winpkg
 
