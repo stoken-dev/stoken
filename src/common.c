@@ -215,7 +215,7 @@ static void usage_cli(void)
 	puts("");
 	puts("Common operations:");
 	puts("");
-	puts("  stoken [ tokencode ] [ --stdin ]");
+	puts("  stoken [ tokencode ] [ --stdin ] [ --next ]");
 	puts("  stoken import { --token=<token_string> | --file=<token_file> } [ --force ]");
 	puts("  stoken setpass");
 	puts("  stoken setpin");
