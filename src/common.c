@@ -41,7 +41,7 @@
 /* globals - shared with cli.c or gui.c */
 
 int opt_random, opt_keep_password, opt_blocks, opt_iphone, opt_android,
-	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small, opt_next;
+	opt_v3, opt_show_qr, opt_seed, opt_sdtid, opt_small, opt_next, opt_both;
 int opt_debug, opt_version, opt_help, opt_batch, opt_force, opt_stdin;
 char *opt_rcfile, *opt_file, *opt_token, *opt_devid, *opt_password,
      *opt_pin, *opt_use_time, *opt_new_password, *opt_new_devid,
@@ -168,6 +168,7 @@ static const struct option long_opts[] = {
 
 	/* used for tokencode generation */
 	{ "next",           0, &opt_next,               1                 },
+	{ "both",           0, &opt_both,               1                 },
 
 	/* these are mostly for exporting/issuing tokens */
 	{ "new-password",   1, NULL,                    OPT_NEW_PASSWORD  },
@@ -218,6 +219,13 @@ static void usage_cli(void)
 	puts("  stoken import { --token=<token_string> | --file=<token_file> } [ --force ]");
 	puts("  stoken setpass");
 	puts("  stoken setpin");
+	puts("");
+	puts("Options for tokencode");
+	puts("");
+	puts("  --stdin            Read PIN from STDIN");
+	puts("  --next             Print next tokencode");
+	puts("  --both             Print both current and next tokencode");
+	puts("  --use-time=<time>  Use <time> to generate token");
 	puts("");
 	puts("Other commands:");
 	puts("");
