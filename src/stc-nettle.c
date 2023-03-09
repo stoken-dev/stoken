@@ -46,34 +46,34 @@ int stc_standalone_init(void)
 
 void stc_aes128_ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
-	struct aes_ctx ctx;
-	aes_set_encrypt_key(&ctx, 128/8, key);
-	aes_encrypt(&ctx, AES_BLOCK_SIZE, out, in);
+	struct aes128_ctx ctx;
+	aes128_set_encrypt_key(&ctx, key);
+	aes128_encrypt(&ctx, AES_BLOCK_SIZE, out, in);
 }
 
 void stc_aes128_ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out)
 {
-	struct aes_ctx ctx;
-	aes_set_decrypt_key(&ctx, 128/8, key);
-	aes_decrypt(&ctx, AES_BLOCK_SIZE, out, in);
+	struct aes128_ctx ctx;
+	aes128_set_decrypt_key(&ctx, key);
+	aes128_decrypt(&ctx, AES_BLOCK_SIZE, out, in);
 }
 
 void stc_aes256_cbc_decrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out)
 {
-	struct CBC_CTX(struct aes_ctx, AES_BLOCK_SIZE) ctx;
-	aes_set_decrypt_key(&ctx.ctx, 256/8, key);
+	struct CBC_CTX(struct aes256_ctx, AES_BLOCK_SIZE) ctx;
+	aes256_set_decrypt_key(&ctx.ctx, key);
 	CBC_SET_IV(&ctx, iv);
-	CBC_DECRYPT(&ctx, aes_decrypt, in_len, out, in);
+	CBC_DECRYPT(&ctx, aes256_decrypt, in_len, out, in);
 }
 
 void stc_aes256_cbc_encrypt(const uint8_t *key, const uint8_t *in, int in_len,
 			       const uint8_t *iv, uint8_t *out)
 {
-	struct CBC_CTX(struct aes_ctx, AES_BLOCK_SIZE) ctx;
-	aes_set_encrypt_key(&ctx.ctx, 256/8, key);
+	struct CBC_CTX(struct aes256_ctx, AES_BLOCK_SIZE) ctx;
+	aes256_set_encrypt_key(&ctx.ctx, key);
 	CBC_SET_IV(&ctx, iv);
-	CBC_ENCRYPT(&ctx, aes_encrypt, in_len, out, in);
+	CBC_ENCRYPT(&ctx, aes256_encrypt, in_len, out, in);
 }
 
 void stc_sha1_hash(uint8_t *out, ...)
@@ -137,11 +137,7 @@ int stc_b64_decode(const uint8_t *in,  unsigned long len,
 	struct base64_decode_ctx ctx;
 	char tmp[BASE64_DECODE_LENGTH(len)];
 	int ret;
-#ifdef NETTLE_OLD_BASE64_API
-	unsigned dst_length = sizeof(tmp);
-#else
 	size_t dst_length;
-#endif
 
 	base64_decode_init(&ctx);
 	ret = base64_decode_update(&ctx, &dst_length, tmp, len, in);
