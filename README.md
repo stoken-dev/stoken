@@ -48,6 +48,10 @@ Next, use the CLI or GUI to show the current tokencode:
 
     stoken tokencode
     stoken-gui &
+    
+You can view the next-tokencode using the following:
+
+    stoken tokencode --next
 
 If your token requires a PIN, stoken will prompt for it. You can use
 <code>stoken setpin</code> to cache your PIN in <code>~/.stokenrc</code>.
