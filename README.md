@@ -1,4 +1,13 @@
-Based on [original work by Kevin Cernekee](https://github.com/cernekee/stoken).
+### Default branch renamed to `main`
+
+On May 17, 2023, the default branch was renamed to `main`. If you have a local repository, run the following commands:
+
+```bash
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+```
 
 stoken - Software Token for Linux/UNIX
 ======================================
