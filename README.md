@@ -42,7 +42,8 @@ On Debian or Ubuntu, this should satisfy most/all dependencies:
     ./configure
     make
     make check
-    make install
+    sudo make install
+    sudo ldconfig
 
 ## Usage
 
